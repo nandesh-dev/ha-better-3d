@@ -1,0 +1,23 @@
+{
+  "scripts": {
+    "watch": "tsx esbuild.config.ts --watch",
+    "build": "tsx esbuild.config.ts"
+  },
+  "packageManager": "pnpm@10.6.2",
+  "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.25.9",
+    "dotenv": "^16.4.7",
+    "esbuild": "0.25.1",
+    "tsx": "^4.19.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "dependencies": {
+    "@types/three": "^0.174.0",
+    "preact": "^10.26.4",
+    "three": "^0.174.0"
+  }
+}
