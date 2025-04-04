@@ -1,23 +1,28 @@
 {
-  "scripts": {
-    "watch": "tsx esbuild.config.ts --watch",
-    "build": "tsx esbuild.config.ts"
-  },
-  "packageManager": "pnpm@10.6.2",
-  "devDependencies": {
-    "@babel/plugin-transform-react-jsx": "^7.25.9",
-    "dotenv": "^16.4.7",
-    "esbuild": "0.25.1",
-    "tsx": "^4.19.3"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
-  },
-  "dependencies": {
-    "@types/three": "^0.174.0",
-    "preact": "^10.26.4",
-    "three": "^0.174.0"
-  }
+    "scripts": {
+        "watch": "tsx esbuild.config.ts --watch",
+        "build": "tsx esbuild.config.ts",
+        "format": "prettier -w ."
+    },
+    "packageManager": "pnpm@10.6.5+sha512.cdf928fca20832cd59ec53826492b7dc25dc524d4370b6b4adbf65803d32efaa6c1c88147c0ae4e8d579a6c9eec715757b50d4fa35eea179d868eada4ed043af",
+    "devDependencies": {
+        "@babel/plugin-transform-react-jsx": "^7.25.9",
+        "@trivago/prettier-plugin-sort-imports": "^5.2.2",
+        "dotenv": "^16.4.7",
+        "esbuild": "0.25.1",
+        "path": "^0.12.7",
+        "tsx": "^4.19.3"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "esbuild"
+        ]
+    },
+    "dependencies": {
+        "@types/three": "^0.174.0",
+        "lit": "^3.2.1",
+        "preact": "^10.26.4",
+        "preact-material-components": "^1.6.1",
+        "three": "^0.174.0"
+    }
 }

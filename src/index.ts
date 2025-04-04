@@ -1,1 +1,5 @@
-console.log("Better 3D project setup")
+import { registerCard } from './elements/card'
+import { registerCardEditor } from './elements/card_editor'
+
+registerCard()
+registerCardEditor()

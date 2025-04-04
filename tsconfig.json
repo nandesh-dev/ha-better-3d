@@ -1,7 +1,13 @@
 {
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-  }
+    "compilerOptions": {
+        "strict": true,
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
+        "target": "es2017",
+        "baseUrl": "./",
+        "paths": {
+            "@/*": ["src/*"]
+        }
+    }
 }
