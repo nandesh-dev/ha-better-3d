@@ -6,9 +6,11 @@ export type Config = {
 
 export type SceneProperties = {
     active_camera: Expression
-    cameras: { [name: string]: PerspectiveOrbitalCameraProperties }
-    objects: { [name: string]: GLBModelProperties | PointLightProperties }
+    cameras: { [name: string]: CameraProperties }
+    objects: { [name: string]: ObjectProperties }
 }
+
+export type CameraProperties = PerspectiveOrbitalCameraProperties
 
 export type PerspectiveOrbitalCameraProperties = {
     type: 'orbital.perspective'
@@ -26,6 +28,8 @@ export type PerspectiveOrbitalCameraProperties = {
         z: Expression
     }
 }
+
+export type ObjectProperties = GLBModelProperties | PointLightProperties
 
 export type GLBModelProperties = {
     type: 'model.glb'

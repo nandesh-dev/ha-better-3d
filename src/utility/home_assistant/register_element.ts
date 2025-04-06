@@ -4,6 +4,7 @@ import { HomeAssistant } from './types'
 
 export type ComponentProps<ConfigType> = {
     config: ConfigType | null
+    setConfig: (config: ConfigType) => void
     homeAssistant: HomeAssistant | null
 }
 
@@ -18,15 +19,11 @@ export type PropertyMap = Record<PropertyKey, any>
 
 export function registerElement<ConfigType>(name: string, component: Component<ConfigType>, propertyMap: PropertyMap) {
     class CustomElement extends HTMLElement {
-        [key: string]: any
         private homeAssistant: HomeAssistant | null = null
         private config: ConfigType | null = null
 
         constructor() {
             super()
-            for (const propertyName in propertyMap) {
-                this[propertyName] = propertyMap[propertyName]
-            }
         }
 
         public set hass(hass: HomeAssistant) {
@@ -47,15 +44,29 @@ export function registerElement<ConfigType>(name: string, component: Component<C
             render(null, this)
         }
 
+        private updateConfig(config: ConfigType) {
+            const event = new CustomEvent<{ config: ConfigType }>('config-changed', {
+                detail: { config },
+                bubbles: true,
+                composed: true,
+            })
+            this.dispatchEvent(event)
+        }
+
         private update() {
             render(
                 h(component, {
                     config: this.config,
+                    setConfig: (config) => this.updateConfig(config),
                     homeAssistant: this.homeAssistant,
                 }),
                 this
             )
         }
+    }
+
+    for (const propertyName in propertyMap) {
+        ;(CustomElement as unknown as { [key: PropertyKey]: any })[propertyName] = propertyMap[propertyName]
     }
 
     customElements.define(name, CustomElement)

@@ -1,8 +1,10 @@
-import { type Config } from '@/configuration/v1'
+import { Config } from '@/configuration/v1'
 import { Visual } from '@/visual'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
+
+import { CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME } from './card_editor'
 
 function Card({ config }: ComponentProps<Config>) {
     if (!config) return
@@ -45,5 +47,9 @@ function Card({ config }: ComponentProps<Config>) {
 export const CARD_CUSTOM_ELEMENT_TAGNAME = 'better-3d-card'
 
 export function registerCard() {
-    registerElement(CARD_CUSTOM_ELEMENT_TAGNAME, Card, {})
+    registerElement(CARD_CUSTOM_ELEMENT_TAGNAME, Card, {
+        getConfigElement: () => {
+            return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
+        },
+    })
 }

@@ -78,14 +78,14 @@ export class PerspectiveOrbitalCamera {
             )
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(property.y)
         if (yError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' y lookAt due to error: ${yError}`
             )
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(property.z)
         if (zError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' z lookAt due to error: ${zError}`
@@ -103,14 +103,14 @@ export class PerspectiveOrbitalCamera {
             )
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(property.y)
         if (yError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' y position due to error: ${yError}`
             )
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(property.z)
         if (zError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' z position due to error: ${zError}`

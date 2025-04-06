@@ -66,12 +66,12 @@ export class GLBModel {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x position due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(property.y)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y position due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(property.z)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z position due to error: ${zError}`)
         }
@@ -85,12 +85,12 @@ export class GLBModel {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x rotation due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(property.y)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y rotation due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(property.z)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z rotation due to error: ${zError}`)
         }
@@ -104,12 +104,12 @@ export class GLBModel {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x scale due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(property.y)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y scale due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(property.z)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z scale due to error: ${zError}`)
         }
@@ -125,7 +125,8 @@ export class GLBModel {
         if (this.disposed) return
 
         for (const child of this.three.children) dispose(child)
-        this.three.children = [gltf.scene]
+        this.three.children = []
+        this.three.add(gltf.scene)
 
         this.logger.debug(`glb model '${this.name}' loaded`)
     }
