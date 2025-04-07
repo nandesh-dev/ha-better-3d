@@ -3,16 +3,18 @@ import { Scene as ThreeScene } from 'three'
 
 import { dispose } from '@/visual/dispose'
 
+import { HomeAssistant } from '@/utility/home_assistant/types'
 import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 import { evaluate } from '../evaluate'
 import { Renderer } from '../renderer'
 import { PerspectiveOrbitalCamera } from './cameras/perspective_orbital'
+import { Card } from './objects/card'
 import { GLBModel } from './objects/glb_model'
 import { PointLight } from './objects/point_light'
 
-type Object = GLBModel | PointLight
+type Object = Card | GLBModel | PointLight
 type Camera = PerspectiveOrbitalCamera
 
 type Size = {
@@ -41,9 +43,9 @@ export class Scene {
         logger.debug(`new scene ${this.name}`)
     }
 
-    public updateProperties(properties: SceneProperties) {
+    public updateProperties(properties: SceneProperties, homeAssistant: HomeAssistant) {
         this.removeUnnecessaryObjects(properties)
-        this.updateObjects(properties)
+        this.updateObjects(properties, homeAssistant)
         this.updateActiveCamera(properties)
     }
 
@@ -70,7 +72,7 @@ export class Scene {
         }
     }
 
-    private updateObjects(properties: SceneProperties) {
+    private updateObjects(properties: SceneProperties, homeAssistant: HomeAssistant) {
         for (const objectName in properties.objects) {
             const objectProperties = properties.objects[objectName]
             let object = this.objects[objectName]
@@ -83,6 +85,9 @@ export class Scene {
                     case 'light.point':
                         object = new PointLight(objectName, this.logger)
                         break
+                    case 'card':
+                        object = new Card(objectName, objectProperties, this.logger)
+                        break
                     default:
                         this.logger.error(
                             `invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`
@@ -93,7 +98,7 @@ export class Scene {
                 this.three.add(object.three)
             }
 
-            object.updateProperties(objectProperties as any)
+            object.updateProperties(objectProperties as any, homeAssistant)
         }
     }
 

@@ -29,7 +29,31 @@ export type PerspectiveOrbitalCameraProperties = {
     }
 }
 
-export type ObjectProperties = GLBModelProperties | PointLightProperties
+export type ObjectProperties = CardProperties | GLBModelProperties | PointLightProperties
+
+export type CardProperties = {
+    type: 'card'
+    config: { type: string }
+    size: {
+        height: Expression
+        width: Expression
+    }
+    position: {
+        x: Expression
+        y: Expression
+        z: Expression
+    }
+    rotation: {
+        x: Expression
+        y: Expression
+        z: Expression
+    }
+    scale: {
+        x: Expression
+        y: Expression
+        z: Expression
+    }
+}
 
 export type GLBModelProperties = {
     type: 'model.glb'

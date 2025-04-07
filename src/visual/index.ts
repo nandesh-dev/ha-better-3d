@@ -1,6 +1,7 @@
 import { Config } from '@/configuration/v1'
 import { GlobalResourceManager } from '@/global'
 
+import { HomeAssistant } from '@/utility/home_assistant/types'
 import { LogLevel, Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
@@ -18,6 +19,7 @@ export type Size = {
 export class Visual {
     private size: Size
     private config: Config
+    private homeAssistant: HomeAssistant
 
     private renderer: Renderer
     private scenes: { [name: string]: Scene } = {}
@@ -32,9 +34,10 @@ export class Visual {
     public domElement: HTMLDivElement
 
     private renderCyclesLeftForPropertiesUpdate: number = 1
-    constructor(size: Size, config: Config) {
+    constructor(size: Size, config: Config, homeAssistant: HomeAssistant) {
         this.size = size
         this.config = config
+        this.homeAssistant = homeAssistant
 
         this.resourceManager = GlobalResourceManager
         this.logger = new Logger(LogLevel.Error)
@@ -49,6 +52,10 @@ export class Visual {
         this.config = config
         this.paused = false
         this.updateProperties()
+    }
+
+    public updateHomeAssistant(homeAssistant: HomeAssistant) {
+        this.homeAssistant = homeAssistant
     }
 
     public updateSize(size: Size) {
@@ -102,7 +109,7 @@ export class Visual {
                 this.scenes[sceneName] = scene
             }
 
-            scene.updateProperties(sceneProperties)
+            scene.updateProperties(sceneProperties, this.homeAssistant)
             scene.updateSize(this.size)
         }
 

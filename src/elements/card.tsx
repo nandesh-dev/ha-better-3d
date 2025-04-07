@@ -6,8 +6,8 @@ import { ComponentProps, registerElement } from '@/utility/home_assistant/regist
 
 import { CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME } from './card_editor'
 
-function Card({ config }: ComponentProps<Config>) {
-    if (!config) return
+function Card({ config, homeAssistant }: ComponentProps<Config>) {
+    if (!config || !homeAssistant) return
 
     const ref = useRef<HTMLDivElement>(null)
     const [visual, setVisual] = useState<Visual>()
@@ -15,7 +15,11 @@ function Card({ config }: ComponentProps<Config>) {
     useEffect(() => {
         if (!ref.current) return
 
-        const visual = new Visual({ height: ref.current.clientHeight, width: ref.current.clientWidth }, config)
+        const visual = new Visual(
+            { height: ref.current.clientHeight, width: ref.current.clientWidth },
+            config,
+            homeAssistant
+        )
         ref.current.append(visual.domElement)
         setVisual(visual)
 
@@ -40,6 +44,12 @@ function Card({ config }: ComponentProps<Config>) {
 
         visual.updateConfig(config)
     }, [config])
+
+    useEffect(() => {
+        if (!visual) return
+
+        visual.updateHomeAssistant(homeAssistant)
+    }, [homeAssistant])
 
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }
