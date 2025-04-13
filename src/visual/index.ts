@@ -1,11 +1,11 @@
-import { Config } from '@/configuration/v1'
+import { Configuration } from '@/configuration'
 import { GlobalResourceManager } from '@/global'
 
+import { evaluate } from '@/utility/evaluate'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { LogLevel, Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
-import { evaluate } from './evaluate'
 import { Renderer } from './renderer'
 import { Scene } from './scene'
 
@@ -18,7 +18,7 @@ export type Size = {
 
 export class Visual {
     private size: Size
-    private config: Config
+    private configuration: Configuration
     private homeAssistant: HomeAssistant
 
     private renderer: Renderer
@@ -34,9 +34,9 @@ export class Visual {
     public domElement: HTMLDivElement
 
     private renderCyclesLeftForPropertiesUpdate: number = 1
-    constructor(size: Size, config: Config, homeAssistant: HomeAssistant) {
+    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
         this.size = size
-        this.config = config
+        this.configuration = configuration
         this.homeAssistant = homeAssistant
 
         this.resourceManager = GlobalResourceManager
@@ -48,8 +48,9 @@ export class Visual {
         this.animate()
     }
 
-    public updateConfig(config: Config) {
-        this.config = config
+    public updateConfig(config: Configuration) {
+        console.log(config)
+        this.configuration = config
         this.paused = false
         this.updateProperties()
     }
@@ -73,26 +74,9 @@ export class Visual {
     }
 
     private updateProperties() {
-        switch (this.config.log_level) {
-            case 'none':
-                this.logger.setLevel(LogLevel.None)
-                break
-            case 'error':
-                this.logger.setLevel(LogLevel.Error)
-                break
-            case 'info':
-                this.logger.setLevel(LogLevel.Info)
-                break
-            case 'debug':
-                this.logger.setLevel(LogLevel.Debug)
-                break
-            default:
-                this.logger.error(`invalid log level '${this.config.log_level}'`)
-        }
-
         for (const sceneName in this.scenes) {
             const scene = this.scenes[sceneName]
-            const sceneProperties = this.config.scenes[sceneName]
+            const sceneProperties = this.configuration.scenes[sceneName]
 
             if (!sceneProperties) {
                 scene.dispose()
@@ -100,8 +84,8 @@ export class Visual {
             }
         }
 
-        for (const sceneName in this.config.scenes) {
-            const sceneProperties = this.config.scenes[sceneName]
+        for (const sceneName in this.configuration.scenes) {
+            const sceneProperties = this.configuration.scenes[sceneName]
             let scene = this.scenes[sceneName]
 
             if (!scene) {
@@ -113,7 +97,7 @@ export class Visual {
             scene.updateSize(this.size)
         }
 
-        const [activeSceneName, error] = evaluate<string>(this.config.active_scene)
+        const [activeSceneName, error] = evaluate<string>(this.configuration.activeScene.value)
         if (error) this.logger.error(`cannot evaluate active scene name due to error: ${error}`)
         else {
             this.activeScene = this.scenes[activeSceneName]
@@ -129,7 +113,7 @@ export class Visual {
         this.renderCyclesLeftForPropertiesUpdate =
             (this.renderCyclesLeftForPropertiesUpdate - 1) % RENDER_TO_PROPERTIES_UPDATE_RATIO
 
-        if (this.paused || !this.config) return
+        if (this.paused || !this.configuration) return
         if (!this.activeScene || !this.activeScene.activeCamera) return
 
         this.renderer.render(this.activeScene.three, this.activeScene.activeCamera.three)

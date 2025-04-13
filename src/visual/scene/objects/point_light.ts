@@ -1,9 +1,11 @@
-import { Expression, PointLightProperties } from '@/configuration/v1'
 import { Color, PointLight as ThreePointLight } from 'three'
 
 import { dispose } from '@/visual/dispose'
-import { evaluate } from '@/visual/evaluate'
 
+import { ExpressionConfiguration } from '@/configuration/common'
+import { PointLightConfiguration } from '@/configuration/objects'
+
+import { evaluate } from '@/utility/evaluate'
 import { Logger } from '@/utility/logger'
 
 export class PointLight {
@@ -13,48 +15,48 @@ export class PointLight {
 
     private logger: Logger
 
-    constructor(uuid: string, logger: Logger) {
-        this.name = uuid
+    constructor(name: string, logger: Logger) {
+        this.name = name
         this.three = new ThreePointLight()
 
         this.logger = logger
         this.logger.debug(`new point light '${this.name}'`)
     }
 
-    public updateProperties(properties: PointLightProperties) {
-        this.updatePosition(properties.position)
-        this.updateColor(properties.color)
-        this.updateIntensity(properties.intensity)
+    public updateConfig(configuration: PointLightConfiguration) {
+        this.updatePosition(configuration.position)
+        this.updateColor(configuration.color)
+        this.updateIntensity(configuration.intensity)
     }
 
     public dispose() {
         dispose(this.three)
     }
 
-    private updateIntensity(expression: Expression) {
-        const [intensity, error] = evaluate<number>(expression)
+    private updateIntensity(configuration: ExpressionConfiguration) {
+        const [intensity, error] = evaluate<number>(configuration.value)
         if (error) return this.logger.error(`cannot evaluate point light intensity due to error: ${error}`)
         this.three.intensity = intensity
     }
 
-    private updateColor(expression: Expression) {
-        const [color, error] = evaluate<Color>(expression)
+    private updateColor(configuration: ExpressionConfiguration) {
+        const [color, error] = evaluate<Color>(configuration.value)
         if (error) return this.logger.error(`cannot evaluate point light color due to error: ${error}`)
         this.three.color = color
     }
 
-    private updatePosition(property: PointLightProperties['position']) {
-        const [x, xError] = evaluate<number>(property.x)
+    private updatePosition(configuration: PointLightConfiguration['position']) {
+        const [x, xError] = evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate point light x position due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.x)
+        const [y, yError] = evaluate<number>(configuration.x.value)
         if (yError) {
             return this.logger.error(`cannot evaluate point light y position due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.x)
+        const [z, zError] = evaluate<number>(configuration.x.value)
         if (zError) {
             return this.logger.error(`cannot evaluate point light z position due to error: ${zError}`)
         }

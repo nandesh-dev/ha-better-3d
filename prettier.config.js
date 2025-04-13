@@ -14,7 +14,7 @@ const config = {
         '^@/elements/(.*)$',
         '^@/components/(.*)$',
         '^@/visual/(.*)$',
-        '^@/config/(.*)$',
+        '^@/configuration/(.*)$',
         '^@/utility/(.*)$',
         '^[./]',
     ],

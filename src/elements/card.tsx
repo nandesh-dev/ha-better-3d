@@ -1,4 +1,4 @@
-import { Config } from '@/configuration/v1'
+import { Configuration } from '@/configuration'
 import { Visual } from '@/visual'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
@@ -6,7 +6,7 @@ import { ComponentProps, registerElement } from '@/utility/home_assistant/regist
 
 import { CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME } from './card_editor'
 
-function Card({ config, homeAssistant }: ComponentProps<Config>) {
+function Card({ config, homeAssistant }: ComponentProps) {
     if (!config || !homeAssistant) return
 
     const ref = useRef<HTMLDivElement>(null)
@@ -17,7 +17,7 @@ function Card({ config, homeAssistant }: ComponentProps<Config>) {
 
         const visual = new Visual(
             { height: ref.current.clientHeight, width: ref.current.clientWidth },
-            config,
+            new Configuration(config),
             homeAssistant
         )
         ref.current.append(visual.domElement)
@@ -42,14 +42,14 @@ function Card({ config, homeAssistant }: ComponentProps<Config>) {
     useEffect(() => {
         if (!visual) return
 
-        visual.updateConfig(config)
-    }, [config])
+        visual.updateConfig(new Configuration(config))
+    }, [config, visual])
 
     useEffect(() => {
         if (!visual) return
 
         visual.updateHomeAssistant(homeAssistant)
-    }, [homeAssistant])
+    }, [homeAssistant, visual])
 
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }

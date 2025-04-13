@@ -1,10 +1,11 @@
-import { GLBModelProperties } from '@/configuration/v1'
 import { Euler, Group } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
-import { evaluate } from '@/visual/evaluate'
 
+import { GLBModelConfiguration } from '@/configuration/objects'
+
+import { evaluate } from '@/utility/evaluate'
 import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
@@ -18,14 +19,14 @@ export class GLBModel {
     private disposed: boolean = false
     private resourceManager: ResourceManager
     private logger: Logger
-    constructor(name: string, properties: GLBModelProperties, resourceManager: ResourceManager, logger: Logger) {
+    constructor(name: string, configuration: GLBModelConfiguration, resourceManager: ResourceManager, logger: Logger) {
         this.three = new Group()
         this.name = name
 
         this.resourceManager = resourceManager
         this.logger = logger
 
-        const [url, error] = evaluate<string>(properties.url)
+        const [url, error] = evaluate<string>(configuration.url.value)
         if (error) {
             logger.error(`cannot evaluate new glb model '${this.name}' url due to error: ${error}`)
             return
@@ -37,11 +38,11 @@ export class GLBModel {
         this.logger.debug(`new glb model '${this.name}'`)
     }
 
-    public updateProperties(properties: GLBModelProperties) {
-        this.updateUrl(properties)
-        this.updatePosition(properties.position)
-        this.updateRotation(properties.rotation)
-        this.updateScale(properties.scale)
+    public updateConfig(configuration: GLBModelConfiguration) {
+        this.updateUrl(configuration.url)
+        this.updatePosition(configuration.position)
+        this.updateRotation(configuration.rotation)
+        this.updateScale(configuration.scale)
     }
 
     public dispose() {
@@ -49,8 +50,8 @@ export class GLBModel {
         if (this.three) dispose(this.three)
     }
 
-    private updateUrl(properties: GLBModelProperties) {
-        const [url, error] = evaluate<string>(properties.url)
+    private updateUrl(configuration: GLBModelConfiguration['url']) {
+        const [url, error] = evaluate<string>(configuration.value)
         if (error) return this.logger.error(`cannot evaluate glb model '${this.name}' url due to error: ${error}`)
 
         if (this.url !== url) {
@@ -60,18 +61,18 @@ export class GLBModel {
         }
     }
 
-    private updatePosition(property: GLBModelProperties['position']) {
-        const [x, xError] = evaluate<number>(property.x)
+    private updatePosition(configuration: GLBModelConfiguration['position']) {
+        const [x, xError] = evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x position due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.y)
+        const [y, yError] = evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y position due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.z)
+        const [z, zError] = evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z position due to error: ${zError}`)
         }
@@ -79,18 +80,18 @@ export class GLBModel {
         this.three.position.set(x, y, z)
     }
 
-    private updateRotation(property: GLBModelProperties['rotation']) {
-        const [x, xError] = evaluate<number>(property.x)
+    private updateRotation(configuration: GLBModelConfiguration['rotation']) {
+        const [x, xError] = evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x rotation due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.y)
+        const [y, yError] = evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y rotation due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.z)
+        const [z, zError] = evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z rotation due to error: ${zError}`)
         }
@@ -98,18 +99,18 @@ export class GLBModel {
         this.three.setRotationFromEuler(new Euler(x, y, z))
     }
 
-    private updateScale(property: GLBModelProperties['scale']) {
-        const [x, xError] = evaluate<number>(property.x)
+    private updateScale(configuration: GLBModelConfiguration['scale']) {
+        const [x, xError] = evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' x scale due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(property.y)
+        const [y, yError] = evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' y scale due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(property.z)
+        const [z, zError] = evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate glb model '${this.name}' z scale due to error: ${zError}`)
         }

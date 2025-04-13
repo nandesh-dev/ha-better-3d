@@ -1,13 +1,16 @@
-import { SceneProperties } from '@/configuration/v1'
+import { SceneConfiguration } from '@/configuration'
 import { Scene as ThreeScene } from 'three'
 
 import { dispose } from '@/visual/dispose'
 
+import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
+import { CardConfiguration, GLBModelConfiguration, PointLightConfiguration } from '@/configuration/objects'
+
+import { evaluate } from '@/utility/evaluate'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
-import { evaluate } from '../evaluate'
 import { Renderer } from '../renderer'
 import { PerspectiveOrbitalCamera } from './cameras/perspective_orbital'
 import { Card } from './objects/card'
@@ -43,7 +46,7 @@ export class Scene {
         logger.debug(`new scene ${this.name}`)
     }
 
-    public updateProperties(properties: SceneProperties, homeAssistant: HomeAssistant) {
+    public updateProperties(properties: SceneConfiguration, homeAssistant: HomeAssistant) {
         this.removeUnnecessaryObjects(properties)
         this.updateObjects(properties, homeAssistant)
         this.updateActiveCamera(properties)
@@ -58,11 +61,15 @@ export class Scene {
         dispose(this.three)
     }
 
-    private removeUnnecessaryObjects(properties: SceneProperties) {
+    private removeUnnecessaryObjects(configuration: SceneConfiguration) {
         for (const objectName in this.objects) {
             const object = this.objects[objectName]
-            const objectProperties = properties.objects[objectName]
-            const inUse = objectProperties && objectProperties.type == object.type
+            const objectProperties = configuration.objects[objectName]
+            const inUse =
+                objectProperties &&
+                ((objectProperties instanceof CardConfiguration && object instanceof Card) ||
+                    (objectProperties instanceof GLBModelConfiguration && object instanceof GLBModel) ||
+                    (objectProperties instanceof PointLightConfiguration && object instanceof PointLight))
 
             if (!inUse) {
                 if (object.three) this.three.remove(object.three)
@@ -72,67 +79,61 @@ export class Scene {
         }
     }
 
-    private updateObjects(properties: SceneProperties, homeAssistant: HomeAssistant) {
-        for (const objectName in properties.objects) {
-            const objectProperties = properties.objects[objectName]
+    private updateObjects(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
+        for (const objectName in configuration.objects) {
+            const objectProperties = configuration.objects[objectName]
             let object = this.objects[objectName]
 
             if (!object) {
-                switch (objectProperties.type) {
-                    case 'model.glb':
-                        object = new GLBModel(objectName, objectProperties, this.resourceManager, this.logger)
-                        break
-                    case 'light.point':
-                        object = new PointLight(objectName, this.logger)
-                        break
-                    case 'card':
-                        object = new Card(objectName, objectProperties, this.logger)
-                        break
-                    default:
-                        this.logger.error(
-                            `invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`
-                        )
+                if (objectProperties instanceof CardConfiguration) {
+                    object = new Card(objectName, objectProperties, this.logger)
+                } else if (objectProperties instanceof GLBModelConfiguration) {
+                    object = new GLBModel(objectName, objectProperties, this.resourceManager, this.logger)
+                } else if (objectProperties instanceof PointLightConfiguration) {
+                    object = new PointLight(objectName, this.logger)
+                } else {
+                    this.logger.error(`invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`)
+                    return
                 }
 
                 this.objects[objectName] = object
                 this.three.add(object.three)
             }
 
-            object.updateProperties(objectProperties as any, homeAssistant)
+            object.updateConfig(objectProperties as any, homeAssistant)
         }
     }
 
-    private updateActiveCamera(properties: SceneProperties) {
-        const [activeCameraName, error] = evaluate<string>(properties.active_camera)
+    private updateActiveCamera(configuration: SceneConfiguration) {
+        const [activeCameraName, error] = evaluate<string>(configuration.activeCamera.value)
         if (error) {
             this.logger.error(`cannot evaluate active camera name for scene '${this.name}' due to error: ${error}`)
             return
         }
 
-        const activeCameraProperties = properties.cameras[activeCameraName]
-        if (activeCameraProperties) {
+        const activeCameraConfiguration = configuration.cameras[activeCameraName]
+        if (activeCameraConfiguration) {
             if (
                 !this.activeCamera ||
                 this.activeCamera.name !== activeCameraName ||
-                this.activeCamera.type !== activeCameraProperties.type
+                (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration &&
+                    !!(this.activeCamera instanceof PerspectiveOrbitalCamera))
             ) {
-                switch (activeCameraProperties.type) {
-                    case 'orbital.perspective':
-                        this.activeCamera?.dispose()
-                        this.activeCamera = new PerspectiveOrbitalCamera(
-                            activeCameraName,
-                            this.renderer.domElement,
-                            this.logger
-                        )
-                        break
-                    default:
-                        this.logger.error(
-                            `invalid camera type '${activeCameraProperties.type}' in scene '${this.name}', using the old active camera if present`
-                        )
+                if (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration) {
+                    this.activeCamera?.dispose()
+                    this.activeCamera = new PerspectiveOrbitalCamera(
+                        activeCameraName,
+                        this.renderer.domElement,
+                        this.logger
+                    )
+                } else {
+                    this.logger.error(
+                        `invalid camera type '${activeCameraConfiguration}' in scene '${this.name}', using the old active camera if present`
+                    )
                 }
             }
 
-            this.activeCamera?.updateProperties(activeCameraProperties)
+            this.activeCamera?.updateProperties(activeCameraConfiguration)
         } else {
             this.activeCamera?.dispose()
             this.activeCamera = null

@@ -2,13 +2,13 @@ import { ComponentType, h, render } from 'preact'
 
 import { HomeAssistant } from './types'
 
-export type ComponentProps<ConfigType> = {
-    config: ConfigType | null
-    setConfig: (config: ConfigType) => void
+export type ComponentProps = {
+    config: unknown | null
+    setConfig: (config: unknown) => void
     homeAssistant: HomeAssistant | null
 }
 
-export type Component<ConfigType> = ComponentType<ComponentProps<ConfigType>>
+export type Component = ComponentType<ComponentProps>
 
 export type PropertyKey = Exclude<
     string,
@@ -17,10 +17,10 @@ export type PropertyKey = Exclude<
 
 export type PropertyMap = Record<PropertyKey, any>
 
-export function registerElement<ConfigType>(name: string, component: Component<ConfigType>, propertyMap: PropertyMap) {
+export function registerElement(name: string, component: Component, propertyMap: PropertyMap) {
     class CustomElement extends HTMLElement {
         private homeAssistant: HomeAssistant | null = null
-        private config: ConfigType | null = null
+        private config: unknown | null = null
 
         constructor() {
             super()
@@ -31,7 +31,7 @@ export function registerElement<ConfigType>(name: string, component: Component<C
             this.update()
         }
 
-        public setConfig(config: ConfigType) {
+        public setConfig(config: unknown) {
             this.config = config
             this.update()
         }
@@ -44,8 +44,8 @@ export function registerElement<ConfigType>(name: string, component: Component<C
             render(null, this)
         }
 
-        private updateConfig(config: ConfigType) {
-            const event = new CustomEvent<{ config: ConfigType }>('config-changed', {
+        private updateConfig(config: unknown) {
+            const event = new CustomEvent<{ config: unknown }>('config-changed', {
                 detail: { config },
                 bubbles: true,
                 composed: true,
