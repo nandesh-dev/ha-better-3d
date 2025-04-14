@@ -1,15 +1,13 @@
 import { Configuration } from '@/configuration'
 import { GlobalResourceManager } from '@/global'
 
-import { evaluate } from '@/utility/evaluate'
+import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { LogLevel, Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from './renderer'
 import { Scene } from './scene'
-
-const RENDER_TO_PROPERTIES_UPDATE_RATIO = 5
 
 export type Size = {
     height: number
@@ -27,20 +25,20 @@ export class Visual {
 
     private resourceManager: ResourceManager
     private logger: Logger
+    private evaluator: Evaluator
 
     private disposed: boolean = false
     private paused: boolean = false
 
     public domElement: HTMLDivElement
-
-    private renderCyclesLeftForPropertiesUpdate: number = 1
     constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
         this.size = size
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
         this.resourceManager = GlobalResourceManager
-        this.logger = new Logger(LogLevel.Error)
+        this.logger = new Logger(LogLevel.Debug)
+        this.evaluator = new Evaluator({ Entities: homeAssistant.entities })
 
         this.renderer = new Renderer()
         this.domElement = this.renderer.domElement
@@ -49,7 +47,6 @@ export class Visual {
     }
 
     public updateConfig(config: Configuration) {
-        console.log(config)
         this.configuration = config
         this.paused = false
         this.updateProperties()
@@ -57,6 +54,8 @@ export class Visual {
 
     public updateHomeAssistant(homeAssistant: HomeAssistant) {
         this.homeAssistant = homeAssistant
+        this.evaluator.setContextValue('Entities', homeAssistant.entities)
+        this.updateProperties()
     }
 
     public updateSize(size: Size) {
@@ -85,22 +84,40 @@ export class Visual {
         }
 
         for (const sceneName in this.configuration.scenes) {
-            const sceneProperties = this.configuration.scenes[sceneName]
             let scene = this.scenes[sceneName]
 
             if (!scene) {
-                scene = new Scene(sceneName, this.renderer, this.resourceManager, this.logger)
+                scene = new Scene(sceneName, this.renderer, this.resourceManager, this.logger, this.evaluator)
                 this.scenes[sceneName] = scene
             }
-
-            scene.updateProperties(sceneProperties, this.homeAssistant)
-            scene.updateSize(this.size)
         }
 
-        const [activeSceneName, error] = evaluate<string>(this.configuration.activeScene.value)
+        const [activeSceneName, error] = this.evaluator.evaluate<string>(this.configuration.activeScene.value)
         if (error) this.logger.error(`cannot evaluate active scene name due to error: ${error}`)
         else {
             this.activeScene = this.scenes[activeSceneName]
+            const sceneConfiguration = this.configuration.scenes[activeSceneName]
+
+            this.activeScene.updateActiveCamera(sceneConfiguration)
+
+            if (this.activeScene.activeCamera) {
+                const camera = this.activeScene.activeCamera.three
+                this.evaluator.setContextValue('Camera', {
+                    position: {
+                        x: camera.position.x,
+                        y: camera.position.y,
+                        z: camera.position.z,
+                    },
+                    rotation: {
+                        x: camera.rotation.x,
+                        y: camera.rotation.y,
+                        z: camera.rotation.z,
+                    },
+                })
+            }
+
+            this.activeScene.updateObjectsProperty(sceneConfiguration, this.homeAssistant)
+            this.activeScene.updateSize(this.size)
         }
         this.renderer.setSize(this.size.height, this.size.width)
     }
@@ -109,9 +126,7 @@ export class Visual {
         if (this.disposed) return
         requestAnimationFrame(() => this.animate())
 
-        if (this.renderCyclesLeftForPropertiesUpdate == 0) this.updateProperties()
-        this.renderCyclesLeftForPropertiesUpdate =
-            (this.renderCyclesLeftForPropertiesUpdate - 1) % RENDER_TO_PROPERTIES_UPDATE_RATIO
+        this.updateProperties()
 
         if (this.paused || !this.configuration) return
         if (!this.activeScene || !this.activeScene.activeCamera) return

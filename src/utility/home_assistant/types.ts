@@ -1,1 +1,3 @@
-export type HomeAssistant = {}
+export type HomeAssistant = {
+    entities: unknown
+}

@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
 
-import { evaluate } from '@/utility/evaluate'
+import { Evaluator } from '@/utility/evaluater'
 import { Logger } from '@/utility/logger'
 
 type Size = {
@@ -19,19 +19,21 @@ export class PerspectiveOrbitalCamera {
     private hadFirstUpdate: boolean = false
     private control: OrbitControls
     private logger: Logger
-    constructor(name: string, domElement: HTMLElement, logger: Logger) {
+    private evaluator: Evaluator
+    constructor(name: string, domElement: HTMLElement, logger: Logger, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreePerspectiveCamera()
 
         this.control = new OrbitControls(this.three, domElement)
         this.logger = logger
+        this.evaluator = evaluator
 
         this.logger.debug(`new orbital perspective camera '${this.name}'`)
     }
 
     public updateProperties(properties: PerspectiveOrbitalCameraConfiguration) {
         let projectionPropertiesChanged = false
-        const [fov, fovError] = evaluate<number>(properties.fov.value)
+        const [fov, fovError] = this.evaluator.evaluate<number>(properties.fov.value)
         if (fovError)
             this.logger.error(`cannot evaluate orbital perspective camera '${this.name}' fov due to error: ${fovError}`)
         else if (this.three.fov !== fov) {
@@ -39,7 +41,7 @@ export class PerspectiveOrbitalCamera {
             this.three.fov = fov
         }
 
-        const [near, nearError] = evaluate<number>(properties.near.value)
+        const [near, nearError] = this.evaluator.evaluate<number>(properties.near.value)
         if (nearError)
             this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' near point due to error: ${nearError}`
@@ -49,7 +51,7 @@ export class PerspectiveOrbitalCamera {
             this.three.near = near
         }
 
-        const [far, farError] = evaluate<number>(properties.far.value)
+        const [far, farError] = this.evaluator.evaluate<number>(properties.far.value)
         if (farError)
             this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' far point due to error: ${farError}`
@@ -71,21 +73,21 @@ export class PerspectiveOrbitalCamera {
     }
 
     private updateLookAt(property: PerspectiveOrbitalCameraConfiguration['lookAt']) {
-        const [x, xError] = evaluate<number>(property.x.value)
+        const [x, xError] = this.evaluator.evaluate<number>(property.x.value)
         if (xError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' x lookAt due to error: ${xError}`
             )
         }
 
-        const [y, yError] = evaluate<number>(property.y.value)
+        const [y, yError] = this.evaluator.evaluate<number>(property.y.value)
         if (yError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' y lookAt due to error: ${yError}`
             )
         }
 
-        const [z, zError] = evaluate<number>(property.z.value)
+        const [z, zError] = this.evaluator.evaluate<number>(property.z.value)
         if (zError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' z lookAt due to error: ${zError}`
@@ -96,21 +98,21 @@ export class PerspectiveOrbitalCamera {
     }
 
     private updatePosition(property: PerspectiveOrbitalCameraConfiguration['position']) {
-        const [x, xError] = evaluate<number>(property.x.value)
+        const [x, xError] = this.evaluator.evaluate<number>(property.x.value)
         if (xError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' x position due to error: ${xError}`
             )
         }
 
-        const [y, yError] = evaluate<number>(property.y.value)
+        const [y, yError] = this.evaluator.evaluate<number>(property.y.value)
         if (yError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' y position due to error: ${yError}`
             )
         }
 
-        const [z, zError] = evaluate<number>(property.z.value)
+        const [z, zError] = this.evaluator.evaluate<number>(property.z.value)
         if (zError) {
             return this.logger.error(
                 `cannot evaluate orbital perspective camera '${this.name}' z position due to error: ${zError}`

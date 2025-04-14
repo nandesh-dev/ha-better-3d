@@ -1,11 +1,11 @@
-import { Euler, Group } from 'three'
+import { Group } from 'three'
 import { CSS3DObject } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
 import { CardConfiguration } from '@/configuration/objects'
 
-import { evaluate } from '@/utility/evaluate'
+import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { Logger } from '@/utility/logger'
 
@@ -22,8 +22,9 @@ export class Card {
     private cardOuterElementCommonEventListener: (e: Event) => void
 
     private logger: Logger
+    private evaluator: Evaluator
 
-    constructor(name: string, configuration: CardConfiguration, logger: Logger) {
+    constructor(name: string, configuration: CardConfiguration, logger: Logger, evaluator: Evaluator) {
         this.name = name
         this.three = new Group()
 
@@ -41,6 +42,7 @@ export class Card {
         this.cardOuterElement.addEventListener('pointermove', this.cardOuterElementCommonEventListener)
 
         this.logger = logger
+        this.evaluator = evaluator
 
         this.cardType = configuration.config.type
         this.loadCard(configuration.config)
@@ -92,12 +94,12 @@ export class Card {
     private updateSize(configuration: CardConfiguration['size']) {
         if (!this.cardOuterElement) return
 
-        const [height, heightError] = evaluate<string>(configuration.height.value)
+        const [height, heightError] = this.evaluator.evaluate<string>(configuration.height.value)
         if (heightError) {
             return this.logger.error(`cannot evaluate card '${this.name}' height due to error: ${heightError}`)
         }
 
-        const [width, widthError] = evaluate<string>(configuration.width.value)
+        const [width, widthError] = this.evaluator.evaluate<string>(configuration.width.value)
         if (widthError) {
             return this.logger.error(`cannot evaluate card '${this.name}' width due to error: ${widthError}`)
         }
@@ -107,17 +109,17 @@ export class Card {
     }
 
     private updatePosition(configuration: CardConfiguration['position']) {
-        const [x, xError] = evaluate<number>(configuration.x.value)
+        const [x, xError] = this.evaluator.evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate card '${this.name}' x position due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(configuration.y.value)
+        const [y, yError] = this.evaluator.evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate card '${this.name}' y position due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(configuration.z.value)
+        const [z, zError] = this.evaluator.evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate card '${this.name}' z position due to error: ${zError}`)
         }
@@ -126,36 +128,36 @@ export class Card {
     }
 
     private updateRotation(configuration: CardConfiguration['rotation']) {
-        const [x, xError] = evaluate<number>(configuration.x.value)
+        const [x, xError] = this.evaluator.evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate card '${this.name}' x rotation due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(configuration.y.value)
+        const [y, yError] = this.evaluator.evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate card '${this.name}' y rotation due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(configuration.z.value)
+        const [z, zError] = this.evaluator.evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate card '${this.name}' z rotation due to error: ${zError}`)
         }
 
-        this.three.setRotationFromEuler(new Euler(x, y, z))
+        this.three.rotation.set(x % (2 * Math.PI), y % (Math.PI * 2), z % (Math.PI * 2))
     }
 
     private updateScale(configuration: CardConfiguration['scale']) {
-        const [x, xError] = evaluate<number>(configuration.x.value)
+        const [x, xError] = this.evaluator.evaluate<number>(configuration.x.value)
         if (xError) {
             return this.logger.error(`cannot evaluate card '${this.name}' x scale due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluate<number>(configuration.y.value)
+        const [y, yError] = this.evaluator.evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate card '${this.name}' y scale due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluate<number>(configuration.z.value)
+        const [z, zError] = this.evaluator.evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate card '${this.name}' z scale due to error: ${zError}`)
         }

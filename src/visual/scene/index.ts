@@ -6,7 +6,7 @@ import { dispose } from '@/visual/dispose'
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
 import { CardConfiguration, GLBModelConfiguration, PointLightConfiguration } from '@/configuration/objects'
 
-import { evaluate } from '@/utility/evaluate'
+import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
@@ -35,21 +35,65 @@ export class Scene {
     private renderer: Renderer
     private resourceManager: ResourceManager
     private logger: Logger
-    constructor(name: string, renderer: Renderer, resourceManager: ResourceManager, logger: Logger) {
+    private evaluator: Evaluator
+    constructor(
+        name: string,
+        renderer: Renderer,
+        resourceManager: ResourceManager,
+        logger: Logger,
+        evaluator: Evaluator
+    ) {
         this.three = new ThreeScene()
         this.name = name
 
         this.renderer = renderer
         this.resourceManager = resourceManager
         this.logger = logger
+        this.evaluator = evaluator
 
         logger.debug(`new scene ${this.name}`)
     }
 
-    public updateProperties(properties: SceneConfiguration, homeAssistant: HomeAssistant) {
-        this.removeUnnecessaryObjects(properties)
-        this.updateObjects(properties, homeAssistant)
-        this.updateActiveCamera(properties)
+    public updateActiveCamera(configuration: SceneConfiguration) {
+        const [activeCameraName, error] = this.evaluator.evaluate<string>(configuration.activeCamera.value)
+        if (error) {
+            this.logger.error(`cannot evaluate active camera name for scene '${this.name}' due to error: ${error}`)
+            return
+        }
+
+        const activeCameraConfiguration = configuration.cameras[activeCameraName]
+        if (activeCameraConfiguration) {
+            if (
+                !this.activeCamera ||
+                this.activeCamera.name !== activeCameraName ||
+                (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration &&
+                    !(this.activeCamera instanceof PerspectiveOrbitalCamera))
+            ) {
+                if (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration) {
+                    this.activeCamera?.dispose()
+                    this.activeCamera = new PerspectiveOrbitalCamera(
+                        activeCameraName,
+                        this.renderer.domElement,
+                        this.logger,
+                        this.evaluator
+                    )
+                } else {
+                    this.logger.error(
+                        `invalid camera type '${activeCameraConfiguration}' in scene '${this.name}', using the old active camera if present`
+                    )
+                }
+            }
+
+            this.activeCamera?.updateProperties(activeCameraConfiguration)
+        } else {
+            this.activeCamera?.dispose()
+            this.activeCamera = null
+        }
+    }
+
+    public updateObjectsProperty(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
+        this.removeUnnecessaryObjects(configuration)
+        this.updateObjects(configuration, homeAssistant)
     }
 
     public updateSize(size: Size) {
@@ -86,11 +130,11 @@ export class Scene {
 
             if (!object) {
                 if (objectProperties instanceof CardConfiguration) {
-                    object = new Card(objectName, objectProperties, this.logger)
+                    object = new Card(objectName, objectProperties, this.logger, this.evaluator)
                 } else if (objectProperties instanceof GLBModelConfiguration) {
-                    object = new GLBModel(objectName, objectProperties, this.resourceManager, this.logger)
+                    object = new GLBModel(objectName, this.resourceManager, this.logger, this.evaluator)
                 } else if (objectProperties instanceof PointLightConfiguration) {
-                    object = new PointLight(objectName, this.logger)
+                    object = new PointLight(objectName, this.logger, this.evaluator)
                 } else {
                     this.logger.error(`invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`)
                     return
@@ -101,42 +145,6 @@ export class Scene {
             }
 
             object.updateConfig(objectProperties as any, homeAssistant)
-        }
-    }
-
-    private updateActiveCamera(configuration: SceneConfiguration) {
-        const [activeCameraName, error] = evaluate<string>(configuration.activeCamera.value)
-        if (error) {
-            this.logger.error(`cannot evaluate active camera name for scene '${this.name}' due to error: ${error}`)
-            return
-        }
-
-        const activeCameraConfiguration = configuration.cameras[activeCameraName]
-        if (activeCameraConfiguration) {
-            if (
-                !this.activeCamera ||
-                this.activeCamera.name !== activeCameraName ||
-                (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration &&
-                    !!(this.activeCamera instanceof PerspectiveOrbitalCamera))
-            ) {
-                if (activeCameraConfiguration instanceof PerspectiveOrbitalCameraConfiguration) {
-                    this.activeCamera?.dispose()
-                    this.activeCamera = new PerspectiveOrbitalCamera(
-                        activeCameraName,
-                        this.renderer.domElement,
-                        this.logger
-                    )
-                } else {
-                    this.logger.error(
-                        `invalid camera type '${activeCameraConfiguration}' in scene '${this.name}', using the old active camera if present`
-                    )
-                }
-            }
-
-            this.activeCamera?.updateProperties(activeCameraConfiguration)
-        } else {
-            this.activeCamera?.dispose()
-            this.activeCamera = null
         }
     }
 }
