@@ -15,10 +15,6 @@ jobs:
                 node-version: [22]
         steps:
             - uses: actions/checkout@v4
-            - name: Package Source Code
-              run: |
-                  mkdir release
-                  zip -r release/better-3d-v${GITHUB_REF#refs/tags/}.zip *
             - name: Install pnpm
               uses: pnpm/action-setup@v4
             - name: Use Node.js ${{ matrix.node-version }}
@@ -35,6 +31,4 @@ jobs:
             - name: Create GitHub Release
               uses: softprops/action-gh-release@v2
               with:
-                  files: |
-                      release/better-3d-v${GITHUB_REF#refs/tags/}.zip
-                      release/better-3d.js
+                  files: release/better-3d.js
