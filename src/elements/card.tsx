@@ -58,8 +58,8 @@ export const CARD_CUSTOM_ELEMENT_TAGNAME = 'better-3d-card'
 
 export function registerCard() {
     registerElement(CARD_CUSTOM_ELEMENT_TAGNAME, Card, {
-        getConfigElement: () => {
+        /*getConfigElement: () => {
             return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
-        },
+        },*/
     })
 }
