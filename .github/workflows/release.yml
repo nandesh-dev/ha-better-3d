@@ -15,7 +15,7 @@ jobs:
             - name: Package Source Code
               run: |
                 mkdir release
-                zip -r release/better-3d-v${GITHUB_REF#refs/tags/}.zip
+                zip -r release/better-3d-v${GITHUB_REF#refs/tags/}.zip *
             - name: Install pnpm
               uses: pnpm/action-setup@v4
               with:
