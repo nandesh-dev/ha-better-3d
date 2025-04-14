@@ -1,0 +1,39 @@
+name: Release
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+
+jobs:
+    build:
+        runs-on: ubuntu-22.04
+        strategy:
+            matrix:
+                node-version: [22]
+        steps:
+            - uses: actions/checkout@v4
+            - name: Package Source Code
+              run: |
+                mkdir release
+                zip -r release/better-3d-v${GITHUB_REF#refs/tags/}.zip
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'pnpm'
+            - name: Install dependencies
+              run: pnpm install
+            - name: Build Better 3D
+              env:
+                  HA_BETTER_3D_BUILD_OUTPUT_FILEPATH: release/better-3d.js
+              run: pnpm run build
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                files: |
+                  release/better-3d-v${GITHUB_REF#refs/tags/}.zip
+                  release/better-3d.js
