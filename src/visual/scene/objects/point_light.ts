@@ -39,6 +39,7 @@ export class PointLight {
             },
         })
 
+        this.updateVisibility(configuration.visible, evaluator)
         this.updatePosition(configuration.position, evaluator)
         this.updateColor(configuration.color, evaluator)
         this.updateIntensity(configuration.intensity, evaluator)
@@ -46,6 +47,12 @@ export class PointLight {
 
     public dispose() {
         dispose(this.three)
+    }
+
+    private updateVisibility(configuration: ExpressionConfiguration, evaluator: Evaluator) {
+        const [visible, error] = evaluator.evaluate<boolean>(configuration.value)
+        if (error) return this.logger.error(`cannot evaluate point light visibility due to error: ${error}`)
+        this.three.visible = visible
     }
 
     private updateIntensity(configuration: ExpressionConfiguration, evaluator: Evaluator) {

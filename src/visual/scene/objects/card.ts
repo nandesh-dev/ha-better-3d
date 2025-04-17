@@ -3,6 +3,7 @@ import { CSS3DObject } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
+import { ExpressionConfiguration } from '@/configuration/common'
 import { CardConfiguration } from '@/configuration/objects'
 
 import { Evaluator } from '@/utility/evaluater'
@@ -52,6 +53,7 @@ export class Card {
 
     public updateConfig(configuration: CardConfiguration, homeAssistant: HomeAssistant) {
         this.updateCardType(configuration.config)
+        this.updateVisibility(configuration.visible)
         this.updateSize(configuration.size)
         this.updatePosition(configuration.position)
         this.updateRotation(configuration.rotation)
@@ -89,6 +91,12 @@ export class Card {
             this.loadCard(configuration)
             return
         }
+    }
+
+    private updateVisibility(configuration: ExpressionConfiguration) {
+        const [visible, error] = this.evaluator.evaluate<boolean>(configuration.value)
+        if (error) return this.logger.error(`cannot evaluate card visibility due to error: ${error}`)
+        this.three.visible = visible
     }
 
     private updateSize(configuration: CardConfiguration['size']) {

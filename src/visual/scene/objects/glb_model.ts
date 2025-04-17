@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
+import { ExpressionConfiguration } from '@/configuration/common'
 import { GLBModelConfiguration } from '@/configuration/objects'
 
 import { Evaluator } from '@/utility/evaluater'
@@ -51,6 +52,7 @@ export class GLBModel {
             },
         })
 
+        this.updateVisibility(configuration.visible, evaluator)
         this.updateUrl(configuration.url, evaluator)
         this.updatePosition(configuration.position, evaluator)
         this.updateRotation(configuration.rotation, evaluator)
@@ -60,6 +62,12 @@ export class GLBModel {
     public dispose() {
         this.disposed = true
         if (this.three) dispose(this.three)
+    }
+
+    private updateVisibility(configuration: ExpressionConfiguration, evaluator: Evaluator) {
+        const [visible, error] = evaluator.evaluate<boolean>(configuration.value)
+        if (error) return this.logger.error(`cannot evaluate glb model visibility due to error: ${error}`)
+        this.three.visible = visible
     }
 
     private updateUrl(configuration: GLBModelConfiguration['url'], evaluator: Evaluator) {

@@ -51,8 +51,6 @@ function Card({ config, homeAssistant }: ComponentProps) {
         visual.updateHomeAssistant(homeAssistant)
     }, [homeAssistant, visual])
 
-    console.log(JSON.stringify(new Configuration(config).encode(), null, 4), config, new Configuration(config))
-
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }
 
@@ -101,6 +99,7 @@ export function registerCard() {
                                     },
                                     intensity: '2000',
                                     color: 'Color.fromHEX("#ffffff")',
+                                    visible: 'true',
                                 },
                                 logo: {
                                     type: 'card',
@@ -127,6 +126,7 @@ export function registerCard() {
                                         y: '1',
                                         z: '1',
                                     },
+                                    visible: 'true',
                                 },
                             },
                         },
