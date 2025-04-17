@@ -1,4 +1,5 @@
 {
     "name": "Better 3D",
-    "filename": "better-3d.js"
+    "filename": "better-3d.js",
+    "icon": "https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png"
 }
