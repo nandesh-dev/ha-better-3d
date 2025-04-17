@@ -1,4 +1,3 @@
-import { Config, SceneProperties } from '@/configuration/v1'
 import { useEffect, useState } from 'preact/hooks'
 
 import { Dropdown, DropdownStyle } from '@/components/dropdown'
@@ -7,14 +6,18 @@ import { Input, InputStyle } from '@/components/input'
 import { SegmentedButtonsStyle } from '@/components/segmented_buttons'
 import { SliderStyle } from '@/components/slider'
 
+import { Config, SceneProperties } from '@/configuration/v1'
+
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
 
 import { SceneEditor } from './scene_editor'
 import style from './style.css?raw'
 
-export const CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME = 'better-3d-card-editor'
+export const CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME = import.meta.env.PROD
+    ? 'better-3d-card-editor'
+    : 'better-3d-card-editor_development'
 
-function CardEditor(props: ComponentProps<Config>) {
+function CardEditor(props: ComponentProps) {
     const [config, setConfig] = useState(JSON.parse(JSON.stringify(props.config)) as Config | null)
     const [selectedScene, setSelectedScene] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)

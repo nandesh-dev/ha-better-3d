@@ -54,12 +54,12 @@ function Card({ config, homeAssistant }: ComponentProps) {
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }
 
-export const CARD_CUSTOM_ELEMENT_TAGNAME = 'better-3d-card'
+export const CARD_CUSTOM_ELEMENT_TAGNAME = import.meta.env.PROD ? 'better-3d-card' : 'better-3d-card_development'
 
 export function registerCard() {
     registerElement(CARD_CUSTOM_ELEMENT_TAGNAME, Card, {
-        /*getConfigElement: () => {
+        getConfigElement: () => {
             return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
-        },*/
+        },
     })
 }
