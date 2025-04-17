@@ -8,7 +8,7 @@ if (!process.env.HA_BETTER_3D_BUILD_OUTPUT_FILEPATH) {
     )
 }
 
-const BUILD_OPTIONS: esbuild.BuildOptions = {
+const DefaultESBuildOptions: esbuild.BuildOptions = {
     entryPoints: ['src/index.ts'],
     bundle: true,
     treeShaking: true,
@@ -25,11 +25,14 @@ const BUILD_OPTIONS: esbuild.BuildOptions = {
 }
 
 async function build() {
-    await esbuild.build(BUILD_OPTIONS)
+    await esbuild.build({ ...DefaultESBuildOptions, define: { 'process.env.PRODUCTION': 'true' } })
 }
 
 async function watch() {
-    const ctx = await esbuild.context(BUILD_OPTIONS)
+    const ctx = await esbuild.context({
+        ...DefaultESBuildOptions,
+        define: { 'process.env.PRODUCTION': 'false' },
+    })
     await ctx.watch()
 }
 

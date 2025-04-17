@@ -17,7 +17,13 @@ export type PropertyKey = Exclude<
 
 export type PropertyMap = Record<PropertyKey, any>
 
-export function registerElement(name: string, component: Component, propertyMap: PropertyMap) {
+export type Metadata = {
+    name: string
+    description: string
+    documentationURL: string
+}
+
+export function registerElement(type: string, component: Component, propertyMap?: PropertyMap, metadata?: Metadata) {
     class CustomElement extends HTMLElement {
         private homeAssistant: HomeAssistant | null = null
         private config: unknown | null = null
@@ -69,5 +75,12 @@ export function registerElement(name: string, component: Component, propertyMap:
         ;(CustomElement as unknown as { [key: PropertyKey]: any })[propertyName] = propertyMap[propertyName]
     }
 
-    customElements.define(name, CustomElement)
+    customElements.define(type, CustomElement)
+    if (metadata) {
+        ;(window as any).customCards = (window as any).customCards || []
+        ;(window as any).customCards.push({
+            ...metadata,
+            type: type,
+        })
+    }
 }

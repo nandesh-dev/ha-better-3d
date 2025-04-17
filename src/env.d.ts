@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 declare module '*.css?raw' {
     const src: string
     export default src

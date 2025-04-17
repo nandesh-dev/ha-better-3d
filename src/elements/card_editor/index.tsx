@@ -13,7 +13,7 @@ import { ComponentProps, registerElement } from '@/utility/home_assistant/regist
 import { SceneEditor } from './scene_editor'
 import style from './style.css?raw'
 
-export const CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME = import.meta.env.PROD
+export const CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION
     ? 'better-3d-card-editor'
     : 'better-3d-card-editor_development'
 
@@ -145,5 +145,5 @@ function CardEditor(props: ComponentProps) {
 }
 
 export function registerCardEditor() {
-    registerElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME, CardEditor, {})
+    registerElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME, CardEditor)
 }

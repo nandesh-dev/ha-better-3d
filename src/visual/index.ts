@@ -98,7 +98,7 @@ export class Visual {
             this.activeScene = this.scenes[activeSceneName]
             const sceneConfiguration = this.configuration.scenes[activeSceneName]
 
-            this.activeScene.updateActiveCamera(sceneConfiguration)
+            this.activeScene?.updateActiveCamera(sceneConfiguration)
 
             if (this.activeScene.activeCamera) {
                 const camera = this.activeScene.activeCamera.three

@@ -54,12 +54,21 @@ function Card({ config, homeAssistant }: ComponentProps) {
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }
 
-export const CARD_CUSTOM_ELEMENT_TAGNAME = import.meta.env.PROD ? 'better-3d-card' : 'better-3d-card_development'
+export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
 
 export function registerCard() {
-    registerElement(CARD_CUSTOM_ELEMENT_TAGNAME, Card, {
-        getConfigElement: () => {
-            return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
+    registerElement(
+        CARD_CUSTOM_ELEMENT_TAGNAME,
+        Card,
+        {
+            getConfigElement: () => {
+                return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
+            },
         },
-    })
+        {
+            name: 'Better 3D',
+            description: 'Fully customizable 3D rendering card',
+            documentationURL: 'https://github.com/nandesh-dev/ha-better-3d',
+        }
+    )
 }
