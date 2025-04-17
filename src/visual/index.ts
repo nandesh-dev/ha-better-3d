@@ -100,7 +100,7 @@ export class Visual {
 
             this.activeScene?.updateActiveCamera(sceneConfiguration)
 
-            if (this.activeScene.activeCamera) {
+            if (this.activeScene?.activeCamera) {
                 const camera = this.activeScene.activeCamera.three
                 this.evaluator.setContextValue('Camera', {
                     position: {
@@ -116,8 +116,8 @@ export class Visual {
                 })
             }
 
-            this.activeScene.updateObjectsProperty(sceneConfiguration, this.homeAssistant)
-            this.activeScene.updateSize(this.size)
+            this.activeScene?.updateObjectsProperty(sceneConfiguration, this.homeAssistant)
+            this.activeScene?.updateSize(this.size)
         }
         this.renderer.setSize(this.size.height, this.size.width)
     }

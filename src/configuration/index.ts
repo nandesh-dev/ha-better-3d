@@ -3,9 +3,13 @@ import { ExpressionConfiguration } from './common'
 import { CardConfiguration, GLBModelConfiguration, ObjectConfiguration, PointLightConfiguration } from './objects'
 
 export class Configuration {
-    activeScene: ExpressionConfiguration
-    scenes: { [name: string]: SceneConfiguration }
+    public type: string
+    public activeScene: ExpressionConfiguration
+    public scenes: { [name: string]: SceneConfiguration }
+
     constructor(raw: any) {
+        this.type = raw.type
+
         this.activeScene = new ExpressionConfiguration(raw?.active_scene, '""')
 
         this.scenes = {}
@@ -16,12 +20,27 @@ export class Configuration {
             }
         }
     }
+
+    public encode() {
+        const encodedScenes: { [name: string]: any } = {}
+
+        for (const name in this.scenes) {
+            encodedScenes[name] = this.scenes[name].encode()
+        }
+
+        return {
+            type: this.type,
+            active_scene: this.activeScene.encode(),
+            scenes: encodedScenes,
+        }
+    }
 }
 
 export class SceneConfiguration {
     public activeCamera: ExpressionConfiguration
     public cameras: { [name: string]: CameraConfiguration }
     public objects: { [name: string]: ObjectConfiguration }
+
     constructor(raw: any) {
         this.activeCamera = new ExpressionConfiguration(raw?.active_camera, '""')
 
@@ -53,6 +72,24 @@ export class SceneConfiguration {
                         break
                 }
             }
+        }
+    }
+
+    public encode() {
+        const encodedCameras: { [name: string]: any } = {}
+        for (const name in this.cameras) {
+            encodedCameras[name] = this.cameras[name].encode()
+        }
+
+        const encodedObjects: { [name: string]: any } = {}
+        for (const name in this.objects) {
+            encodedObjects[name] = this.objects[name].encode()
+        }
+
+        return {
+            active_camera: this.activeCamera.encode(),
+            cameras: encodedCameras,
+            objects: encodedObjects,
         }
     }
 }

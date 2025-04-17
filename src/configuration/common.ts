@@ -1,4 +1,4 @@
-import { Expression } from '@/utility/evaluate'
+import { Expression } from '@/utility/evaluater'
 
 export type Vector3DefaultValue = {
     x: Expression
@@ -15,6 +15,14 @@ export class Vector3Configuration {
         this.x = new ExpressionConfiguration(raw?.x, defaultValue.x)
         this.y = new ExpressionConfiguration(raw?.y, defaultValue.y)
         this.z = new ExpressionConfiguration(raw?.z, defaultValue.z)
+    }
+
+    public encode() {
+        return {
+            x: this.x.encode(),
+            y: this.y.encode(),
+            z: this.z.encode(),
+        }
     }
 }
 
@@ -44,12 +52,22 @@ export class HTMLSizeConfiguration {
         this.height = new ExpressionConfiguration(raw?.height, '"200px"')
         this.width = new ExpressionConfiguration(raw?.width, '"400px"')
     }
+
+    public encode() {
+        return { height: this.height.encode(), width: this.width.encode() }
+    }
 }
 
 export class ExpressionConfiguration {
     public value: Expression
 
     constructor(raw: any, defaultValue: Expression) {
-        this.value = typeof raw == 'string' ? raw : defaultValue
+        this.value = defaultValue
+        if (typeof raw == 'string') this.value = raw
+        if (typeof raw == 'number') this.value = raw.toString()
+    }
+
+    public encode() {
+        return this.value
     }
 }

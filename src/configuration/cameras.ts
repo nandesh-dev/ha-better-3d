@@ -16,4 +16,15 @@ export class PerspectiveOrbitalCameraConfiguration {
         this.position = new CommonPositionConfiguration(raw?.position)
         this.lookAt = new CommonPositionConfiguration(raw?.loot_at)
     }
+
+    public encode() {
+        return {
+            type: 'orbital.perspective',
+            fov: this.fov.encode(),
+            near: this.near.encode(),
+            far: this.far.encode(),
+            position: this.position.encode(),
+            look_at: this.lookAt.encode(),
+        }
+    }
 }

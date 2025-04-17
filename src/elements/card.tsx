@@ -51,6 +51,8 @@ function Card({ config, homeAssistant }: ComponentProps) {
         visual.updateHomeAssistant(homeAssistant)
     }, [homeAssistant, visual])
 
+    console.log(JSON.stringify(new Configuration(config).encode(), null, 4), config, new Configuration(config))
+
     return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
 }
 
@@ -61,8 +63,75 @@ export function registerCard() {
         CARD_CUSTOM_ELEMENT_TAGNAME,
         Card,
         {
-            getConfigElement: () => {
+            /*getConfigElement: () => {
                 return document.createElement(CARD_EDITOR_CUSTOM_ELEMENT_TAGNAME)
+            },*/
+            getStubConfig: () => {
+                return new Configuration({
+                    type: `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`,
+                    active_scene: '"primary_scene"',
+                    scenes: {
+                        primary_scene: {
+                            active_camera: '"primary_camera"',
+                            cameras: {
+                                primary_camera: {
+                                    type: 'orbital.perspective',
+                                    fov: '50',
+                                    near: '0.1',
+                                    far: '10000',
+                                    position: {
+                                        x: '500',
+                                        y: '50',
+                                        z: '-100',
+                                    },
+                                    look_at: {
+                                        x: '0',
+                                        y: '0',
+                                        z: '0',
+                                    },
+                                },
+                            },
+                            objects: {
+                                light: {
+                                    type: 'light.point',
+                                    position: {
+                                        x: '15',
+                                        y: '4',
+                                        z: '10',
+                                    },
+                                    intensity: '2000',
+                                    color: 'Color.fromHEX("#ffffff")',
+                                },
+                                logo: {
+                                    type: 'card',
+                                    config: {
+                                        type: 'picture',
+                                        image: 'https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png',
+                                    },
+                                    size: {
+                                        height: '"auto"',
+                                        width: '"auto"',
+                                    },
+                                    position: {
+                                        x: '0',
+                                        y: '0',
+                                        z: '0',
+                                    },
+                                    rotation: {
+                                        x: '0',
+                                        y: 'Math.PI / 2',
+                                        z: '0',
+                                    },
+                                    scale: {
+                                        x: '1',
+                                        y: '1',
+                                        z: '1',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                }).encode()
             },
         },
         {
