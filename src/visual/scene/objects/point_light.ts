@@ -73,12 +73,12 @@ export class PointLight {
             return this.logger.error(`cannot evaluate point light x position due to error: ${xError}`)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.x.value)
+        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
         if (yError) {
             return this.logger.error(`cannot evaluate point light y position due to error: ${yError}`)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.x.value)
+        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
         if (zError) {
             return this.logger.error(`cannot evaluate point light z position due to error: ${zError}`)
         }
