@@ -31,13 +31,13 @@ export class Visual {
     private paused: boolean = false
 
     public domElement: HTMLDivElement
-    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
+    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant, logger: Logger) {
         this.size = size
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
         this.resourceManager = GlobalResourceManager
-        this.logger = new Logger(LogLevel.Debug)
+        this.logger = logger
         this.evaluator = new Evaluator({ Entities: homeAssistant.entities })
 
         this.renderer = new Renderer()

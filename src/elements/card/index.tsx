@@ -3,14 +3,30 @@ import { Visual } from '@/visual'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
+import { Logger } from '@/utility/logger'
 
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
+
+const LOG_DISAPPEAR_TIME = 5 * 1000
 
 function Card({ config, homeAssistant }: ComponentProps) {
     if (!config || !homeAssistant) return
 
     const ref = useRef<HTMLDivElement>(null)
+    const [styles, setStyles] = useState('')
     const [visual, setVisual] = useState<Visual>()
+    const [logger, _] = useState(() => new Logger())
+    const [logs, setLogs] = useState<string[]>([])
+
+    useEffect(() => {
+        logger.onLog((log) => {
+            setLogs((logs) => [...logs, log])
+
+            setTimeout(() => {
+                setLogs((logs) => logs.slice(1))
+            }, LOG_DISAPPEAR_TIME)
+        })
+    }, [logger])
 
     useEffect(() => {
         if (!ref.current) return
@@ -18,7 +34,8 @@ function Card({ config, homeAssistant }: ComponentProps) {
         const visual = new Visual(
             { height: ref.current.clientHeight, width: ref.current.clientWidth },
             new Configuration(config),
-            homeAssistant
+            homeAssistant,
+            logger
         )
         ref.current.append(visual.domElement)
         setVisual(visual)
@@ -40,9 +57,12 @@ function Card({ config, homeAssistant }: ComponentProps) {
     }, [ref.current])
 
     useEffect(() => {
-        if (!visual) return
+        const configuration = new Configuration(config)
+        logger.setLevel(configuration.logLevel)
+        setStyles(configuration.styles)
 
-        visual.updateConfig(new Configuration(config))
+        if (!visual) return
+        visual.updateConfig(configuration)
     }, [config, visual])
 
     useEffect(() => {
@@ -51,7 +71,19 @@ function Card({ config, homeAssistant }: ComponentProps) {
         visual.updateHomeAssistant(homeAssistant)
     }, [homeAssistant, visual])
 
-    return <div ref={ref} style={{ overflow: 'hidden', width: '100%', aspectRatio: '2/1' }}></div>
+    return (
+        <>
+            <style>{styles}</style>
+            <div class="card">
+                <div class="visual" ref={ref} />
+                <div class="logs">
+                    {logs.map((log) => {
+                        return <p class="logs__log">{log}</p>
+                    })}
+                </div>
+            </div>
+        </>
+    )
 }
 
 export function registerCard() {
@@ -74,6 +106,31 @@ export function registerCard() {
 const DefaultConfiguration = new Configuration({
     type: `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`,
     active_scene: '"primary_scene"',
+    log_level: 'error',
+    styles: `
+      .card {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 2/1;
+      }
+
+      .visual {
+        width: 100%;
+        height: 100%;
+      }
+
+      .logs {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+      }
+
+      .logs__log {
+        text-align: right;
+        padding: 0.5rem 1rem;
+        margin: 0;
+      }
+    `,
     scenes: {
         primary_scene: {
             active_camera: '"primary_camera"',
