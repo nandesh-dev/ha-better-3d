@@ -134,6 +134,7 @@ const DefaultConfiguration = new Configuration({
     scenes: {
         primary_scene: {
             active_camera: '"primary_camera"',
+            background_color: 'Color.fromHEX("#eeeeee")',
             cameras: {
                 primary_camera: {
                     type: 'orbital.perspective',
@@ -169,6 +170,14 @@ const DefaultConfiguration = new Configuration({
                     config: {
                         type: 'picture',
                         image: 'https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png',
+                        card_mod: {
+                            style: `
+                              ha-card {
+                                background: none !important;
+                                box-shadow: none;
+                              }
+                            `,
+                        },
                     },
                     size: {
                         height: '"auto"',

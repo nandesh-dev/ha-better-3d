@@ -1,5 +1,5 @@
 import { SceneConfiguration } from '@/configuration'
-import { Scene as ThreeScene } from 'three'
+import { Color, Scene as ThreeScene } from 'three'
 
 import { dispose } from '@/visual/dispose'
 
@@ -94,6 +94,13 @@ export class Scene {
     public updateObjectsProperty(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
         this.removeUnnecessaryObjects(configuration)
         this.updateObjects(configuration, homeAssistant)
+        this.updateBackgroundColor(configuration.backgroundColor, this.evaluator)
+    }
+
+    public updateBackgroundColor(configuration: SceneConfiguration['backgroundColor'], evaluator: Evaluator) {
+        const [color, error] = evaluator.evaluate<Color>(configuration.value)
+        if (error) return this.logger.error(`cannot evaluate scene background color due to error: ${error}`)
+        this.three.background = color
     }
 
     public updateSize(size: Size) {

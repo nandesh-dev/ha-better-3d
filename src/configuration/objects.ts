@@ -88,7 +88,7 @@ export class PointLightConfiguration {
     constructor(raw: any) {
         this.position = new CommonPositionConfiguration(raw?.position)
         this.intensity = new ExpressionConfiguration(raw?.intensity, '"10"')
-        this.color = new ExpressionConfiguration(raw?.color, 'Color.fromHEX("#FFFFFF")')
+        this.color = new ExpressionConfiguration(raw?.color, 'Color.fromHEX("#ffffff")')
         this.visible = new ExpressionConfiguration(raw?.visible, 'true')
     }
 

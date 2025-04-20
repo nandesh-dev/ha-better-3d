@@ -76,11 +76,14 @@ export class Configuration {
 
 export class SceneConfiguration {
     public activeCamera: ExpressionConfiguration
+    public backgroundColor: ExpressionConfiguration
     public cameras: { [name: string]: CameraConfiguration }
     public objects: { [name: string]: ObjectConfiguration }
 
     constructor(raw: any) {
         this.activeCamera = new ExpressionConfiguration(raw?.active_camera, '""')
+
+        this.backgroundColor = new ExpressionConfiguration(raw?.background_color, 'Color.fromHEX("#eeeeee")')
 
         this.cameras = {}
         if (raw?.cameras !== undefined) {
@@ -126,6 +129,7 @@ export class SceneConfiguration {
 
         return {
             active_camera: this.activeCamera.encode(),
+            background_color: this.backgroundColor.encode(),
             cameras: encodedCameras,
             objects: encodedObjects,
         }
