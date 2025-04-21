@@ -154,7 +154,7 @@ const DefaultConfiguration = new Configuration({
                 },
             },
             objects: {
-                light: {
+                point_light: {
                     type: 'light.point',
                     position: {
                         x: '15',
@@ -162,6 +162,12 @@ const DefaultConfiguration = new Configuration({
                         z: '10',
                     },
                     intensity: '2000',
+                    color: 'Color.fromHEX("#ffffff")',
+                    visible: 'true',
+                },
+                ambient_light: {
+                    type: 'light.ambient',
+                    intensity: '1',
                     color: 'Color.fromHEX("#ffffff")',
                     visible: 'true',
                 },

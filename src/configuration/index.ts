@@ -2,7 +2,13 @@ import { LogLevel } from '@/utility/logger'
 
 import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './cameras'
 import { ExpressionConfiguration } from './common'
-import { CardConfiguration, GLBModelConfiguration, ObjectConfiguration, PointLightConfiguration } from './objects'
+import {
+    AmbientLightConfiguration,
+    CardConfiguration,
+    GLBModelConfiguration,
+    ObjectConfiguration,
+    PointLightConfiguration,
+} from './objects'
 
 export class Configuration {
     public type: string
@@ -110,6 +116,9 @@ export class SceneConfiguration {
                         break
                     case 'light.point':
                         this.objects[name] = new PointLightConfiguration(properties)
+                        break
+                    case 'light.ambient':
+                        this.objects[name] = new AmbientLightConfiguration(properties)
                         break
                 }
             }

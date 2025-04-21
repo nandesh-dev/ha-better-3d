@@ -6,7 +6,11 @@ import {
     HTMLSizeConfiguration,
 } from './common'
 
-export type ObjectConfiguration = CardConfiguration | GLBModelConfiguration | PointLightConfiguration
+export type ObjectConfiguration =
+    | CardConfiguration
+    | GLBModelConfiguration
+    | PointLightConfiguration
+    | AmbientLightConfiguration
 
 export class CardConfigConfiguration {
     type: string
@@ -87,7 +91,7 @@ export class PointLightConfiguration {
 
     constructor(raw: any) {
         this.position = new CommonPositionConfiguration(raw?.position)
-        this.intensity = new ExpressionConfiguration(raw?.intensity, '"10"')
+        this.intensity = new ExpressionConfiguration(raw?.intensity, '"1000"')
         this.color = new ExpressionConfiguration(raw?.color, 'Color.fromHEX("#ffffff")')
         this.visible = new ExpressionConfiguration(raw?.visible, 'true')
     }
@@ -96,6 +100,27 @@ export class PointLightConfiguration {
         return {
             type: 'light.point',
             position: this.position.encode(),
+            intensity: this.intensity.encode(),
+            color: this.color.encode(),
+            visible: this.visible.encode(),
+        }
+    }
+}
+
+export class AmbientLightConfiguration {
+    public intensity: ExpressionConfiguration
+    public color: ExpressionConfiguration
+    public visible: ExpressionConfiguration
+
+    constructor(raw: any) {
+        this.intensity = new ExpressionConfiguration(raw?.intensity, '"10"')
+        this.color = new ExpressionConfiguration(raw?.color, 'Color.fromHEX("#ffffff")')
+        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+    }
+
+    public encode() {
+        return {
+            type: 'light.ambient',
             intensity: this.intensity.encode(),
             color: this.color.encode(),
             visible: this.visible.encode(),

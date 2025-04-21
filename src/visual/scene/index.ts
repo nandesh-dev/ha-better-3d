@@ -4,7 +4,12 @@ import { Color, Scene as ThreeScene } from 'three'
 import { dispose } from '@/visual/dispose'
 
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
-import { CardConfiguration, GLBModelConfiguration, PointLightConfiguration } from '@/configuration/objects'
+import {
+    AmbientLightConfiguration,
+    CardConfiguration,
+    GLBModelConfiguration,
+    PointLightConfiguration,
+} from '@/configuration/objects'
 
 import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
@@ -13,11 +18,12 @@ import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from '../renderer'
 import { PerspectiveOrbitalCamera } from './cameras/perspective_orbital'
+import { AmbientLight } from './objects/ambient_light'
 import { Card } from './objects/card'
 import { GLBModel } from './objects/glb_model'
 import { PointLight } from './objects/point_light'
 
-type Object = Card | GLBModel | PointLight
+type Object = Card | GLBModel | PointLight | AmbientLight
 type Camera = PerspectiveOrbitalCamera
 
 type Size = {
@@ -120,7 +126,8 @@ export class Scene {
                 objectProperties &&
                 ((objectProperties instanceof CardConfiguration && object instanceof Card) ||
                     (objectProperties instanceof GLBModelConfiguration && object instanceof GLBModel) ||
-                    (objectProperties instanceof PointLightConfiguration && object instanceof PointLight))
+                    (objectProperties instanceof PointLightConfiguration && object instanceof PointLight) ||
+                    (objectProperties instanceof AmbientLightConfiguration && object instanceof AmbientLight))
 
             if (!inUse) {
                 if (object.three) this.three.remove(object.three)
@@ -142,6 +149,8 @@ export class Scene {
                     object = new GLBModel(objectName, this.resourceManager, this.logger, this.evaluator)
                 } else if (objectProperties instanceof PointLightConfiguration) {
                     object = new PointLight(objectName, this.logger, this.evaluator)
+                } else if (objectProperties instanceof AmbientLightConfiguration) {
+                    object = new AmbientLight(objectName, this.logger, this.evaluator)
                 } else {
                     this.logger.error(`invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`)
                     return
