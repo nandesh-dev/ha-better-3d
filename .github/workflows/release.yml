@@ -32,3 +32,4 @@ jobs:
               uses: softprops/action-gh-release@v2
               with:
                   files: release/better-3d.js
+                  generate_release_notes: true
