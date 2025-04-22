@@ -1,5 +1,4 @@
 {
-    "type": "module",
     "scripts": {
         "watch": "tsx esbuild.config.ts --watch",
         "build": "tsx esbuild.config.ts",

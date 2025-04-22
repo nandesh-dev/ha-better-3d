@@ -15,6 +15,27 @@ jobs:
               uses: 'hacs/action@main'
               with:
                   category: 'plugin'
+    validate-building:
+        name: Validate Building
+        runs-on: ubuntu-22.04
+        strategy:
+            matrix:
+                node-version: [22]
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'pnpm'
+            - name: Install dependencies
+              run: pnpm install
+            - name: Build Better 3D
+              env:
+                  HA_BETTER_3D_BUILD_OUTPUT_FILEPATH: release/better-3d.js
+              run: pnpm run build
     validate-formatting:
         name: Validate Formatting
         runs-on: 'ubuntu-latest'
