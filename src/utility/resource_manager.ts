@@ -1,12 +1,7 @@
-import { type Cache } from '@/utility/cache'
-
 export class ResourceManager {
-    private cache?: Cache
     private activeRequests: Request[] = []
 
-    constructor(cache?: Cache) {
-        this.cache = cache
-    }
+    constructor() {}
 
     public load(url: string): Promise<ArrayBuffer> {
         return new Promise((resolve, reject) => {
@@ -22,28 +17,15 @@ export class ResourceManager {
             }
 
             request = new Request(url)
-
             this.activeRequests.push(request)
 
-            Promise.race<ArrayBuffer>([
-                new Promise((resolve, _) => {
-                    this.cache
-                        ?.get(url)
-                        .then(resolve)
-                        .catch(() => {}) // TODO Report some kind of warning when cache get fails
-                }),
-                new Promise((resolve, reject) => {
-                    fetch(url)
-                        .then((raw) => raw.arrayBuffer())
-                        .then((data) => {
-                            this.activeRequests = this.activeRequests.filter((request) => request.url !== url)
-                            request.success(data)
-                            resolve(data)
-                        })
-                        .catch(reject)
-                }),
-            ])
-                .then(resolve)
+            fetch(url)
+                .then((raw) => raw.arrayBuffer())
+                .then((data) => {
+                    this.activeRequests = this.activeRequests.filter((request) => request.url !== url)
+                    request.success(data)
+                    resolve(data)
+                })
                 .catch(reject)
         })
     }
