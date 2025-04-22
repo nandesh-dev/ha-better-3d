@@ -5,6 +5,7 @@
 Say goodbye to flat dashboards; It's time to bridge the 3D world with our Home Assistant dashboards.
 
 Introducing Better 3D Card, a fully customizable card that allows you add
+
 - [x] Custom 3D models
 - [x] Any Home Assistant and custom cards
 - [x] Custom lights
