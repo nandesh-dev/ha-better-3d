@@ -32,6 +32,6 @@ jobs:
                   node-version: ${{ matrix.node-version }}
                   cache: 'pnpm'
             - name: Install dependencies
-              run: pnpm clean-install
+              run: pnpm install
             - name: Validate code formatting
               run: pnpm run format:check
