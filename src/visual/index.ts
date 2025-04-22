@@ -2,8 +2,9 @@ import { Configuration } from '@/configuration'
 import { GlobalResourceManager } from '@/global'
 
 import { Evaluator } from '@/utility/evaluater'
+import { encodeStates } from '@/utility/home_assistant/encode_states'
 import { HomeAssistant } from '@/utility/home_assistant/types'
-import { LogLevel, Logger } from '@/utility/logger'
+import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from './renderer'
@@ -38,7 +39,7 @@ export class Visual {
 
         this.resourceManager = GlobalResourceManager
         this.logger = logger
-        this.evaluator = new Evaluator({ Entities: homeAssistant.entities })
+        this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
 
         this.renderer = new Renderer()
         this.domElement = this.renderer.domElement
@@ -54,7 +55,7 @@ export class Visual {
 
     public updateHomeAssistant(homeAssistant: HomeAssistant) {
         this.homeAssistant = homeAssistant
-        this.evaluator.setContextValue('Entities', homeAssistant.entities)
+        this.evaluator.setContextValue('Entities', encodeStates(homeAssistant.states))
         this.updateProperties()
     }
 
