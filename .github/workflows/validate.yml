@@ -8,9 +8,30 @@ on:
 
 jobs:
     validate-hacs:
+        name: Validate HACS
         runs-on: 'ubuntu-latest'
         steps:
             - name: Validation
               uses: 'hacs/action@main'
               with:
                   category: 'plugin'
+    validate-formatting:
+        name: Validate Formatting
+        runs-on: 'ubuntu-latest'
+        strategy:
+            matrix:
+                node-version: [22]
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+            - name: Use Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: 'pnpm'
+            - name: Install dependencies
+              run: pnpm clean-install
+            - name: Validate code formatting
+              run: pnpm run format:check
