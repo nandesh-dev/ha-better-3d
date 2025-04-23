@@ -38,22 +38,24 @@ export class PointLight {
             throw new Error(`Update visible`, error)
         }
 
-        try {
-            this.updatePosition(configuration.position, evaluator)
-        } catch (error) {
-            throw new Error(`Update position`, error)
-        }
+        if (this.three.visible) {
+            try {
+                this.updatePosition(configuration.position, evaluator)
+            } catch (error) {
+                throw new Error(`Update position`, error)
+            }
 
-        try {
-            this.updateColor(configuration.color, evaluator)
-        } catch (error) {
-            throw new Error(`Update color`, error)
-        }
+            try {
+                this.updateColor(configuration.color, evaluator)
+            } catch (error) {
+                throw new Error(`Update color`, error)
+            }
 
-        try {
-            this.updateIntensity(configuration.intensity, evaluator)
-        } catch (error) {
-            throw new Error(`Update intensity`, error)
+            try {
+                this.updateIntensity(configuration.intensity, evaluator)
+            } catch (error) {
+                throw new Error(`Update intensity`, error)
+            }
         }
     }
 

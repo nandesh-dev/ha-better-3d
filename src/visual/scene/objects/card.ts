@@ -70,38 +70,40 @@ export class Card {
         this.updateCardType(configuration.config)
 
         try {
+            this.updateCardProperties(configuration.config, homeAssistant)
+        } catch {}
+
+        try {
             this.updateVisible(configuration.visible, evaluator)
         } catch (error) {
             throw new Error(`Update visible`, error)
         }
 
-        try {
-            this.updateSize(configuration.size, evaluator)
-        } catch (error) {
-            throw new Error('Update size', error)
-        }
+        if (this.three.visible) {
+            try {
+                this.updateSize(configuration.size, evaluator)
+            } catch (error) {
+                throw new Error('Update size', error)
+            }
 
-        try {
-            this.updatePosition(configuration.position, evaluator)
-        } catch (error) {
-            throw new Error('Update position', error)
-        }
+            try {
+                this.updatePosition(configuration.position, evaluator)
+            } catch (error) {
+                throw new Error('Update position', error)
+            }
 
-        try {
-            this.updateRotation(configuration.rotation, evaluator)
-        } catch (error) {
-            throw new Error('Update rotation', error)
-        }
+            try {
+                this.updateRotation(configuration.rotation, evaluator)
+            } catch (error) {
+                throw new Error('Update rotation', error)
+            }
 
-        try {
-            this.updateScale(configuration.scale, evaluator)
-        } catch (error) {
-            throw new Error('Update scale', error)
+            try {
+                this.updateScale(configuration.scale, evaluator)
+            } catch (error) {
+                throw new Error('Update scale', error)
+            }
         }
-
-        try {
-            this.updateCardProperties(configuration.config, homeAssistant)
-        } catch {}
     }
 
     public dispose() {

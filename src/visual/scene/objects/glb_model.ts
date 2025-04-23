@@ -60,22 +60,24 @@ export class GLBModel {
             throw new Error(`Update visible`, error)
         }
 
-        try {
-            this.updatePosition(configuration.position, evaluator)
-        } catch (error) {
-            throw new Error('Update position', error)
-        }
+        if (this.three.visible) {
+            try {
+                this.updatePosition(configuration.position, evaluator)
+            } catch (error) {
+                throw new Error('Update position', error)
+            }
 
-        try {
-            this.updateRotation(configuration.rotation, evaluator)
-        } catch (error) {
-            throw new Error('Update rotation', error)
-        }
+            try {
+                this.updateRotation(configuration.rotation, evaluator)
+            } catch (error) {
+                throw new Error('Update rotation', error)
+            }
 
-        try {
-            this.updateScale(configuration.scale, evaluator)
-        } catch (error) {
-            throw new Error('Update scale', error)
+            try {
+                this.updateScale(configuration.scale, evaluator)
+            } catch (error) {
+                throw new Error('Update scale', error)
+            }
         }
     }
 
