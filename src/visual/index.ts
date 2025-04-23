@@ -1,10 +1,10 @@
 import { Configuration } from '@/configuration'
 import { GlobalResourceManager } from '@/global'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { encodeStates } from '@/utility/home_assistant/encode_states'
 import { HomeAssistant } from '@/utility/home_assistant/types'
-import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from './renderer'
@@ -25,31 +25,38 @@ export class Visual {
     private activeScene: Scene | null = null
 
     private resourceManager: ResourceManager
-    private logger: Logger
     private evaluator: Evaluator
 
     private disposed: boolean = false
     private paused: boolean = false
+    private errorElement: HTMLParagraphElement
 
     public domElement: HTMLDivElement
-    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant, logger: Logger) {
+    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
         this.size = size
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
         this.resourceManager = GlobalResourceManager
-        this.logger = logger
         this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
 
+        this.domElement = document.createElement('div')
+        this.domElement.classList.add('visual')
+
         this.renderer = new Renderer()
-        this.domElement = this.renderer.domElement
+        const rendererContainerElement = document.createElement('div')
+        rendererContainerElement.classList.add('visual__renderer')
+        rendererContainerElement.append(this.renderer.domElement)
+        this.domElement.append(rendererContainerElement)
+
+        this.errorElement = document.createElement('p')
+        this.errorElement.classList.add('visual__error')
 
         this.animate()
     }
 
     public updateConfig(config: Configuration) {
         this.configuration = config
-        this.paused = false
         this.updateProperties()
     }
 
@@ -61,7 +68,6 @@ export class Visual {
 
     public updateSize(size: Size) {
         this.size = size
-        this.paused = false
         this.updateProperties()
     }
 
@@ -74,53 +80,85 @@ export class Visual {
     }
 
     private updateProperties() {
-        for (const sceneName in this.scenes) {
-            const scene = this.scenes[sceneName]
-            const sceneProperties = this.configuration.scenes[sceneName]
+        try {
+            this.renderer.setSize(this.size.height, this.size.width)
 
-            if (!sceneProperties) {
-                scene.dispose()
-                delete this.scenes[sceneName]
+            for (const sceneName in this.scenes) {
+                const scene = this.scenes[sceneName]
+                const sceneProperties = this.configuration.scenes[sceneName]
+
+                if (!sceneProperties) {
+                    scene.dispose()
+                    delete this.scenes[sceneName]
+                }
             }
-        }
 
-        for (const sceneName in this.configuration.scenes) {
-            let scene = this.scenes[sceneName]
-
-            if (!scene) {
-                scene = new Scene(sceneName, this.renderer, this.resourceManager, this.logger, this.evaluator)
-                this.scenes[sceneName] = scene
+            for (const sceneName in this.configuration.scenes) {
+                let scene = this.scenes[sceneName]
+                if (!scene) {
+                    scene = new Scene(sceneName, this.renderer, this.resourceManager, this.evaluator)
+                    this.scenes[sceneName] = scene
+                }
             }
-        }
 
-        const [activeSceneName, error] = this.evaluator.evaluate<string>(this.configuration.activeScene.value)
-        if (error) this.logger.error(`cannot evaluate active scene name due to error: ${error}`)
-        else {
+            let activeSceneName
+            try {
+                activeSceneName = this.evaluator.evaluate<string>(this.configuration.activeScene.value)
+            } catch (error) {
+                throw new Error(`${this.configuration.activeScene.encode()}: Error evaluating active scene`, error)
+            }
             this.activeScene = this.scenes[activeSceneName]
+            if (!this.activeScene) return
+
             const sceneConfiguration = this.configuration.scenes[activeSceneName]
-
-            this.activeScene?.updateActiveCamera(sceneConfiguration)
-
-            if (this.activeScene?.activeCamera) {
-                const camera = this.activeScene.activeCamera.three
-                this.evaluator.setContextValue('Camera', {
-                    position: {
-                        x: camera.position.x,
-                        y: camera.position.y,
-                        z: camera.position.z,
-                    },
-                    rotation: {
-                        x: camera.rotation.x,
-                        y: camera.rotation.y,
-                        z: camera.rotation.z,
-                    },
-                })
+            try {
+                this.activeScene.updateActiveCamera(sceneConfiguration)
+            } catch (error) {
+                throw new Error(`Update active camera`, error)
             }
+            if (!this.activeScene.activeCamera) return
 
-            this.activeScene?.updateObjectsProperty(sceneConfiguration, this.homeAssistant)
-            this.activeScene?.updateSize(this.size)
+            const camera = this.activeScene.activeCamera.three
+            this.evaluator.setContextValue('Camera', {
+                position: {
+                    x: camera.position.x,
+                    y: camera.position.y,
+                    z: camera.position.z,
+                },
+                rotation: {
+                    x: camera.rotation.x,
+                    y: camera.rotation.y,
+                    z: camera.rotation.z,
+                },
+            })
+
+            try {
+                this.activeScene.updateProperties(sceneConfiguration, this.homeAssistant)
+            } catch (error) {
+                throw new Error(`Update scene properties`, error)
+            }
+            this.activeScene.updateSize(this.size)
+
+            if (this.paused) {
+                this.paused = false
+                this.clearError()
+            }
+        } catch (error) {
+            if (!this.paused) {
+                this.paused = true
+                this.setError(error as Error)
+            }
         }
-        this.renderer.setSize(this.size.height, this.size.width)
+    }
+
+    private setError(error: Error) {
+        this.domElement.append(this.errorElement)
+        this.errorElement.innerText = error.toString()
+    }
+
+    private clearError() {
+        if (!this.domElement.contains(this.errorElement)) return
+        this.domElement.removeChild(this.errorElement)
     }
 
     private animate() {

@@ -1,5 +1,7 @@
 import { Color as ThreeColor } from 'three'
 
+import { Error } from './error'
+
 export type Expression = string
 
 const Color = {
@@ -23,18 +25,14 @@ export class Evaluator {
         return new Evaluator({ ...this.context, [key]: value })
     }
 
-    public evaluate<T>(expression: Expression): [T, null] | [null, Error] {
+    public evaluate<T>(expression: Expression): T {
+        const parameters = ['Math', 'Color', ...Object.keys(this.context)]
+        const argumentValues = [Math, Color, ...Object.values(this.context)]
+
         try {
-            return [
-                new Function('Math', 'Color', ...Object.keys(this.context), `return ${expression}`)(
-                    Math,
-                    Color,
-                    ...Object.values(this.context)
-                ),
-                null,
-            ]
+            return new Function(...parameters, `return ${expression}`)(...argumentValues)
         } catch (error) {
-            return [null, error as Error]
+            throw new Error((error as any).toString())
         }
     }
 }

@@ -3,11 +3,8 @@ import { Visual } from '@/visual'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
-import { Logger } from '@/utility/logger'
 
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
-
-const LOG_DISAPPEAR_TIME = 5 * 1000
 
 function Card({ config, homeAssistant }: ComponentProps) {
     if (!config || !homeAssistant) return
@@ -15,18 +12,6 @@ function Card({ config, homeAssistant }: ComponentProps) {
     const ref = useRef<HTMLDivElement>(null)
     const [styles, setStyles] = useState('')
     const [visual, setVisual] = useState<Visual>()
-    const [logger, _] = useState(() => new Logger())
-    const [logs, setLogs] = useState<string[]>([])
-
-    useEffect(() => {
-        logger.onLog((log) => {
-            setLogs((logs) => [...logs, log])
-
-            setTimeout(() => {
-                setLogs((logs) => logs.slice(1))
-            }, LOG_DISAPPEAR_TIME)
-        })
-    }, [logger])
 
     useEffect(() => {
         if (!ref.current) return
@@ -34,8 +19,7 @@ function Card({ config, homeAssistant }: ComponentProps) {
         const visual = new Visual(
             { height: ref.current.clientHeight, width: ref.current.clientWidth },
             new Configuration(config),
-            homeAssistant,
-            logger
+            homeAssistant
         )
         ref.current.append(visual.domElement)
         setVisual(visual)
@@ -58,7 +42,6 @@ function Card({ config, homeAssistant }: ComponentProps) {
 
     useEffect(() => {
         const configuration = new Configuration(config)
-        logger.setLevel(configuration.logLevel)
         setStyles(configuration.styles)
 
         if (!visual) return
@@ -74,14 +57,7 @@ function Card({ config, homeAssistant }: ComponentProps) {
     return (
         <>
             <style>{styles}</style>
-            <div class="card">
-                <div class="visual" ref={ref} />
-                <div class="logs">
-                    {logs.map((log) => {
-                        return <p class="logs__log">{log}</p>
-                    })}
-                </div>
-            </div>
+            <div class="card" ref={ref} />
         </>
     )
 }
@@ -106,31 +82,30 @@ export function registerCard() {
 const DefaultConfiguration = new Configuration({
     type: `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`,
     active_scene: '"primary_scene"',
-    log_level: 'error',
-    styles: `
-      .card {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 2/1;
-      }
+    styles: `.card {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/1;
+}
 
-      .visual {
-        width: 100%;
-        height: 100%;
-      }
+.visual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
-      .logs {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-      }
+.visual__renderer {
+  width: 100%;
+  height: 100%;
+}
 
-      .logs__log {
-        text-align: right;
-        padding: 0.5rem 1rem;
-        margin: 0;
-      }
-    `,
+.visual__error {
+  position: absolute;
+  inset: 0;
+  overflow-y: scroll;
+  white-space: pre;
+  color: var(--primary-text-color);
+}`,
     scenes: {
         primary_scene: {
             active_camera: '"primary_camera"',
@@ -177,12 +152,10 @@ const DefaultConfiguration = new Configuration({
                         type: 'picture',
                         image: 'https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png',
                         card_mod: {
-                            style: `
-                              ha-card {
-                                background: none !important;
-                                box-shadow: none;
-                              }
-                            `,
+                            style: `ha-card {
+  background: none !important;
+  box-shadow: none;
+}`,
                         },
                     },
                     size: {

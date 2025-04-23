@@ -1,5 +1,3 @@
-import { LogLevel } from '@/utility/logger'
-
 import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './cameras'
 import { ExpressionConfiguration } from './common'
 import {
@@ -12,30 +10,12 @@ import {
 
 export class Configuration {
     public type: string
-    public logLevel: LogLevel
     public activeScene: ExpressionConfiguration
     public scenes: { [name: string]: SceneConfiguration }
     public styles: string
 
     constructor(raw: any) {
         this.type = raw.type
-
-        switch (raw?.log_level) {
-            case 'none':
-                this.logLevel = LogLevel.None
-                break
-            case 'error':
-                this.logLevel = LogLevel.Error
-                break
-            case 'info':
-                this.logLevel = LogLevel.Info
-                break
-            case 'debug':
-                this.logLevel = LogLevel.Debug
-                break
-            default:
-                this.logLevel = LogLevel.Error
-        }
 
         this.activeScene = new ExpressionConfiguration(raw?.active_scene, '""')
 
@@ -57,22 +37,8 @@ export class Configuration {
             encodedScenes[name] = this.scenes[name].encode()
         }
 
-        let logLevelString = 'none'
-        switch (this.logLevel) {
-            case LogLevel.Error:
-                logLevelString = 'error'
-                break
-            case LogLevel.Info:
-                logLevelString = 'info'
-                break
-            case LogLevel.Debug:
-                logLevelString = 'debug'
-                break
-        }
-
         return {
             type: this.type,
-            log_level: logLevelString,
             active_scene: this.activeScene.encode(),
             scenes: encodedScenes,
             styles: this.styles,

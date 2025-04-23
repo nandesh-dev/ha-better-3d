@@ -6,9 +6,9 @@ import { dispose } from '@/visual/dispose'
 import { ExpressionConfiguration } from '@/configuration/common'
 import { CardConfiguration } from '@/configuration/objects'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
-import { Logger } from '@/utility/logger'
 
 export class Card {
     public type: string = 'card'
@@ -22,10 +22,9 @@ export class Card {
     private cardOuterElement: HTMLDivElement
     private cardOuterElementCommonEventListener: (e: Event) => void
 
-    private logger: Logger
     private evaluator: Evaluator
 
-    constructor(name: string, configuration: CardConfiguration, logger: Logger, evaluator: Evaluator) {
+    constructor(name: string, configuration: CardConfiguration, evaluator: Evaluator) {
         this.name = name
         this.three = new Group()
 
@@ -42,16 +41,13 @@ export class Card {
         this.cardOuterElement.addEventListener('pointercancel', this.cardOuterElementCommonEventListener)
         this.cardOuterElement.addEventListener('pointermove', this.cardOuterElementCommonEventListener)
 
-        this.logger = logger
         this.evaluator = evaluator
 
         this.cardType = configuration.config.type
         this.loadCard(configuration.config)
-
-        this.logger.debug(`new card '${this.name}'`)
     }
 
-    public updateConfig(configuration: CardConfiguration, homeAssistant: HomeAssistant) {
+    public updateProperties(configuration: CardConfiguration, homeAssistant: HomeAssistant) {
         const evaluator = this.evaluator.withContextValue('Self', {
             position: {
                 x: this.three.position.x,
@@ -68,29 +64,48 @@ export class Card {
                 y: this.three.scale.y,
                 z: this.three.scale.z,
             },
+            visible: this.three.visible,
         })
 
         this.updateCardType(configuration.config)
-        this.updateVisibility(configuration.visible, evaluator)
-        this.updateSize(configuration.size, evaluator)
-        this.updatePosition(configuration.position, evaluator)
-        this.updateRotation(configuration.rotation, evaluator)
-        this.updateScale(configuration.scale, evaluator)
 
-        if (!this.cardConfigSet && typeof (this.card as any)?.setConfig == 'function') {
-            try {
-                this.cardConfigSet = true
-                ;(this.card as any).setConfig(configuration.config)
-            } catch {}
+        try {
+            this.updateVisible(configuration.visible, evaluator)
+        } catch (error) {
+            throw new Error(`Update visible`, error)
         }
 
-        if (this.card) {
-            ;(this.card as any).hass = homeAssistant
+        try {
+            this.updateSize(configuration.size, evaluator)
+        } catch (error) {
+            throw new Error('Update size', error)
         }
+
+        try {
+            this.updatePosition(configuration.position, evaluator)
+        } catch (error) {
+            throw new Error('Update position', error)
+        }
+
+        try {
+            this.updateRotation(configuration.rotation, evaluator)
+        } catch (error) {
+            throw new Error('Update rotation', error)
+        }
+
+        try {
+            this.updateScale(configuration.scale, evaluator)
+        } catch (error) {
+            throw new Error('Update scale', error)
+        }
+
+        try {
+            this.updateCardProperties(configuration.config, homeAssistant)
+        } catch {}
     }
 
     public dispose() {
-        if (this.three) dispose(this.three)
+        dispose(this.three)
         this.cardOuterElement.removeEventListener('keyup', this.cardOuterElementCommonEventListener)
         this.cardOuterElement.removeEventListener('keydown', this.cardOuterElementCommonEventListener)
         this.cardOuterElement.removeEventListener('wheel', this.cardOuterElementCommonEventListener)
@@ -99,6 +114,25 @@ export class Card {
         this.cardOuterElement.removeEventListener('pointerdown', this.cardOuterElementCommonEventListener)
         this.cardOuterElement.removeEventListener('pointercancel', this.cardOuterElementCommonEventListener)
         this.cardOuterElement.removeEventListener('pointermove', this.cardOuterElementCommonEventListener)
+    }
+
+    private updateCardProperties(configuration: CardConfiguration['config'], homeAssistant: HomeAssistant) {
+        if (!this.cardConfigSet && typeof (this.card as any)?.setConfig == 'function') {
+            try {
+                this.cardConfigSet = true
+                ;(this.card as any).setConfig(configuration)
+            } catch (error) {
+                throw new Error(`Set configuration`, error)
+            }
+        }
+
+        if (this.card) {
+            try {
+                ;(this.card as any).hass = homeAssistant
+            } catch (error) {
+                throw new Error(`Update hass`, error)
+            }
+        }
     }
 
     private updateCardType(configuration: CardConfiguration['config']) {
@@ -111,81 +145,100 @@ export class Card {
         }
     }
 
-    private updateVisibility(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        const [visible, error] = evaluator.evaluate<boolean>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate card visibility due to error: ${error}`)
-        this.three.visible = visible
+    private updateVisible(configuration: ExpressionConfiguration, evaluator: Evaluator) {
+        try {
+            const visible = evaluator.evaluate<boolean>(configuration.value)
+            this.three.visible = visible
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
     }
 
     private updateSize(configuration: CardConfiguration['size'], evaluator: Evaluator) {
-        if (!this.cardOuterElement) return
+        let height, width
 
-        const [height, heightError] = evaluator.evaluate<string>(configuration.height.value)
-        if (heightError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' height due to error: ${heightError}`)
+        try {
+            height = evaluator.evaluate<string>(configuration.height.value)
+        } catch (error) {
+            throw new Error(`${configuration.height.encode()}: Error evaluating height expression`, error)
         }
 
-        const [width, widthError] = evaluator.evaluate<string>(configuration.width.value)
-        if (widthError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' width due to error: ${widthError}`)
+        try {
+            width = evaluator.evaluate<string>(configuration.width.value)
+        } catch (error) {
+            throw new Error(`${configuration.width.encode()}: Error evaluating height expression`, error)
         }
 
-        this.cardOuterElement.style.height = height
-        this.cardOuterElement.style.width = width
+        Object.assign(this.cardOuterElement.style, { height, width })
     }
 
     private updatePosition(configuration: CardConfiguration['position'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' x position due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' y position due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' z position due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.position.set(x, y, z)
     }
 
     private updateRotation(configuration: CardConfiguration['rotation'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' x rotation due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' y rotation due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' z rotation due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
-        this.three.rotation.set(x % (2 * Math.PI), y % (Math.PI * 2), z % (Math.PI * 2))
+        this.three.rotation.set(x, y, z)
     }
 
     private updateScale(configuration: CardConfiguration['scale'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' x scale due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' y scale due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate card '${this.name}' z scale due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.scale.set(x, y, z)
@@ -195,7 +248,5 @@ export class Card {
         const cardHelper = await (window as any).loadCardHelpers()
         this.card = cardHelper.createCardElement(configuration.config)
         if (this.card) this.cardOuterElement.append(this.card)
-
-        this.logger.debug(`card '${this.name}' loaded`)
     }
 }
