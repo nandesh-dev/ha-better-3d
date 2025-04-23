@@ -6,8 +6,8 @@ import { dispose } from '@/visual/dispose'
 import { ExpressionConfiguration } from '@/configuration/common'
 import { GLBModelConfiguration } from '@/configuration/objects'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
-import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 export class GLBModel {
@@ -19,20 +19,16 @@ export class GLBModel {
 
     private disposed: boolean = false
     private resourceManager: ResourceManager
-    private logger: Logger
     private evaluator: Evaluator
-    constructor(name: string, resourceManager: ResourceManager, logger: Logger, evaluator: Evaluator) {
+    constructor(name: string, resourceManager: ResourceManager, evaluator: Evaluator) {
         this.three = new Group()
         this.name = name
 
         this.resourceManager = resourceManager
-        this.logger = logger
         this.evaluator = evaluator
-
-        this.logger.debug(`new glb model '${this.name}'`)
     }
 
-    public updateConfig(configuration: GLBModelConfiguration) {
+    public updateProperties(configuration: GLBModelConfiguration) {
         const evaluator = this.evaluator.withContextValue('Self', {
             url: this.url,
             position: {
@@ -52,11 +48,35 @@ export class GLBModel {
             },
         })
 
-        this.updateVisibility(configuration.visible, evaluator)
-        this.updateUrl(configuration.url, evaluator)
-        this.updatePosition(configuration.position, evaluator)
-        this.updateRotation(configuration.rotation, evaluator)
-        this.updateScale(configuration.scale, evaluator)
+        try {
+            this.updateUrl(configuration.url, evaluator)
+        } catch (error) {
+            throw new Error(`Update url`, error)
+        }
+
+        try {
+            this.updateVisible(configuration.visible, evaluator)
+        } catch (error) {
+            throw new Error(`Update visible`, error)
+        }
+
+        try {
+            this.updatePosition(configuration.position, evaluator)
+        } catch (error) {
+            throw new Error('Update position', error)
+        }
+
+        try {
+            this.updateRotation(configuration.rotation, evaluator)
+        } catch (error) {
+            throw new Error('Update rotation', error)
+        }
+
+        try {
+            this.updateScale(configuration.scale, evaluator)
+        } catch (error) {
+            throw new Error('Update scale', error)
+        }
     }
 
     public dispose() {
@@ -64,16 +84,13 @@ export class GLBModel {
         if (this.three) dispose(this.three)
     }
 
-    private updateVisibility(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        const [visible, error] = evaluator.evaluate<boolean>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate glb model visibility due to error: ${error}`)
-        this.three.visible = visible
-    }
-
     private updateUrl(configuration: GLBModelConfiguration['url'], evaluator: Evaluator) {
-        const [url, error] = evaluator.evaluate<string>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate glb model '${this.name}' url due to error: ${error}`)
-
+        let url
+        try {
+            url = evaluator.evaluate<string>(configuration.value)
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
         if (this.url !== url) {
             this.url = url
             this.loadModel(url)
@@ -81,58 +98,83 @@ export class GLBModel {
         }
     }
 
+    private updateVisible(configuration: ExpressionConfiguration, evaluator: Evaluator) {
+        let visible
+        try {
+            visible = evaluator.evaluate<boolean>(configuration.value)
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
+        this.three.visible = visible
+    }
+
     private updatePosition(configuration: GLBModelConfiguration['position'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' x position due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' y position due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' z position due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.position.set(x, y, z)
     }
 
     private updateRotation(configuration: GLBModelConfiguration['rotation'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' x rotation due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' y rotation due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' z rotation due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
-        this.three.rotation.set(x % (2 * Math.PI), y % (Math.PI * 2), z % (Math.PI * 2))
+        this.three.rotation.set(x, y, z)
     }
 
     private updateScale(configuration: GLBModelConfiguration['scale'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' x scale due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' y scale due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate glb model '${this.name}' z scale due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.scale.set(x, y, z)
@@ -148,7 +190,5 @@ export class GLBModel {
         for (const child of this.three.children) dispose(child)
         this.three.children = []
         this.three.add(gltf.scene)
-
-        this.logger.debug(`glb model '${this.name}' loaded`)
     }
 }

@@ -11,9 +11,9 @@ import {
     PointLightConfiguration,
 } from '@/configuration/objects'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
-import { Logger } from '@/utility/logger'
 import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from '../renderer'
@@ -40,31 +40,24 @@ export class Scene {
 
     private renderer: Renderer
     private resourceManager: ResourceManager
-    private logger: Logger
     private evaluator: Evaluator
-    constructor(
-        name: string,
-        renderer: Renderer,
-        resourceManager: ResourceManager,
-        logger: Logger,
-        evaluator: Evaluator
-    ) {
+
+    constructor(name: string, renderer: Renderer, resourceManager: ResourceManager, evaluator: Evaluator) {
         this.three = new ThreeScene()
         this.name = name
 
         this.renderer = renderer
         this.resourceManager = resourceManager
-        this.logger = logger
         this.evaluator = evaluator
-
-        logger.debug(`new scene ${this.name}`)
     }
 
     public updateActiveCamera(configuration: SceneConfiguration) {
-        const [activeCameraName, error] = this.evaluator.evaluate<string>(configuration.activeCamera.value)
-        if (error) {
-            this.logger.error(`cannot evaluate active camera name for scene '${this.name}' due to error: ${error}`)
-            return
+        let activeCameraName
+
+        try {
+            activeCameraName = this.evaluator.evaluate<string>(configuration.activeCamera.value)
+        } catch (error) {
+            throw new Error(`${configuration.activeCamera.encode()}: Error evaluating active camera expression`, error)
         }
 
         const activeCameraConfiguration = configuration.cameras[activeCameraName]
@@ -80,32 +73,47 @@ export class Scene {
                     this.activeCamera = new PerspectiveOrbitalCamera(
                         activeCameraName,
                         this.renderer.domElement,
-                        this.logger,
                         this.evaluator
                     )
                 } else {
-                    this.logger.error(
-                        `invalid camera type '${activeCameraConfiguration}' in scene '${this.name}', using the old active camera if present`
-                    )
+                    throw new Error(`${activeCameraName}: Invalid type`)
                 }
             }
 
-            this.activeCamera?.updateProperties(activeCameraConfiguration)
+            try {
+                this.activeCamera?.updateProperties(activeCameraConfiguration)
+            } catch (error) {
+                throw new Error(`${activeCameraName}: Update properties`, error)
+            }
         } else {
             this.activeCamera?.dispose()
             this.activeCamera = null
         }
     }
 
-    public updateObjectsProperty(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
+    public updateProperties(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
         this.removeUnnecessaryObjects(configuration)
-        this.updateObjects(configuration, homeAssistant)
-        this.updateBackgroundColor(configuration.backgroundColor, this.evaluator)
+
+        try {
+            this.updateObjects(configuration, homeAssistant)
+        } catch (error) {
+            throw new Error(`Update objects`, error)
+        }
+
+        try {
+            this.updateBackgroundColor(configuration.backgroundColor, this.evaluator)
+        } catch (error) {
+            throw new Error(`Update background color`, error)
+        }
     }
 
     public updateBackgroundColor(configuration: SceneConfiguration['backgroundColor'], evaluator: Evaluator) {
-        const [color, error] = evaluator.evaluate<Color>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate scene background color due to error: ${error}`)
+        let color
+        try {
+            color = evaluator.evaluate<Color>(configuration.value)
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
         this.three.background = color
     }
 
@@ -144,23 +152,26 @@ export class Scene {
 
             if (!object) {
                 if (objectProperties instanceof CardConfiguration) {
-                    object = new Card(objectName, objectProperties, this.logger, this.evaluator)
+                    object = new Card(objectName, objectProperties, this.evaluator)
                 } else if (objectProperties instanceof GLBModelConfiguration) {
-                    object = new GLBModel(objectName, this.resourceManager, this.logger, this.evaluator)
+                    object = new GLBModel(objectName, this.resourceManager, this.evaluator)
                 } else if (objectProperties instanceof PointLightConfiguration) {
-                    object = new PointLight(objectName, this.logger, this.evaluator)
+                    object = new PointLight(objectName, this.evaluator)
                 } else if (objectProperties instanceof AmbientLightConfiguration) {
-                    object = new AmbientLight(objectName, this.logger, this.evaluator)
+                    object = new AmbientLight(objectName, this.evaluator)
                 } else {
-                    this.logger.error(`invalid object type: '${(objectProperties as any).type}' in scene ${this.name}`)
-                    return
+                    throw new Error(`${objectProperties}: Invalid object type`)
                 }
 
                 this.objects[objectName] = object
                 this.three.add(object.three)
             }
 
-            object.updateConfig(objectProperties as any, homeAssistant)
+            try {
+                object.updateProperties(objectProperties as any, homeAssistant)
+            } catch (error) {
+                throw new Error(`${objectName}: Update object properties`, error)
+            }
         }
     }
 }

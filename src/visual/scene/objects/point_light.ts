@@ -2,85 +2,111 @@ import { Color, PointLight as ThreePointLight } from 'three'
 
 import { dispose } from '@/visual/dispose'
 
-import { ExpressionConfiguration } from '@/configuration/common'
 import { PointLightConfiguration } from '@/configuration/objects'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
-import { Logger } from '@/utility/logger'
 
 export class PointLight {
     public type: string = 'light.point'
     public three: ThreePointLight
     public name: string
 
-    private logger: Logger
     private evaluator: Evaluator
-    constructor(name: string, logger: Logger, evaluator: Evaluator) {
+    constructor(name: string, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreePointLight()
 
-        this.logger = logger
         this.evaluator = evaluator
-
-        this.logger.debug(`new point light '${this.name}'`)
     }
 
-    public updateConfig(configuration: PointLightConfiguration) {
+    public updateProperties(configuration: PointLightConfiguration) {
         const evaluator = this.evaluator.withContextValue('Self', {
             position: {
                 x: this.three.position.x,
                 y: this.three.position.y,
                 z: this.three.position.z,
             },
-            rotation: {
-                x: this.three.rotation.x,
-                y: this.three.rotation.y,
-                z: this.three.rotation.z,
-            },
+            visible: this.three.visible,
+            color: this.three.color.clone(),
+            intensity: this.three.intensity,
         })
 
-        this.updateVisibility(configuration.visible, evaluator)
-        this.updatePosition(configuration.position, evaluator)
-        this.updateColor(configuration.color, evaluator)
-        this.updateIntensity(configuration.intensity, evaluator)
+        try {
+            this.updateVisible(configuration.visible, evaluator)
+        } catch (error) {
+            throw new Error(`Update visible`, error)
+        }
+
+        try {
+            this.updatePosition(configuration.position, evaluator)
+        } catch (error) {
+            throw new Error(`Update position`, error)
+        }
+
+        try {
+            this.updateColor(configuration.color, evaluator)
+        } catch (error) {
+            throw new Error(`Update color`, error)
+        }
+
+        try {
+            this.updateIntensity(configuration.intensity, evaluator)
+        } catch (error) {
+            throw new Error(`Update intensity`, error)
+        }
     }
 
     public dispose() {
         dispose(this.three)
     }
 
-    private updateVisibility(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        const [visible, error] = evaluator.evaluate<boolean>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate point light visibility due to error: ${error}`)
-        this.three.visible = visible
+    private updateVisible(configuration: PointLightConfiguration['visible'], evaluator: Evaluator) {
+        try {
+            const visible = evaluator.evaluate<boolean>(configuration.value)
+            this.three.visible = visible
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
     }
 
-    private updateIntensity(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        const [intensity, error] = evaluator.evaluate<number>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate point light intensity due to error: ${error}`)
-        this.three.intensity = intensity
+    private updateColor(configuration: PointLightConfiguration['color'], evaluator: Evaluator) {
+        try {
+            const color = evaluator.evaluate<Color>(configuration.value)
+            this.three.color = color
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
     }
 
-    private updateColor(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        const [color, error] = evaluator.evaluate<Color>(configuration.value)
-        if (error) return this.logger.error(`cannot evaluate point light color due to error: ${error}`)
-        this.three.color = color
+    private updateIntensity(configuration: PointLightConfiguration['intensity'], evaluator: Evaluator) {
+        try {
+            const intensity = evaluator.evaluate<number>(configuration.value)
+            this.three.intensity = intensity
+        } catch (error) {
+            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
+        }
     }
 
     private updatePosition(configuration: PointLightConfiguration['position'], evaluator: Evaluator) {
-        const [x, xError] = evaluator.evaluate<number>(configuration.x.value)
-        if (xError) {
-            return this.logger.error(`cannot evaluate point light x position due to error: ${xError}`)
+        let x, y, z
+
+        try {
+            x = evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = evaluator.evaluate<number>(configuration.y.value)
-        if (yError) {
-            return this.logger.error(`cannot evaluate point light y position due to error: ${yError}`)
+        try {
+            y = evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = evaluator.evaluate<number>(configuration.z.value)
-        if (zError) {
-            return this.logger.error(`cannot evaluate point light z position due to error: ${zError}`)
+        try {
+            z = evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.position.set(x, y, z)

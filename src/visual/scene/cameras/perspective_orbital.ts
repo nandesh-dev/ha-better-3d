@@ -3,8 +3,8 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
 
+import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
-import { Logger } from '@/utility/logger'
 
 type Size = {
     width: number
@@ -18,108 +18,113 @@ export class PerspectiveOrbitalCamera {
 
     private hadFirstUpdate: boolean = false
     private control: OrbitControls
-    private logger: Logger
     private evaluator: Evaluator
-    constructor(name: string, domElement: HTMLElement, logger: Logger, evaluator: Evaluator) {
+    constructor(name: string, domElement: HTMLElement, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreePerspectiveCamera()
 
         this.control = new OrbitControls(this.three, domElement)
-        this.logger = logger
         this.evaluator = evaluator
-
-        this.logger.debug(`new orbital perspective camera '${this.name}'`)
     }
 
-    public updateProperties(properties: PerspectiveOrbitalCameraConfiguration) {
+    public updateProperties(configuration: PerspectiveOrbitalCameraConfiguration) {
         let projectionPropertiesChanged = false
-        const [fov, fovError] = this.evaluator.evaluate<number>(properties.fov.value)
-        if (fovError)
-            this.logger.error(`cannot evaluate orbital perspective camera '${this.name}' fov due to error: ${fovError}`)
-        else if (this.three.fov !== fov) {
-            projectionPropertiesChanged = true
-            this.three.fov = fov
+
+        try {
+            const fov = this.evaluator.evaluate<number>(configuration.fov.value)
+            if (this.three.fov !== fov) {
+                projectionPropertiesChanged = true
+                this.three.fov = fov
+            }
+        } catch (error) {
+            throw new Error(`${configuration.fov.encode()}: Update field of view`, error)
         }
 
-        const [near, nearError] = this.evaluator.evaluate<number>(properties.near.value)
-        if (nearError)
-            this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' near point due to error: ${nearError}`
-            )
-        else if (this.three.near !== near) {
-            projectionPropertiesChanged = true
-            this.three.near = near
+        try {
+            const near = this.evaluator.evaluate<number>(configuration.near.value)
+            if (this.three.near !== near) {
+                projectionPropertiesChanged = true
+                this.three.near = near
+            }
+        } catch (error) {
+            throw new Error(`${configuration.near.encode()}: Update near point`, error)
         }
 
-        const [far, farError] = this.evaluator.evaluate<number>(properties.far.value)
-        if (farError)
-            this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' far point due to error: ${farError}`
-            )
-        else if (this.three.far !== far) {
-            projectionPropertiesChanged = true
-            this.three.far = far
+        try {
+            const far = this.evaluator.evaluate<number>(configuration.far.value)
+            if (this.three.far !== far) {
+                projectionPropertiesChanged = true
+                this.three.far = far
+            }
+        } catch (error) {
+            throw new Error(`${configuration.far.encode()}: Update far point`, error)
         }
 
         if (projectionPropertiesChanged) this.three.updateProjectionMatrix()
 
-        if (this.hadFirstUpdate) return
+        if (this.hadFirstUpdate) return null
         this.hadFirstUpdate = true
 
-        this.updatePosition(properties.position)
-        this.updateLookAt(properties.lookAt)
+        try {
+            this.updatePosition(configuration.position)
+        } catch (error) {
+            throw new Error('Update look at', error)
+        }
+
+        try {
+            this.updateLookAt(configuration.lookAt)
+        } catch (error) {
+            throw new Error('Update position', error)
+        }
 
         this.control.update()
     }
 
-    private updateLookAt(property: PerspectiveOrbitalCameraConfiguration['lookAt']) {
-        const [x, xError] = this.evaluator.evaluate<number>(property.x.value)
-        if (xError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' x lookAt due to error: ${xError}`
-            )
+    private updateLookAt(configuration: PerspectiveOrbitalCameraConfiguration['lookAt']) {
+        let x, y, z
+
+        try {
+            x = this.evaluator.evaluate<number>(configuration.x.value)
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = this.evaluator.evaluate<number>(property.y.value)
-        if (yError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' y lookAt due to error: ${yError}`
-            )
+        try {
+            y = this.evaluator.evaluate<number>(configuration.y.value)
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = this.evaluator.evaluate<number>(property.z.value)
-        if (zError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' z lookAt due to error: ${zError}`
-            )
+        try {
+            z = this.evaluator.evaluate<number>(configuration.z.value)
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
         this.three.lookAt(x, y, z)
     }
 
-    private updatePosition(property: PerspectiveOrbitalCameraConfiguration['position']) {
-        const [x, xError] = this.evaluator.evaluate<number>(property.x.value)
-        if (xError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' x position due to error: ${xError}`
-            )
+    private updatePosition(configuration: PerspectiveOrbitalCameraConfiguration['position']) {
+        try {
+            const x = this.evaluator.evaluate<number>(configuration.x.value)
+            this.three.position.x = x
+        } catch (error) {
+            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
         }
 
-        const [y, yError] = this.evaluator.evaluate<number>(property.y.value)
-        if (yError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' y position due to error: ${yError}`
-            )
+        try {
+            const y = this.evaluator.evaluate<number>(configuration.y.value)
+            this.three.position.y = y
+        } catch (error) {
+            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
         }
 
-        const [z, zError] = this.evaluator.evaluate<number>(property.z.value)
-        if (zError) {
-            return this.logger.error(
-                `cannot evaluate orbital perspective camera '${this.name}' z position due to error: ${zError}`
-            )
+        try {
+            const z = this.evaluator.evaluate<number>(configuration.z.value)
+            this.three.position.z = z
+        } catch (error) {
+            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
-
-        this.three.position.set(x, y, z)
     }
 
     public updateSize(size: Size) {
