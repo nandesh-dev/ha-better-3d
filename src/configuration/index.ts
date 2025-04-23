@@ -55,7 +55,7 @@ export class SceneConfiguration {
     constructor(raw: any) {
         this.activeCamera = new ExpressionConfiguration(raw?.active_camera, '""')
 
-        this.backgroundColor = new ExpressionConfiguration(raw?.background_color, 'Color.fromHEX("#eeeeee")')
+        this.backgroundColor = new ExpressionConfiguration(raw?.background_color, 'new Color("#eeeeee")')
 
         this.cameras = {}
         if (raw?.cameras !== undefined) {

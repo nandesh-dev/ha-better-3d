@@ -109,7 +109,7 @@ const DefaultConfiguration = new Configuration({
     scenes: {
         primary_scene: {
             active_camera: '"primary_camera"',
-            background_color: 'Color.fromHEX("#eeeeee")',
+            background_color: 'new Color("#eeeeee")',
             cameras: {
                 primary_camera: {
                     type: 'orbital.perspective',
@@ -137,13 +137,13 @@ const DefaultConfiguration = new Configuration({
                         z: '10',
                     },
                     intensity: '2000',
-                    color: 'Color.fromHEX("#ffffff")',
+                    color: 'new Color("#ffffff")',
                     visible: 'true',
                 },
                 ambient_light: {
                     type: 'light.ambient',
                     intensity: '1',
-                    color: 'Color.fromHEX("#ffffff")',
+                    color: 'new Color("#ffffff")',
                     visible: 'true',
                 },
                 logo: {
