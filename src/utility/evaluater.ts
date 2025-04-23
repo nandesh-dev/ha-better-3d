@@ -1,13 +1,8 @@
-import { Color as ThreeColor } from 'three'
+import { Color } from 'three'
 
 import { Error } from './error'
 
 export type Expression = string
-
-const Color = {
-    fromHEX: (raw: string, colorSpace: string) =>
-        new ThreeColor().setHex(parseInt(raw.replace('#', '0x'), 16), colorSpace),
-}
 
 export type EvaluatorContext = { [key: string]: unknown }
 
