@@ -34,16 +34,18 @@ export class AmbientLight {
             throw new Error(`Update visible`, error)
         }
 
-        try {
-            this.updateColor(configuration.color, evaluator)
-        } catch (error) {
-            throw new Error(`Update color`, error)
-        }
+        if (this.three.visible) {
+            try {
+                this.updateColor(configuration.color, evaluator)
+            } catch (error) {
+                throw new Error(`Update color`, error)
+            }
 
-        try {
-            this.updateIntensity(configuration.intensity, evaluator)
-        } catch (error) {
-            throw new Error(`Update intensity`, error)
+            try {
+                this.updateIntensity(configuration.intensity, evaluator)
+            } catch (error) {
+                throw new Error(`Update intensity`, error)
+            }
         }
     }
 
