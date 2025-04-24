@@ -4,14 +4,13 @@ import { CSS3DObject } from 'three/examples/jsm/Addons.js'
 import { dispose } from '@/visual/dispose'
 
 import { ExpressionConfiguration } from '@/configuration/common'
-import { CardConfiguration } from '@/configuration/objects'
+import { Card3DConfiguration } from '@/configuration/objects'
 
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 
-export class Card {
-    public type: string = 'card'
+export class Card3D {
     public three: Group
 
     public name: string
@@ -24,7 +23,7 @@ export class Card {
 
     private evaluator: Evaluator
 
-    constructor(name: string, configuration: CardConfiguration, evaluator: Evaluator) {
+    constructor(name: string, configuration: Card3DConfiguration, evaluator: Evaluator) {
         this.name = name
         this.three = new Group()
 
@@ -47,7 +46,7 @@ export class Card {
         this.loadCard(configuration.config)
     }
 
-    public updateProperties(configuration: CardConfiguration, homeAssistant: HomeAssistant) {
+    public updateProperties(configuration: Card3DConfiguration, homeAssistant: HomeAssistant) {
         const evaluator = this.evaluator.withContextValue('Self', {
             position: {
                 x: this.three.position.x,
@@ -118,7 +117,7 @@ export class Card {
         this.cardOuterElement.removeEventListener('pointermove', this.cardOuterElementCommonEventListener)
     }
 
-    private updateCardProperties(configuration: CardConfiguration['config'], homeAssistant: HomeAssistant) {
+    private updateCardProperties(configuration: Card3DConfiguration['config'], homeAssistant: HomeAssistant) {
         if (!this.cardConfigSet && typeof (this.card as any)?.setConfig == 'function') {
             try {
                 this.cardConfigSet = true
@@ -137,7 +136,7 @@ export class Card {
         }
     }
 
-    private updateCardType(configuration: CardConfiguration['config']) {
+    private updateCardType(configuration: Card3DConfiguration['config']) {
         const cardType = configuration.type
 
         if (this.cardType !== cardType) {
@@ -156,7 +155,7 @@ export class Card {
         }
     }
 
-    private updateSize(configuration: CardConfiguration['size'], evaluator: Evaluator) {
+    private updateSize(configuration: Card3DConfiguration['size'], evaluator: Evaluator) {
         let height, width
 
         try {
@@ -174,7 +173,7 @@ export class Card {
         Object.assign(this.cardOuterElement.style, { height, width })
     }
 
-    private updatePosition(configuration: CardConfiguration['position'], evaluator: Evaluator) {
+    private updatePosition(configuration: Card3DConfiguration['position'], evaluator: Evaluator) {
         let x, y, z
 
         try {
@@ -198,7 +197,7 @@ export class Card {
         this.three.position.set(x, y, z)
     }
 
-    private updateRotation(configuration: CardConfiguration['rotation'], evaluator: Evaluator) {
+    private updateRotation(configuration: Card3DConfiguration['rotation'], evaluator: Evaluator) {
         let x, y, z
 
         try {
@@ -222,7 +221,7 @@ export class Card {
         this.three.rotation.set(x, y, z)
     }
 
-    private updateScale(configuration: CardConfiguration['scale'], evaluator: Evaluator) {
+    private updateScale(configuration: Card3DConfiguration['scale'], evaluator: Evaluator) {
         let x, y, z
 
         try {
@@ -246,7 +245,7 @@ export class Card {
         this.three.scale.set(x, y, z)
     }
 
-    private async loadCard(configuration: CardConfiguration['config']) {
+    private async loadCard(configuration: Card3DConfiguration['config']) {
         const cardHelper = await (window as any).loadCardHelpers()
         this.card = cardHelper.createCardElement(configuration.config)
         if (this.card) this.cardOuterElement.append(this.card)

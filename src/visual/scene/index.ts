@@ -6,7 +6,8 @@ import { dispose } from '@/visual/dispose'
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
 import {
     AmbientLightConfiguration,
-    CardConfiguration,
+    Card2DConfiguration,
+    Card3DConfiguration,
     GLBModelConfiguration,
     PointLightConfiguration,
 } from '@/configuration/objects'
@@ -18,12 +19,13 @@ import { ResourceManager } from '@/utility/resource_manager'
 
 import { Renderer } from '../renderer'
 import { PerspectiveOrbitalCamera } from './cameras/perspective_orbital'
+import { Card2D } from './objects/2d_card'
+import { Card3D } from './objects/3d_card'
 import { AmbientLight } from './objects/ambient_light'
-import { Card } from './objects/card'
 import { GLBModel } from './objects/glb_model'
 import { PointLight } from './objects/point_light'
 
-type Object = Card | GLBModel | PointLight | AmbientLight
+type Object = Card2D | Card3D | GLBModel | PointLight | AmbientLight
 type Camera = PerspectiveOrbitalCamera
 
 type Size = {
@@ -132,7 +134,8 @@ export class Scene {
             const objectProperties = configuration.objects[objectName]
             const inUse =
                 objectProperties &&
-                ((objectProperties instanceof CardConfiguration && object instanceof Card) ||
+                ((objectProperties instanceof Card2DConfiguration && object instanceof Card2D) ||
+                    (objectProperties instanceof Card3DConfiguration && object instanceof Card3D) ||
                     (objectProperties instanceof GLBModelConfiguration && object instanceof GLBModel) ||
                     (objectProperties instanceof PointLightConfiguration && object instanceof PointLight) ||
                     (objectProperties instanceof AmbientLightConfiguration && object instanceof AmbientLight))
@@ -151,8 +154,10 @@ export class Scene {
             let object = this.objects[objectName]
 
             if (!object) {
-                if (objectProperties instanceof CardConfiguration) {
-                    object = new Card(objectName, objectProperties, this.evaluator)
+                if (objectProperties instanceof Card2DConfiguration) {
+                    object = new Card2D(objectName, objectProperties, this.evaluator)
+                } else if (objectProperties instanceof Card3DConfiguration) {
+                    object = new Card3D(objectName, objectProperties, this.evaluator)
                 } else if (objectProperties instanceof GLBModelConfiguration) {
                     object = new GLBModel(objectName, this.resourceManager, this.evaluator)
                 } else if (objectProperties instanceof PointLightConfiguration) {

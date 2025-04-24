@@ -8,7 +8,6 @@ import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 
 export class PointLight {
-    public type: string = 'light.point'
     public three: ThreePointLight
     public name: string
 

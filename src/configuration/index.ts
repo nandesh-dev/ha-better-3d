@@ -2,7 +2,8 @@ import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './ca
 import { ExpressionConfiguration } from './common'
 import {
     AmbientLightConfiguration,
-    CardConfiguration,
+    Card2DConfiguration,
+    Card3DConfiguration,
     GLBModelConfiguration,
     ObjectConfiguration,
     PointLightConfiguration,
@@ -74,8 +75,11 @@ export class SceneConfiguration {
             for (const name in raw.objects) {
                 const properties = raw.objects[name]
                 switch (properties.type) {
-                    case 'card':
-                        this.objects[name] = new CardConfiguration(properties)
+                    case 'card.2d':
+                        this.objects[name] = new Card2DConfiguration(properties)
+                        break
+                    case 'card.3d':
+                        this.objects[name] = new Card3DConfiguration(properties)
                         break
                     case 'model.glb':
                         this.objects[name] = new GLBModelConfiguration(properties)

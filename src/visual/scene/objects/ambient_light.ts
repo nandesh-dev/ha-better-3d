@@ -8,7 +8,6 @@ import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 
 export class AmbientLight {
-    public type: string = 'light.ambient'
     public three: ThreeAmbientLight
     public name: string
 

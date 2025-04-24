@@ -11,7 +11,6 @@ import { Evaluator } from '@/utility/evaluater'
 import { ResourceManager } from '@/utility/resource_manager'
 
 export class GLBModel {
-    public type: string = 'model.glb'
     public three: Group
 
     public name: string
