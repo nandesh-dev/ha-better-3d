@@ -1,5 +1,27 @@
 import { Expression } from '@/utility/evaluater'
 
+export type CommonSizeDefaultValue = {
+    width: Expression
+    height: Expression
+}
+
+export class CommonSizeConfiguration {
+    public width: ExpressionConfiguration
+    public height: ExpressionConfiguration
+
+    constructor(raw: any, defaultValue: CommonSizeDefaultValue) {
+        this.width = new ExpressionConfiguration(raw?.width, defaultValue.width)
+        this.height = new ExpressionConfiguration(raw?.height, defaultValue.height)
+    }
+
+    public encode() {
+        return {
+            height: this.height.encode(),
+            width: this.width.encode(),
+        }
+    }
+}
+
 export type Vector3DefaultValue = {
     x: Expression
     y: Expression
@@ -44,17 +66,9 @@ export class CommonScaleConfiguration extends Vector3Configuration {
     }
 }
 
-export class HTMLSizeConfiguration {
-    public height: ExpressionConfiguration
-    public width: ExpressionConfiguration
-
+export class HTMLSizeConfiguration extends CommonSizeConfiguration {
     constructor(raw: any) {
-        this.height = new ExpressionConfiguration(raw?.height, '"200px"')
-        this.width = new ExpressionConfiguration(raw?.width, '"400px"')
-    }
-
-    public encode() {
-        return { height: this.height.encode(), width: this.width.encode() }
+        super(raw, { height: '"auto"', width: '"auto"' })
     }
 }
 

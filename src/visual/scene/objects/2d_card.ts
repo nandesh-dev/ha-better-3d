@@ -222,27 +222,21 @@ export class Card2D {
     }
 
     private updateScale(configuration: Card2DConfiguration['scale'], evaluator: Evaluator) {
-        let x, y, z
+        let width, height
 
         try {
-            x = evaluator.evaluate<number>(configuration.x.value)
+            width = evaluator.evaluate<number>(configuration.width.value)
         } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
+            throw new Error(`${configuration.height.encode()}: Error evaluating width expression`, error)
         }
 
         try {
-            y = evaluator.evaluate<number>(configuration.y.value)
+            height = evaluator.evaluate<number>(configuration.height.value)
         } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
+            throw new Error(`${configuration.height.encode()}: Error evaluating height expression`, error)
         }
 
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.scale.set(x, y, z)
+        this.three.scale.set(width, height, 1)
     }
 
     private async loadCard(configuration: Card2DConfiguration['config']) {
