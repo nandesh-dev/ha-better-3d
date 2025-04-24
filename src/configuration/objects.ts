@@ -7,7 +7,8 @@ import {
 } from './common'
 
 export type ObjectConfiguration =
-    | CardConfiguration
+    | Card2DConfiguration
+    | Card3DConfiguration
     | GLBModelConfiguration
     | PointLightConfiguration
     | AmbientLightConfiguration
@@ -26,7 +27,7 @@ export class CardConfigConfiguration {
     }
 }
 
-export class CardConfiguration {
+export class Card3DConfiguration {
     public config: CardConfigConfiguration
     public size: HTMLSizeConfiguration
     public position: CommonPositionConfiguration
@@ -45,7 +46,37 @@ export class CardConfiguration {
 
     public encode() {
         return {
-            type: 'card',
+            type: 'card.3d',
+            config: this.config.encode(),
+            size: this.size.encode(),
+            position: this.position.encode(),
+            rotation: this.rotation.encode(),
+            scale: this.scale.encode(),
+            visible: this.visible.encode(),
+        }
+    }
+}
+
+export class Card2DConfiguration {
+    public config: CardConfigConfiguration
+    public size: HTMLSizeConfiguration
+    public position: CommonPositionConfiguration
+    public rotation: CommonRotationConfiguration
+    public scale: CommonScaleConfiguration
+    public visible: ExpressionConfiguration
+
+    constructor(raw: any) {
+        this.config = new CardConfigConfiguration(raw?.config)
+        this.size = new HTMLSizeConfiguration(raw?.size)
+        this.position = new CommonPositionConfiguration(raw?.position)
+        this.rotation = new CommonPositionConfiguration(raw?.rotation)
+        this.scale = new CommonPositionConfiguration(raw?.scale)
+        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+    }
+
+    public encode() {
+        return {
+            type: 'card.2d',
             config: this.config.encode(),
             size: this.size.encode(),
             position: this.position.encode(),

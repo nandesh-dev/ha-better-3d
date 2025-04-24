@@ -147,7 +147,7 @@ const DefaultConfiguration = new Configuration({
                     visible: 'true',
                 },
                 logo: {
-                    type: 'card',
+                    type: 'card.3d',
                     config: {
                         type: 'picture',
                         image: 'https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png',
