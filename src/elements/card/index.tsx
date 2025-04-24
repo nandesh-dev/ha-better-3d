@@ -173,9 +173,8 @@ const DefaultConfiguration = new Configuration({
                         z: '0',
                     },
                     scale: {
-                        x: '1',
-                        y: '1',
-                        z: '1',
+                        height: '1',
+                        width: '1',
                     },
                     visible: 'true',
                 },

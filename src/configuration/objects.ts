@@ -2,6 +2,7 @@ import {
     CommonPositionConfiguration,
     CommonRotationConfiguration,
     CommonScaleConfiguration,
+    CommonSizeConfiguration,
     ExpressionConfiguration,
     HTMLSizeConfiguration,
 } from './common'
@@ -32,7 +33,7 @@ export class Card3DConfiguration {
     public size: HTMLSizeConfiguration
     public position: CommonPositionConfiguration
     public rotation: CommonRotationConfiguration
-    public scale: CommonScaleConfiguration
+    public scale: CommonSizeConfiguration
     public visible: ExpressionConfiguration
 
     constructor(raw: any) {
@@ -40,7 +41,7 @@ export class Card3DConfiguration {
         this.size = new HTMLSizeConfiguration(raw?.size)
         this.position = new CommonPositionConfiguration(raw?.position)
         this.rotation = new CommonPositionConfiguration(raw?.rotation)
-        this.scale = new CommonPositionConfiguration(raw?.scale)
+        this.scale = new CommonSizeConfiguration(raw?.scale, { height: '1', width: '1' })
         this.visible = new ExpressionConfiguration(raw?.visible, 'true')
     }
 
@@ -62,7 +63,7 @@ export class Card2DConfiguration {
     public size: HTMLSizeConfiguration
     public position: CommonPositionConfiguration
     public rotation: CommonRotationConfiguration
-    public scale: CommonScaleConfiguration
+    public scale: CommonSizeConfiguration
     public visible: ExpressionConfiguration
 
     constructor(raw: any) {
@@ -70,7 +71,7 @@ export class Card2DConfiguration {
         this.size = new HTMLSizeConfiguration(raw?.size)
         this.position = new CommonPositionConfiguration(raw?.position)
         this.rotation = new CommonPositionConfiguration(raw?.rotation)
-        this.scale = new CommonPositionConfiguration(raw?.scale)
+        this.scale = new CommonSizeConfiguration(raw?.scale, { height: '1', width: '1' })
         this.visible = new ExpressionConfiguration(raw?.visible, 'true')
     }
 
