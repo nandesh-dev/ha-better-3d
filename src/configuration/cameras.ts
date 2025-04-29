@@ -14,7 +14,7 @@ export class PerspectiveOrbitalCameraConfiguration {
         this.near = new ExpressionConfiguration(raw?.near, '0.1')
         this.far = new ExpressionConfiguration(raw?.far, '1000')
         this.position = new CommonPositionConfiguration(raw?.position)
-        this.lookAt = new CommonPositionConfiguration(raw?.loot_at)
+        this.lookAt = new CommonPositionConfiguration(raw?.look_at)
     }
 
     public encode() {
