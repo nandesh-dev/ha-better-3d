@@ -1,4 +1,4 @@
-import { PerspectiveCamera as ThreePerspectiveCamera } from 'three'
+import { PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
@@ -68,13 +68,13 @@ export class PerspectiveOrbitalCamera {
         try {
             this.updatePosition(configuration.position)
         } catch (error) {
-            throw new Error('Update look at', error)
+            throw new Error('Update position', error)
         }
 
         try {
             this.updateLookAt(configuration.lookAt)
         } catch (error) {
-            throw new Error('Update position', error)
+            throw new Error('Update lookAt', error)
         }
 
         this.control.update()
@@ -101,7 +101,7 @@ export class PerspectiveOrbitalCamera {
             throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
         }
 
-        this.three.lookAt(x, y, z)
+        this.control.target = new Vector3(x, y, z)
     }
 
     private updatePosition(configuration: PerspectiveOrbitalCameraConfiguration['position']) {
