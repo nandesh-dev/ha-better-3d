@@ -71,7 +71,6 @@ export class HTMLSizeConfiguration extends CommonSizeConfiguration {
         super(raw, { height: '"auto"', width: '"auto"' })
     }
 }
-
 export class ExpressionConfiguration {
     public value: Expression
 

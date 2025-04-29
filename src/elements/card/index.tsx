@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
 
+import { EDITOR_CUSTOM_ELEMENT_TAGNAME } from '../editor'
+
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
 
 function Card({ config, homeAssistant }: ComponentProps) {
@@ -69,6 +71,9 @@ export function registerCard() {
         {
             getStubConfig: () => {
                 return DefaultConfiguration.encode()
+            },
+            getConfigElement: () => {
+                return document.createElement(EDITOR_CUSTOM_ELEMENT_TAGNAME)
             },
         },
         {

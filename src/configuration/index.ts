@@ -1,5 +1,5 @@
 import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './cameras'
-import { ExpressionConfiguration } from './common'
+import { ExpressionConfiguration, FixedStringPattern } from './common'
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
