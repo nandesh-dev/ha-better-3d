@@ -1,13 +1,12 @@
-import { Group } from 'three'
+import { Euler, Group, Vector2, Vector3 } from 'three'
 import { CSS3DSprite } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
-import { ExpressionConfiguration } from '@/configuration/common'
 import { Card2DConfiguration } from '@/configuration/objects'
 
 import { Error } from '@/utility/error'
-import { Evaluator } from '@/utility/evaluater'
+import { Evaluator, HTMLSize } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 
 export class Card2D {
@@ -48,59 +47,55 @@ export class Card2D {
 
     public updateProperties(configuration: Card2DConfiguration, homeAssistant: HomeAssistant) {
         const evaluator = this.evaluator.withContextValue('Self', {
-            position: {
-                x: this.three.position.x,
-                y: this.three.position.y,
-                z: this.three.position.z,
-            },
-            rotation: {
-                x: this.three.rotation.x,
-                y: this.three.rotation.y,
-                z: this.three.rotation.z,
-            },
-            scale: {
-                x: this.three.scale.x,
-                y: this.three.scale.y,
-                z: this.three.scale.z,
-            },
+            position: this.three.position.clone(),
+            rotation: this.three.rotation.clone(),
+            scale: this.three.scale.clone(),
             visible: this.three.visible,
         })
 
-        this.updateCardType(configuration.config)
+        if (this.cardType !== configuration.config.type) {
+            this.cardType = configuration.config.type
+            this.loadCard(configuration.config)
+        }
 
         try {
             this.updateCardProperties(configuration.config, homeAssistant)
         } catch {}
 
         try {
-            this.updateVisible(configuration.visible, evaluator)
+            const visible = evaluator.evaluate<boolean>(configuration.visible)
+            this.three.visible = visible
         } catch (error) {
-            throw new Error(`Update visible`, error)
+            throw new Error(`Error evaluating visible`, error)
         }
 
         if (this.three.visible) {
             try {
-                this.updateSize(configuration.size, evaluator)
+                const size = evaluator.evaluate<HTMLSize>(configuration.size)
+                Object.assign(this.cardOuterElement.style, size)
             } catch (error) {
-                throw new Error('Update size', error)
+                throw new Error(`${configuration.size.encode()}: Error evaluating size`, error)
             }
 
             try {
-                this.updatePosition(configuration.position, evaluator)
+                const position = evaluator.evaluate<Vector3>(configuration.position)
+                this.three.position.copy(position)
             } catch (error) {
-                throw new Error('Update position', error)
+                throw new Error(`${configuration.position.encode()}: Error evaluating position`, error)
             }
 
             try {
-                this.updateRotation(configuration.rotation, evaluator)
+                const rotation = evaluator.evaluate<Euler>(configuration.rotation)
+                this.three.rotation.copy(rotation)
             } catch (error) {
-                throw new Error('Update rotation', error)
+                throw new Error(`${configuration.rotation.encode()}: Error evaluating rotation`, error)
             }
 
             try {
-                this.updateScale(configuration.scale, evaluator)
+                const scale = evaluator.evaluate<Vector2>(configuration.scale)
+                this.three.scale.set(scale.x, scale.y, 1)
             } catch (error) {
-                throw new Error('Update scale', error)
+                throw new Error(`${configuration.scale.encode()}: Error evaluating scale`, error)
             }
         }
     }
@@ -134,109 +129,6 @@ export class Card2D {
                 throw new Error(`Update hass`, error)
             }
         }
-    }
-
-    private updateCardType(configuration: Card2DConfiguration['config']) {
-        const cardType = configuration.type
-
-        if (this.cardType !== cardType) {
-            this.cardType = cardType
-            this.loadCard(configuration)
-            return
-        }
-    }
-
-    private updateVisible(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        try {
-            const visible = evaluator.evaluate<boolean>(configuration.value)
-            this.three.visible = visible
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updateSize(configuration: Card2DConfiguration['size'], evaluator: Evaluator) {
-        let height, width
-
-        try {
-            height = evaluator.evaluate<string>(configuration.height.value)
-        } catch (error) {
-            throw new Error(`${configuration.height.encode()}: Error evaluating height expression`, error)
-        }
-
-        try {
-            width = evaluator.evaluate<string>(configuration.width.value)
-        } catch (error) {
-            throw new Error(`${configuration.width.encode()}: Error evaluating height expression`, error)
-        }
-
-        Object.assign(this.cardOuterElement.style, { height, width })
-    }
-
-    private updatePosition(configuration: Card2DConfiguration['position'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.position.set(x, y, z)
-    }
-
-    private updateRotation(configuration: Card2DConfiguration['rotation'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.rotation.set(x, y, z)
-    }
-
-    private updateScale(configuration: Card2DConfiguration['scale'], evaluator: Evaluator) {
-        let width, height
-
-        try {
-            width = evaluator.evaluate<number>(configuration.width.value)
-        } catch (error) {
-            throw new Error(`${configuration.height.encode()}: Error evaluating width expression`, error)
-        }
-
-        try {
-            height = evaluator.evaluate<number>(configuration.height.value)
-        } catch (error) {
-            throw new Error(`${configuration.height.encode()}: Error evaluating height expression`, error)
-        }
-
-        this.three.scale.set(width, height, 1)
     }
 
     private async loadCard(configuration: Card2DConfiguration['config']) {

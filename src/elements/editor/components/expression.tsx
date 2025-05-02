@@ -1,11 +1,11 @@
 import { FormEventHandler, HTMLInputTypeAttribute } from 'preact/compat'
 import { useState } from 'preact/hooks'
 
-import { ExpressionConfiguration } from '@/configuration/common'
+import { Expression as ConfigurationExpression } from '@/configuration/expression'
 
 export type Properties = {
     label: string
-    configuration: ExpressionConfiguration
+    configuration: ConfigurationExpression
     onChange: () => void
     patterns: { [name: string]: Pattern }
 }
@@ -50,7 +50,7 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
                 {selectedPattern == 'Custom' ? (
                     <input value={values[0]} onInput={createOnValueChangeHandler(0)} type="string" />
                 ) : (
-                    patterns[selectedPattern].inputs.map(({ name, type }, i) => {
+                    patterns[selectedPattern].inputs.map(({ type }, i) => {
                         return <input value={values[i]} onInput={createOnValueChangeHandler(i)} type={type} />
                     })
                 )}
@@ -65,8 +65,8 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
 }
 
 export type Pattern = {
-    matchRegex: (expression: ExpressionConfiguration['value']) => string[] | null
-    computeValue: (values: string[]) => ExpressionConfiguration['value']
+    matchRegex: (expression: ConfigurationExpression['value']) => string[] | null
+    computeValue: (values: string[]) => ConfigurationExpression['value']
     inputs: { name: string; type: HTMLInputTypeAttribute }[]
 }
 

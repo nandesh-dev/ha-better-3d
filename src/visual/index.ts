@@ -103,7 +103,7 @@ export class Visual {
 
             let activeSceneName
             try {
-                activeSceneName = this.evaluator.evaluate<string>(this.configuration.activeScene.value)
+                activeSceneName = this.evaluator.evaluate<string>(this.configuration.activeScene)
             } catch (error) {
                 throw new Error(`${this.configuration.activeScene.encode()}: Error evaluating active scene`, error)
             }

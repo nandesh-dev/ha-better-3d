@@ -1,5 +1,5 @@
 import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './cameras'
-import { ExpressionConfiguration, FixedStringPattern } from './common'
+import { Expression } from './expression'
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
@@ -11,14 +11,14 @@ import {
 
 export class Configuration {
     public type: string
-    public activeScene: ExpressionConfiguration
+    public activeScene: Expression
     public scenes: { [name: string]: SceneConfiguration }
     public styles: string
 
     constructor(raw: any) {
         this.type = raw.type
 
-        this.activeScene = new ExpressionConfiguration(raw?.active_scene, '""')
+        this.activeScene = new Expression(raw?.active_scene, '""')
 
         this.scenes = {}
         if (raw?.scenes !== undefined) {
@@ -48,15 +48,15 @@ export class Configuration {
 }
 
 export class SceneConfiguration {
-    public activeCamera: ExpressionConfiguration
-    public backgroundColor: ExpressionConfiguration
+    public activeCamera: Expression
+    public backgroundColor: Expression
     public cameras: { [name: string]: CameraConfiguration }
     public objects: { [name: string]: ObjectConfiguration }
 
     constructor(raw: any) {
-        this.activeCamera = new ExpressionConfiguration(raw?.active_camera, '""')
+        this.activeCamera = new Expression(raw?.active_camera, '""')
 
-        this.backgroundColor = new ExpressionConfiguration(raw?.background_color, 'new Color("#eeeeee")')
+        this.backgroundColor = new Expression(raw?.background_color, 'new Color("#eeeeee")')
 
         this.cameras = {}
         if (raw?.cameras !== undefined) {
