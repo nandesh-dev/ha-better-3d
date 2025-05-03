@@ -16,11 +16,16 @@ import { ComponentProps, registerElement } from '@/utility/home_assistant/regist
 import { CameraIcon } from './components/camera_icon'
 import { CardIcon } from './components/card_icon'
 import {
+    EntityBoolPattern,
+    EntityBrightnessPattern,
+    EntityRGBColorPattern,
+    EulerPattern,
     Expression,
+    FixedBoolPattern,
     FixedColorPattern,
     FixedNumberPattern,
     FixedStringPattern,
-    RGBEntityColorPattern,
+    HTMLSizePattern,
     Vector3Pattern,
 } from './components/expression'
 import { LightIcon } from './components/light_icon'
@@ -198,7 +203,6 @@ function Sidebar({
                             {sceneName}
                         </button>
                         {Object.keys(scene.cameras).map((cameraName) => {
-                            const camera = scene.cameras[cameraName]
                             isEvenItem = !isEvenItem
                             return (
                                 <div
@@ -264,7 +268,7 @@ function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
                     label="Background Color"
                     configuration={configuration.backgroundColor}
                     onChange={onChange}
-                    patterns={{ Fixed: FixedColorPattern, 'RGB Entity': RGBEntityColorPattern }}
+                    patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
                 />
             </div>
         </div>
@@ -280,7 +284,126 @@ function ObjectSettings({ configuration, onChange }: ObjectSettingsProperties) {
     return (
         <div class="panel object">
             <span class="panel-name">Object Settings</span>
-            <div class="object-inner"></div>
+            <div class="object-inner">
+                {(configuration instanceof Card3DConfiguration || configuration instanceof Card2DConfiguration) && (
+                    <>
+                        <Expression
+                            label="Size"
+                            configuration={configuration.size}
+                            onChange={onChange}
+                            patterns={{ Fixed: HTMLSizePattern }}
+                        />
+                        <Expression
+                            label="Position"
+                            configuration={configuration.position}
+                            onChange={onChange}
+                            patterns={{ Fixed: Vector3Pattern }}
+                        />
+                        <Expression
+                            label="Rotation"
+                            configuration={configuration.rotation}
+                            onChange={onChange}
+                            patterns={{ Fixed: EulerPattern }}
+                        />
+                        <Expression
+                            label="Scale"
+                            configuration={configuration.scale}
+                            onChange={onChange}
+                            patterns={{ Fixed: Vector3Pattern }}
+                        />
+                        <Expression
+                            label="Visible"
+                            configuration={configuration.visible}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedBoolPattern, 'Entity State': EntityBoolPattern }}
+                        />
+                    </>
+                )}
+                {configuration instanceof GLBModelConfiguration && (
+                    <>
+                        <Expression
+                            label="URL"
+                            configuration={configuration.url}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedStringPattern }}
+                        />
+                        <Expression
+                            label="Position"
+                            configuration={configuration.position}
+                            onChange={onChange}
+                            patterns={{ Fixed: Vector3Pattern }}
+                        />
+                        <Expression
+                            label="Rotation"
+                            configuration={configuration.rotation}
+                            onChange={onChange}
+                            patterns={{ Fixed: EulerPattern }}
+                        />
+                        <Expression
+                            label="Scale"
+                            configuration={configuration.scale}
+                            onChange={onChange}
+                            patterns={{ Fixed: Vector3Pattern }}
+                        />
+                        <Expression
+                            label="Visible"
+                            configuration={configuration.visible}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedBoolPattern, 'Entity State': EntityBoolPattern }}
+                        />
+                    </>
+                )}
+                {configuration instanceof PointLightConfiguration && (
+                    <>
+                        <Expression
+                            label="Color"
+                            configuration={configuration.color}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
+                        />
+                        <Expression
+                            label="Intensity"
+                            configuration={configuration.intensity}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedNumberPattern, 'Entity Brightness': EntityBrightnessPattern }}
+                        />
+                        <Expression
+                            label="Position"
+                            configuration={configuration.position}
+                            onChange={onChange}
+                            patterns={{ Fixed: Vector3Pattern }}
+                        />
+                        <Expression
+                            label="Visible"
+                            configuration={configuration.visible}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedBoolPattern, 'Entity State': EntityBoolPattern }}
+                        />
+                    </>
+                )}
+                {configuration instanceof AmbientLightConfiguration && (
+                    <>
+                        <Expression
+                            label="Color"
+                            configuration={configuration.color}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
+                        />
+                        <Expression
+                            label="Intensity"
+                            configuration={configuration.intensity}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedNumberPattern, 'Entity Brightness': EntityBrightnessPattern }}
+                        />
+                        <Expression
+                            label="Visible"
+                            configuration={configuration.visible}
+                            onChange={onChange}
+                            patterns={{ Fixed: FixedBoolPattern, 'Entity State': EntityBoolPattern }}
+                        />
+                    </>
+                )}
+            </div>
         </div>
     )
 }
