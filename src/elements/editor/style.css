@@ -45,6 +45,14 @@
     padding: var(--spacing-md) var(--spacing-lg);
 }
 
+.camera-inner {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.object-inner {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
 .sidebar {
     height: 100%;
     overflow-y: auto;
@@ -54,6 +62,9 @@
     padding-left: var(--spacing-lg);
     padding-top: var(--spacing-sm);
     padding-bottom: var(--spacing-sm);
+    background: none;
+    border: none;
+    text-align: start;
 }
 
 .sidebar-scene-name__even {
@@ -70,10 +81,13 @@
 
 .sidebar-scene-item-name {
     margin-left: var(--spacing-xl);
+    border: none;
     border-left: 1px solid var(--color-neutral__light);
     padding-left: var(--spacing-lg);
     padding-top: var(--spacing-sm);
     padding-bottom: var(--spacing-sm);
+    background: none;
+    text-align: start;
 }
 
 .sidebar-scene-item__even {

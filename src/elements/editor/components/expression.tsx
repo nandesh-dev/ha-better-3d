@@ -51,6 +51,16 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
                     <input value={values[0]} onInput={createOnValueChangeHandler(0)} type="string" />
                 ) : (
                     patterns[selectedPattern].inputs.map(({ type }, i) => {
+                        if (type == 'number') {
+                            return (
+                                <input
+                                    value={values[i]}
+                                    onInput={createOnValueChangeHandler(i)}
+                                    type={type}
+                                    step={Math.abs(Math.ceil(parseFloat(values[i]) / 10))}
+                                />
+                            )
+                        }
                         return <input value={values[i]} onInput={createOnValueChangeHandler(i)} type={type} />
                     })
                 )}
@@ -79,6 +89,15 @@ export const FixedStringPattern: Pattern = {
     inputs: [{ name: 'string', type: 'string' }],
 }
 
+export const FixedNumberPattern: Pattern = {
+    matchRegex: (value) => {
+        const match = /^(\s*-?\d*\.?\d*\s*)$/.exec(value)
+        return match !== null ? [match[1].trim()] : null
+    },
+    computeValue: (values) => `${parseFloat(values[0])}`,
+    inputs: [{ name: 'number', type: 'number' }],
+}
+
 export const FixedColorPattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new Color\("((?:[^"\\]|\\.)*)"\)$/.exec(value)
@@ -96,4 +115,17 @@ export const RGBEntityColorPattern: Pattern = {
     computeValue: (values) =>
         `new Color(...Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}"].map(a=>a/255))`,
     inputs: [{ name: 'entity', type: 'string' }],
+}
+
+export const Vector3Pattern: Pattern = {
+    matchRegex: (value) => {
+        const match = /^new Vector3\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
+        return match !== null ? [match[1].trim(), match[2].trim(), match[3].trim()] : null
+    },
+    computeValue: (values) => `new Vector3(${parseFloat(values[0])},${parseFloat(values[1])},${parseFloat(values[2])})`,
+    inputs: [
+        { name: 'X', type: 'number' },
+        { name: 'Y', type: 'number' },
+        { name: 'Z', type: 'number' },
+    ],
 }

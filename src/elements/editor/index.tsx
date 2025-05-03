@@ -1,11 +1,13 @@
 import { Configuration, SceneConfiguration } from '@/configuration'
 import { useEffect, useState } from 'preact/hooks'
 
+import { CameraConfiguration } from '@/configuration/cameras'
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
     Card3DConfiguration,
     GLBModelConfiguration,
+    ObjectConfiguration,
     PointLightConfiguration,
 } from '@/configuration/objects'
 
@@ -13,26 +15,43 @@ import { ComponentProps, registerElement } from '@/utility/home_assistant/regist
 
 import { CameraIcon } from './components/camera_icon'
 import { CardIcon } from './components/card_icon'
-import { Expression, FixedColorPattern, FixedStringPattern, RGBEntityColorPattern } from './components/expression'
+import {
+    Expression,
+    FixedColorPattern,
+    FixedNumberPattern,
+    FixedStringPattern,
+    RGBEntityColorPattern,
+    Vector3Pattern,
+} from './components/expression'
 import { LightIcon } from './components/light_icon'
 import { ModelIcon } from './components/model_icon'
 import Style from './style.css?raw'
 
 export const EDITOR_CUSTOM_ELEMENT_TAGNAME = 'better-3d-editor'
 
-export function Editor({ config: rawConfiguration }: ComponentProps) {
+export function Editor({ config: rawConfiguration, setConfig }: ComponentProps) {
     if (!rawConfiguration) return
 
     const [configuration, setConfiguration] = useState<Configuration | null>(null)
-    const [selectedPanelType, setSelectedPanelType] = useState<'scene' | 'camera' | 'object'>('scene')
-    const [selectedPanelName, setSelectedPanelName] = useState<string | null>(null)
+    const [selectedSceneName, setSelectedSceneName] = useState<string | null>(null)
+    const [selectedSceneChildrenName, setSelectedSceneChildrenName] = useState<string | null>(null)
+    const [selectedSceneChildrenType, setSelectedSceneChildrenType] = useState<'object' | 'camera' | null>(null)
+
+    useEffect(() => {
+        if (!configuration) return
+        const timeout = setTimeout(() => {
+            setConfig(configuration.encode())
+        }, 50)
+
+        return () => clearTimeout(timeout)
+    }, [configuration])
 
     useEffect(() => {
         if (configuration || !rawConfiguration) return
 
         const newConfiguration = new Configuration(rawConfiguration)
         setConfiguration(newConfiguration)
-        setSelectedPanelName(Object.keys(newConfiguration.scenes)[0] || null)
+        setSelectedSceneName(Object.keys(newConfiguration.scenes)[0] || null)
     }, [rawConfiguration])
 
     if (!configuration) return
@@ -46,20 +65,19 @@ export function Editor({ config: rawConfiguration }: ComponentProps) {
             <style>{Style}</style>
             <div class="editor">
                 <GeneralSettings configuration={configuration} onChange={updateConfiguration} />
-                <Sidebar scenes={configuration.scenes} />
-                {selectedPanelName !== null ? (
-                    selectedPanelType == 'scene' &&
-                    (configuration.scenes[selectedPanelName] ? (
-                        <SceneSettings
-                            configuration={configuration.scenes[selectedPanelName]}
-                            onChange={updateConfiguration}
-                        />
-                    ) : (
-                        <div class="panel" />
-                    ))
-                ) : (
-                    <div class="panel" />
-                )}
+                <Sidebar
+                    scenes={configuration.scenes}
+                    onSelectedSceneNameChange={setSelectedSceneName}
+                    onSelectedSceneChildrenNameChange={setSelectedSceneChildrenName}
+                    onSelectedSceneChildrenTypeChange={setSelectedSceneChildrenType}
+                />
+                <SelectedPanelSetting
+                    selectedSceneName={selectedSceneName}
+                    selectedSceneChildrenName={selectedSceneChildrenName}
+                    selectedSceneChildrenType={selectedSceneChildrenType}
+                    configuration={configuration}
+                    onChange={updateConfiguration}
+                />
             </div>
         </>
     )
@@ -67,6 +85,51 @@ export function Editor({ config: rawConfiguration }: ComponentProps) {
 
 export function registerEditor() {
     registerElement(EDITOR_CUSTOM_ELEMENT_TAGNAME, Editor)
+}
+
+type SelectedPanelSettingProperties = {
+    selectedSceneName: string | null
+    selectedSceneChildrenName: string | null
+    selectedSceneChildrenType: 'camera' | 'object' | null
+    configuration: Configuration
+    onChange: () => void
+}
+
+function SelectedPanelSetting({
+    selectedSceneName,
+    selectedSceneChildrenName,
+    selectedSceneChildrenType,
+    configuration,
+    onChange,
+}: SelectedPanelSettingProperties) {
+    if (selectedSceneName !== null) {
+        const selectedScene = configuration.scenes[selectedSceneName]
+        if (selectedScene) {
+            if (selectedSceneChildrenName !== null) {
+                if (selectedSceneChildrenType == 'object' && selectedScene.objects[selectedSceneChildrenName]) {
+                    return (
+                        <ObjectSettings
+                            configuration={selectedScene.objects[selectedSceneChildrenName]}
+                            onChange={onChange}
+                        />
+                    )
+                }
+
+                if (selectedSceneChildrenType == 'camera' && selectedScene.cameras[selectedSceneChildrenName]) {
+                    return (
+                        <CameraSettings
+                            configuration={selectedScene.cameras[selectedSceneChildrenName]}
+                            onChange={onChange}
+                        />
+                    )
+                }
+            }
+
+            return <SceneSettings configuration={configuration.scenes[selectedSceneName]} onChange={onChange} />
+        }
+    }
+
+    return <div class="panel" />
 }
 
 type GeneralSettingsProperties = {
@@ -92,9 +155,33 @@ function GeneralSettings({ configuration, onChange }: GeneralSettingsProperties)
 
 type SidebarProperties = {
     scenes: Configuration['scenes']
+    onSelectedSceneNameChange: (name: string) => void
+    onSelectedSceneChildrenNameChange: (name: string | null) => void
+    onSelectedSceneChildrenTypeChange: (name: 'object' | 'camera' | null) => void
 }
 
-function Sidebar({ scenes }: SidebarProperties) {
+function Sidebar({
+    scenes,
+    onSelectedSceneNameChange,
+    onSelectedSceneChildrenNameChange,
+    onSelectedSceneChildrenTypeChange,
+}: SidebarProperties) {
+    const onSceneClick = (name: string) => {
+        onSelectedSceneNameChange(name)
+        onSelectedSceneChildrenNameChange(null)
+        onSelectedSceneChildrenTypeChange(null)
+    }
+
+    const onCameraClick = (name: string) => {
+        onSelectedSceneChildrenNameChange(name)
+        onSelectedSceneChildrenTypeChange('camera')
+    }
+
+    const onObjectClick = (name: string) => {
+        onSelectedSceneChildrenNameChange(name)
+        onSelectedSceneChildrenTypeChange('object')
+    }
+
     let isEvenItem = true
     return (
         <div class="panel sidebar">
@@ -104,11 +191,12 @@ function Sidebar({ scenes }: SidebarProperties) {
                 isEvenItem = !isEvenItem
                 return (
                     <div style="display: flex; flex-direction: column;">
-                        <span
+                        <button
                             class={`sidebar-scene-name ${isEvenItem ? 'sidebar-scene-name__even' : 'sidebar-scene-name__odd'}`}
+                            onClick={() => onSceneClick(sceneName)}
                         >
                             {sceneName}
-                        </span>
+                        </button>
                         {Object.keys(scene.cameras).map((cameraName) => {
                             const camera = scene.cameras[cameraName]
                             isEvenItem = !isEvenItem
@@ -116,7 +204,9 @@ function Sidebar({ scenes }: SidebarProperties) {
                                 <div
                                     class={`sidebar-scene-item ${isEvenItem ? 'sidebar-scene-item__even' : 'sidebar-scene-item__odd'}`}
                                 >
-                                    <span class="sidebar-scene-item-name">{cameraName}</span>
+                                    <button class="sidebar-scene-item-name" onClick={() => onCameraClick(cameraName)}>
+                                        {cameraName}
+                                    </button>
                                     <CameraIcon />
                                 </div>
                             )
@@ -140,7 +230,9 @@ function Sidebar({ scenes }: SidebarProperties) {
                                 <div
                                     class={`sidebar-scene-item ${isEvenItem ? 'sidebar-scene-item__even' : 'sidebar-scene-item__odd'}`}
                                 >
-                                    <span class="sidebar-scene-item-name">{objectName}</span>
+                                    <button class="sidebar-scene-item-name" onClick={() => onObjectClick(objectName)}>
+                                        {objectName}
+                                    </button>
                                     <Icon />
                                 </div>
                             )
@@ -173,6 +265,65 @@ function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
                     configuration={configuration.backgroundColor}
                     onChange={onChange}
                     patterns={{ Fixed: FixedColorPattern, 'RGB Entity': RGBEntityColorPattern }}
+                />
+            </div>
+        </div>
+    )
+}
+
+type ObjectSettingsProperties = {
+    configuration: ObjectConfiguration
+    onChange: () => void
+}
+
+function ObjectSettings({ configuration, onChange }: ObjectSettingsProperties) {
+    return (
+        <div class="panel object">
+            <span class="panel-name">Object Settings</span>
+            <div class="object-inner"></div>
+        </div>
+    )
+}
+
+type CameraSettingsProperties = {
+    configuration: CameraConfiguration
+    onChange: () => void
+}
+
+function CameraSettings({ configuration, onChange }: CameraSettingsProperties) {
+    return (
+        <div class="panel camera">
+            <span class="panel-name">Camera Settings</span>
+            <div class="camera-inner">
+                <Expression
+                    label="FOV"
+                    configuration={configuration.fov}
+                    onChange={onChange}
+                    patterns={{ Fixed: FixedNumberPattern }}
+                />
+                <Expression
+                    label="Near Point"
+                    configuration={configuration.near}
+                    onChange={onChange}
+                    patterns={{ Fixed: FixedNumberPattern }}
+                />
+                <Expression
+                    label="Far Point"
+                    configuration={configuration.far}
+                    onChange={onChange}
+                    patterns={{ Fixed: FixedNumberPattern }}
+                />
+                <Expression
+                    label="Position"
+                    configuration={configuration.position}
+                    onChange={onChange}
+                    patterns={{ Fixed: Vector3Pattern }}
+                />
+                <Expression
+                    label="Look At"
+                    configuration={configuration.lookAt}
+                    onChange={onChange}
+                    patterns={{ Fixed: Vector3Pattern }}
                 />
             </div>
         </div>
