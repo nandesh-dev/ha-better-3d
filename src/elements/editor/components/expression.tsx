@@ -137,21 +137,25 @@ export const FixedColorPattern: Pattern = {
 
 export const EntityRGBColorPattern: Pattern = {
     matchRegex: (value) => {
-        const match = /^new Color\(...Entities\["((?:[^"\\]|\\.)*)\.rgb_color"\].map\(a=>a\/255\)\)$/.exec(value)
+        const match =
+            /^new Color\(...\(Entities\["((?:[^"\\]|\\.)*)\.rgb_color"\]\s*\|\|\s*\[0,0,0\]\).map\(a=>a\/255\)\)$/.exec(
+                value
+            )
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\')] : null
     },
     computeValue: (values) =>
-        `new Color(...Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.rgb_color"].map(a=>a/255))`,
+        `new Color(...(Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.rgb_color"] || [0,0,0]).map(a=>a/255))`,
     inputs: [{ name: 'entity', type: 'string' }],
 }
 
 export const EntityBrightnessPattern: Pattern = {
     matchRegex: (value) => {
-        const match = /^Entities\["((?:[^"\\]|\\.)+)\.brightness"\]\s*\*(\s*-?\d*\.?\d*\s*)\/ 255$/.exec(value)
+        const match =
+            /^\(Entities\["((?:[^"\\]|\\.)+)\.brightness"\]\s?\|\|\s?0\)\s?\*(\s*-?\d*\.?\d*\s*)\/\s?255$/.exec(value)
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\'), match[2].trim()] : null
     },
     computeValue: (values) => {
-        return `Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.brightness"] * ${values[1]} / 255`
+        return `(Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.brightness"] || 0) * ${values[1]} / 255`
     },
     inputs: [
         { name: 'entity', type: 'string' },
