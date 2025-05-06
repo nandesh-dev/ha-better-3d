@@ -45,9 +45,14 @@ export function CardConfigEditor({ label, configuration, onChange }: CardConfigE
     }
 
     return (
-        <div>
+        <div class="config-editor">
             <span>{label}</span>
-            <textarea value={configString} onInput={onTextAreaValueChange} ref={textAreaRef} />
+            <textarea
+                class="config-editor-textarea"
+                value={configString}
+                onInput={onTextAreaValueChange}
+                ref={textAreaRef}
+            />
         </div>
     )
 }

@@ -1,5 +1,6 @@
 .editor {
     --spacing: 0.1rem;
+    --spacing-2sx: calc(0.5 * var(--spacing));
     --spacing-sx: calc(1 * var(--spacing));
     --spacing-sm: calc(2 * var(--spacing));
     --spacing-md: calc(4 * var(--spacing));
@@ -92,4 +93,41 @@
 
 .sidebar-scene-item__even {
     background-color: var(--color-neutral);
+}
+
+.expression {
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+}
+
+.expression-inner {
+    margin-top: var(--spacing-sm);
+    display: grid;
+    grid-auto-flow: column;
+    gap: var(--spacing-md);
+}
+
+.expression-input {
+    box-sizing: border-box;
+    width: 100% !important;
+    border: 0px;
+    background-color: var(--color-neutral__light);
+    border-radius: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+.config-editor {
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+}
+
+.config-editor-textarea {
+    box-sizing: border-box;
+    margin-top: var(--spacing-sm);
+    width: 100%;
+    height: calc(80 * var(--spacing));
+    border: 0px;
+    background-color: var(--color-neutral__light);
+    border-radius: var(--spacing-md);
+    padding: var(--spacing-md);
 }

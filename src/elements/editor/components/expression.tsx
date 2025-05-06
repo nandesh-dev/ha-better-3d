@@ -57,9 +57,9 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
     }
 
     return (
-        <div>
+        <div class="expression">
             <span>{label}</span>
-            <div>
+            <div class="expression-inner">
                 {selectedPattern == 'Custom' ? (
                     <input value={values[0]} onInput={createOnValueChangeHandler(0)} type="string" />
                 ) : (
@@ -67,11 +67,13 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
                         if (type == 'number') {
                             return (
                                 <input
+                                    class="expression-input"
                                     value={values[i]}
                                     onInput={createOnValueChangeHandler(i)}
-                                    type={type}
+                                    type="number"
                                     step={Math.min(Math.ceil(Math.abs(parseFloat(values[i])) / 10), 5)}
                                     key={name}
+                                    placeholder={name}
                                 />
                             )
                         }
@@ -79,20 +81,28 @@ export function Expression({ label, configuration, onChange, patterns }: Propert
                         if (type == 'checkbox') {
                             return (
                                 <input
+                                    class="expression-input"
                                     checked={values[i] == 'true'}
                                     onInput={createOnCheckedHandler(i)}
-                                    type={type}
+                                    type="checkbox"
                                     key={name}
                                 />
                             )
                         }
 
                         return (
-                            <input value={values[i]} onInput={createOnValueChangeHandler(i)} type={type} key={name} />
+                            <input
+                                class="expression-input"
+                                value={values[i]}
+                                onInput={createOnValueChangeHandler(i)}
+                                type={type}
+                                key={name}
+                                placeholder={name}
+                            />
                         )
                     })
                 )}
-                <select value={selectedPattern} onChange={onSelectedPatternChange}>
+                <select class="expression-input" value={selectedPattern} onChange={onSelectedPatternChange}>
                     {['Custom', ...Object.keys(patterns)].map((patternName) => {
                         return <option>{patternName}</option>
                     })}
@@ -151,7 +161,7 @@ export const EntityRGBColorPattern: Pattern = {
 export const EntityBrightnessPattern: Pattern = {
     matchRegex: (value) => {
         const match =
-            /^\(Entities\["((?:[^"\\]|\\.)+)\.brightness"\]\s?\|\|\s?0\)\s?\*(\s*-?\d*\.?\d*\s*)\/\s?255$/.exec(value)
+            /^\(Entities\["((?:[^"\\]|\\.)*)\.brightness"\]\s?\|\|\s?0\)\s?\*(\s*-?\d*\.?\d*\s*)\/\s?255$/.exec(value)
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\'), match[2].trim()] : null
     },
     computeValue: (values) => {
