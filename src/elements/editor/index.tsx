@@ -14,6 +14,7 @@ import {
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
 
 import { CameraIcon } from './components/camera_icon'
+import { CardConfigEditor } from './components/card_config_editor'
 import { CardIcon } from './components/card_icon'
 import {
     EntityBoolPattern,
@@ -287,6 +288,7 @@ function ObjectSettings({ configuration, onChange }: ObjectSettingsProperties) {
             <div class="object-inner">
                 {(configuration instanceof Card3DConfiguration || configuration instanceof Card2DConfiguration) && (
                     <>
+                        <CardConfigEditor label="Config" configuration={configuration.config} onChange={onChange} />
                         <Expression
                             label="Size"
                             configuration={configuration.size}
