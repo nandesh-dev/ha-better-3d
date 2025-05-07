@@ -115,7 +115,6 @@
     border-radius: var(--spacing-md);
     padding: var(--spacing-md);
 }
-
 .config-editor {
     padding-top: var(--spacing-md);
     padding-bottom: var(--spacing-md);
@@ -126,6 +125,21 @@
     margin-top: var(--spacing-sm);
     width: 100%;
     height: calc(80 * var(--spacing));
+    border: 0px;
+    background-color: var(--color-neutral__light);
+    border-radius: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
+.select {
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+}
+
+.select-input {
+    box-sizing: border-box;
+    margin-top: var(--spacing-sm);
+    width: 100%;
     border: 0px;
     background-color: var(--color-neutral__light);
     border-radius: var(--spacing-md);

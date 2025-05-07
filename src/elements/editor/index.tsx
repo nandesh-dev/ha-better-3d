@@ -31,6 +31,7 @@ import {
 } from './components/expression'
 import { LightIcon } from './components/light_icon'
 import { ModelIcon } from './components/model_icon'
+import { Select } from './components/select'
 import Style from './style.css?raw'
 
 export const EDITOR_CUSTOM_ELEMENT_TAGNAME = 'better-3d-editor'
@@ -113,10 +114,43 @@ function SelectedPanelSetting({
         if (selectedScene) {
             if (selectedSceneChildrenName !== null) {
                 if (selectedSceneChildrenType == 'object' && selectedScene.objects[selectedSceneChildrenName]) {
+                    const changeObjectType = (type: string) => {
+                        const rawObjectConfiguration = selectedScene.objects[selectedSceneChildrenName].encode()
+                        switch (type) {
+                            case 'card.2d':
+                                selectedScene.objects[selectedSceneChildrenName] = new Card2DConfiguration(
+                                    rawObjectConfiguration
+                                )
+                                break
+                            case 'card.3d':
+                                selectedScene.objects[selectedSceneChildrenName] = new Card3DConfiguration(
+                                    rawObjectConfiguration
+                                )
+                                break
+                            case 'model.glb':
+                                selectedScene.objects[selectedSceneChildrenName] = new GLBModelConfiguration(
+                                    rawObjectConfiguration
+                                )
+                                break
+                            case 'light.point':
+                                selectedScene.objects[selectedSceneChildrenName] = new PointLightConfiguration(
+                                    rawObjectConfiguration
+                                )
+                                break
+                            case 'light.ambient':
+                                selectedScene.objects[selectedSceneChildrenName] = new AmbientLightConfiguration(
+                                    rawObjectConfiguration
+                                )
+                                break
+                        }
+
+                        onChange()
+                    }
                     return (
                         <ObjectSettings
                             configuration={selectedScene.objects[selectedSceneChildrenName]}
                             onChange={onChange}
+                            changeType={changeObjectType}
                         />
                     )
                 }
@@ -278,14 +312,34 @@ function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
 
 type ObjectSettingsProperties = {
     configuration: ObjectConfiguration
+    changeType: (type: string) => void
     onChange: () => void
 }
 
-function ObjectSettings({ configuration, onChange }: ObjectSettingsProperties) {
+function ObjectSettings({ configuration, onChange, changeType }: ObjectSettingsProperties) {
+    let objectType = ''
+    if (configuration instanceof Card2DConfiguration) {
+        objectType = 'card.2d'
+    } else if (configuration instanceof Card3DConfiguration) {
+        objectType = 'card.3d'
+    } else if (configuration instanceof GLBModelConfiguration) {
+        objectType = 'model.glb'
+    } else if (configuration instanceof PointLightConfiguration) {
+        objectType = 'light.point'
+    } else if (configuration instanceof AmbientLightConfiguration) {
+        objectType = 'light.ambient'
+    }
+
     return (
         <div class="panel object">
             <span class="panel-name">Object Settings</span>
             <div class="object-inner">
+                <Select
+                    label="Type"
+                    selected={objectType}
+                    options={['card.2d', 'card.3d', 'model.glb', 'light.point', 'light.ambient']}
+                    setSelected={changeType}
+                />
                 {(configuration instanceof Card3DConfiguration || configuration instanceof Card2DConfiguration) && (
                     <>
                         <CardConfigEditor label="Config" configuration={configuration.config} onChange={onChange} />
