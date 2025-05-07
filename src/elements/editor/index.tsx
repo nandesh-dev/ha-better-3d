@@ -1,7 +1,7 @@
 import { Configuration, SceneConfiguration } from '@/configuration'
 import { useEffect, useState } from 'preact/hooks'
 
-import { CameraConfiguration } from '@/configuration/cameras'
+import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
@@ -77,6 +77,7 @@ export function Editor({ config: rawConfiguration, setConfig }: ComponentProps) 
                     onSelectedSceneNameChange={setSelectedSceneName}
                     onSelectedSceneChildrenNameChange={setSelectedSceneChildrenName}
                     onSelectedSceneChildrenTypeChange={setSelectedSceneChildrenType}
+                    onChange={updateConfiguration}
                 />
                 <SelectedPanelSetting
                     selectedSceneName={selectedSceneName}
@@ -148,6 +149,7 @@ function SelectedPanelSetting({
                     }
                     return (
                         <ObjectSettings
+                            key={selectedSceneChildrenName}
                             configuration={selectedScene.objects[selectedSceneChildrenName]}
                             onChange={onChange}
                             changeType={changeObjectType}
@@ -158,6 +160,7 @@ function SelectedPanelSetting({
                 if (selectedSceneChildrenType == 'camera' && selectedScene.cameras[selectedSceneChildrenName]) {
                     return (
                         <CameraSettings
+                            key={selectedSceneChildrenName}
                             configuration={selectedScene.cameras[selectedSceneChildrenName]}
                             onChange={onChange}
                         />
@@ -165,7 +168,13 @@ function SelectedPanelSetting({
                 }
             }
 
-            return <SceneSettings configuration={configuration.scenes[selectedSceneName]} onChange={onChange} />
+            return (
+                <SceneSettings
+                    key={selectedSceneName}
+                    configuration={configuration.scenes[selectedSceneName]}
+                    onChange={onChange}
+                />
+            )
         }
     }
 
@@ -198,6 +207,7 @@ type SidebarProperties = {
     onSelectedSceneNameChange: (name: string) => void
     onSelectedSceneChildrenNameChange: (name: string | null) => void
     onSelectedSceneChildrenTypeChange: (name: 'object' | 'camera' | null) => void
+    onChange: () => void
 }
 
 function Sidebar({
@@ -205,6 +215,7 @@ function Sidebar({
     onSelectedSceneNameChange,
     onSelectedSceneChildrenNameChange,
     onSelectedSceneChildrenTypeChange,
+    onChange,
 }: SidebarProperties) {
     const onSceneClick = (name: string) => {
         onSelectedSceneNameChange(name)
@@ -220,6 +231,21 @@ function Sidebar({
     const onObjectClick = (name: string) => {
         onSelectedSceneChildrenNameChange(name)
         onSelectedSceneChildrenTypeChange('object')
+    }
+
+    const addScene = () => {
+        if (!scenes['untitled']) {
+            scenes['untitled'] = new SceneConfiguration({})
+        } else {
+            let count = 2
+            while (scenes[`untitled_${count}`]) {
+                count++
+            }
+
+            scenes[`untitled_${count}`] = new SceneConfiguration({})
+        }
+
+        onChange()
     }
 
     let isEvenItem = true
@@ -279,6 +305,9 @@ function Sidebar({
                     </div>
                 )
             })}
+            <button class="add-button" onClick={addScene}>
+                Add Scene
+            </button>
         </div>
     )
 }
@@ -289,6 +318,36 @@ type SceneSettingsProperties = {
 }
 
 function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
+    const addCamera = () => {
+        if (!configuration.cameras['untitled']) {
+            configuration.cameras['untitled'] = new PerspectiveOrbitalCameraConfiguration({})
+        } else {
+            let count = 2
+            while (configuration.cameras[`untitled_${count}`]) {
+                count++
+            }
+
+            configuration.cameras[`untitled_${count}`] = new PerspectiveOrbitalCameraConfiguration({})
+        }
+
+        onChange()
+    }
+
+    const addObject = () => {
+        if (!configuration.objects['untitled']) {
+            configuration.objects['untitled'] = new GLBModelConfiguration({})
+        } else {
+            let count = 2
+            while (configuration.objects[`untitled_${count}`]) {
+                count++
+            }
+
+            configuration.objects[`untitled_${count}`] = new GLBModelConfiguration({})
+        }
+
+        onChange()
+    }
+
     return (
         <div class="panel scene">
             <span class="panel-name">Scene Settings</span>
@@ -305,6 +364,14 @@ function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
                     onChange={onChange}
                     patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
                 />
+            </div>
+            <div class="add-buttons-outer">
+                <button class="add-button" onClick={addCamera}>
+                    Add Camera
+                </button>
+                <button class="add-button" onClick={addObject}>
+                    Add Object
+                </button>
             </div>
         </div>
     )

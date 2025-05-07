@@ -1,6 +1,5 @@
 .editor {
     --spacing: 0.1rem;
-    --spacing-2sx: calc(0.5 * var(--spacing));
     --spacing-sx: calc(1 * var(--spacing));
     --spacing-sm: calc(2 * var(--spacing));
     --spacing-md: calc(4 * var(--spacing));
@@ -93,6 +92,21 @@
 
 .sidebar-scene-item__even {
     background-color: var(--color-neutral);
+}
+
+.add-buttons-outer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sx);
+}
+
+.add-button {
+    box-sizing: border-box;
+    margin-top: var(--spacing-md);
+    width: 100%;
+    border: 0px;
+    background-color: var(--color-neutral__light);
+    padding: var(--spacing-md);
 }
 
 .expression {
