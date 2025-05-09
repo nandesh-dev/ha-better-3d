@@ -1,7 +1,5 @@
 import { Color, AmbientLight as ThreeAmbientLight } from 'three'
 
-import { dispose } from '@/visual/dispose'
-
 import { AmbientLightConfiguration } from '@/configuration/objects'
 
 import { Error } from '@/utility/error'
@@ -28,54 +26,28 @@ export class AmbientLight {
         })
 
         try {
-            this.updateVisible(configuration.visible, evaluator)
+            const visible = evaluator.evaluate<boolean>(configuration.visible)
+            this.three.visible = visible
         } catch (error) {
-            throw new Error(`Update visible`, error)
+            throw new Error(`${configuration.visible.encode()}: Error evaluating visible`, error)
         }
 
         if (this.three.visible) {
             try {
-                this.updateColor(configuration.color, evaluator)
+                const color = evaluator.evaluate<Color>(configuration.color)
+                this.three.color.copy(color)
             } catch (error) {
-                throw new Error(`Update color`, error)
+                throw new Error(`${configuration.color.encode()}: Error evaluating color`, error)
             }
 
             try {
-                this.updateIntensity(configuration.intensity, evaluator)
+                const intensity = evaluator.evaluate<number>(configuration.intensity)
+                this.three.intensity = intensity
             } catch (error) {
-                throw new Error(`Update intensity`, error)
+                throw new Error(`${configuration.intensity.encode()}: Error evaluating intensity`, error)
             }
         }
     }
 
-    public dispose() {
-        dispose(this.three)
-    }
-
-    private updateVisible(configuration: AmbientLightConfiguration['visible'], evaluator: Evaluator) {
-        try {
-            const visible = evaluator.evaluate<boolean>(configuration.value)
-            this.three.visible = visible
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updateColor(configuration: AmbientLightConfiguration['color'], evaluator: Evaluator) {
-        try {
-            const color = evaluator.evaluate<Color>(configuration.value)
-            this.three.color = color
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updateIntensity(configuration: AmbientLightConfiguration['intensity'], evaluator: Evaluator) {
-        try {
-            const intensity = evaluator.evaluate<number>(configuration.value)
-            this.three.intensity = intensity
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
+    public dispose() {}
 }

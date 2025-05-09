@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
 
+import { EDITOR_CUSTOM_ELEMENT_TAGNAME } from '../editor'
+import { DEFAULT_CONFIG } from './default_config'
+
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
 
 function Card({ config, homeAssistant }: ComponentProps) {
@@ -70,6 +73,9 @@ export function registerCard() {
             getStubConfig: () => {
                 return DefaultConfiguration.encode()
             },
+            getConfigElement: () => {
+                return document.createElement(EDITOR_CUSTOM_ELEMENT_TAGNAME)
+            },
         },
         {
             name: 'Better 3D',
@@ -79,106 +85,4 @@ export function registerCard() {
     )
 }
 
-const DefaultConfiguration = new Configuration({
-    type: `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`,
-    active_scene: '"primary_scene"',
-    styles: `.card {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2/1;
-}
-
-.visual {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.visual__renderer {
-  width: 100%;
-  height: 100%;
-}
-
-.visual__error {
-  position: absolute;
-  inset: 0;
-  overflow-y: scroll;
-  white-space: pre;
-  color: var(--primary-text-color);
-}`,
-    scenes: {
-        primary_scene: {
-            active_camera: '"primary_camera"',
-            background_color: 'new Color("#eeeeee")',
-            cameras: {
-                primary_camera: {
-                    type: 'orbital.perspective',
-                    fov: '50',
-                    near: '0.1',
-                    far: '10000',
-                    position: {
-                        x: '500',
-                        y: '50',
-                        z: '-100',
-                    },
-                    look_at: {
-                        x: '0',
-                        y: '0',
-                        z: '0',
-                    },
-                },
-            },
-            objects: {
-                point_light: {
-                    type: 'light.point',
-                    position: {
-                        x: '15',
-                        y: '4',
-                        z: '10',
-                    },
-                    intensity: '2000',
-                    color: 'new Color("#ffffff")',
-                    visible: 'true',
-                },
-                ambient_light: {
-                    type: 'light.ambient',
-                    intensity: '1',
-                    color: 'new Color("#ffffff")',
-                    visible: 'true',
-                },
-                logo: {
-                    type: 'card.3d',
-                    config: {
-                        type: 'picture',
-                        image: 'https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png',
-                        card_mod: {
-                            style: `ha-card {
-  background: none !important;
-  box-shadow: none;
-}`,
-                        },
-                    },
-                    size: {
-                        height: '"auto"',
-                        width: '"auto"',
-                    },
-                    position: {
-                        x: '0',
-                        y: '0',
-                        z: '0',
-                    },
-                    rotation: {
-                        x: '0',
-                        y: 'Math.PI / 2',
-                        z: '0',
-                    },
-                    scale: {
-                        height: '1',
-                        width: '1',
-                    },
-                    visible: 'true',
-                },
-            },
-        },
-    },
-})
+const DefaultConfiguration = new Configuration(DEFAULT_CONFIG)

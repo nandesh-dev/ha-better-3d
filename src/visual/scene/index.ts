@@ -57,7 +57,7 @@ export class Scene {
         let activeCameraName
 
         try {
-            activeCameraName = this.evaluator.evaluate<string>(configuration.activeCamera.value)
+            activeCameraName = this.evaluator.evaluate<string>(configuration.activeCamera)
         } catch (error) {
             throw new Error(`${configuration.activeCamera.encode()}: Error evaluating active camera expression`, error)
         }
@@ -112,7 +112,7 @@ export class Scene {
     public updateBackgroundColor(configuration: SceneConfiguration['backgroundColor'], evaluator: Evaluator) {
         let color
         try {
-            color = evaluator.evaluate<Color>(configuration.value)
+            color = evaluator.evaluate<Color>(configuration)
         } catch (error) {
             throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
         }

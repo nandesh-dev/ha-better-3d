@@ -1,11 +1,4 @@
-import {
-    CommonPositionConfiguration,
-    CommonRotationConfiguration,
-    CommonScaleConfiguration,
-    CommonSizeConfiguration,
-    ExpressionConfiguration,
-    HTMLSizeConfiguration,
-} from './common'
+import { Expression } from './expression'
 
 export type ObjectConfiguration =
     | Card2DConfiguration
@@ -30,19 +23,19 @@ export class CardConfigConfiguration {
 
 export class Card3DConfiguration {
     public config: CardConfigConfiguration
-    public size: HTMLSizeConfiguration
-    public position: CommonPositionConfiguration
-    public rotation: CommonRotationConfiguration
-    public scale: CommonSizeConfiguration
-    public visible: ExpressionConfiguration
+    public size: Expression
+    public position: Expression
+    public rotation: Expression
+    public scale: Expression
+    public visible: Expression
 
     constructor(raw: any) {
         this.config = new CardConfigConfiguration(raw?.config)
-        this.size = new HTMLSizeConfiguration(raw?.size)
-        this.position = new CommonPositionConfiguration(raw?.position)
-        this.rotation = new CommonPositionConfiguration(raw?.rotation)
-        this.scale = new CommonSizeConfiguration(raw?.scale, { height: '1', width: '1' })
-        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+        this.size = new Expression(raw?.size, 'new HTMLSize("auto", "auto")')
+        this.position = new Expression(raw?.position, 'new Vector3(0, 0, 0)')
+        this.rotation = new Expression(raw?.rotation, 'new Euler(0, 0, 0)')
+        this.scale = new Expression(raw?.scale, 'new Vector2(1, 1)')
+        this.visible = new Expression(raw?.visible, 'true')
     }
 
     public encode() {
@@ -60,19 +53,19 @@ export class Card3DConfiguration {
 
 export class Card2DConfiguration {
     public config: CardConfigConfiguration
-    public size: HTMLSizeConfiguration
-    public position: CommonPositionConfiguration
-    public rotation: CommonRotationConfiguration
-    public scale: CommonSizeConfiguration
-    public visible: ExpressionConfiguration
+    public size: Expression
+    public position: Expression
+    public rotation: Expression
+    public scale: Expression
+    public visible: Expression
 
     constructor(raw: any) {
         this.config = new CardConfigConfiguration(raw?.config)
-        this.size = new HTMLSizeConfiguration(raw?.size)
-        this.position = new CommonPositionConfiguration(raw?.position)
-        this.rotation = new CommonPositionConfiguration(raw?.rotation)
-        this.scale = new CommonSizeConfiguration(raw?.scale, { height: '1', width: '1' })
-        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+        this.size = new Expression(raw?.size, 'new HTMLSize("auto", "auto")')
+        this.position = new Expression(raw?.position, 'new Vector3(0, 0, 0)')
+        this.rotation = new Expression(raw?.rotation, 'new Euler(0, 0, 0)')
+        this.scale = new Expression(raw?.scale, 'new Vector2(1, 1)')
+        this.visible = new Expression(raw?.visible, 'true')
     }
 
     public encode() {
@@ -89,18 +82,18 @@ export class Card2DConfiguration {
 }
 
 export class GLBModelConfiguration {
-    public url: ExpressionConfiguration
-    public position: CommonPositionConfiguration
-    public rotation: CommonRotationConfiguration
-    public scale: CommonScaleConfiguration
-    public visible: ExpressionConfiguration
+    public url: Expression
+    public position: Expression
+    public rotation: Expression
+    public scale: Expression
+    public visible: Expression
 
     constructor(raw: any) {
-        this.url = new ExpressionConfiguration(raw?.url, '')
-        this.position = new CommonPositionConfiguration(raw?.position)
-        this.rotation = new CommonPositionConfiguration(raw?.rotation)
-        this.scale = new CommonPositionConfiguration(raw?.scale)
-        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+        this.url = new Expression(raw?.url, '')
+        this.position = new Expression(raw?.position, 'new Vector3(0, 0, 0)')
+        this.rotation = new Expression(raw?.rotation, 'new Euler(0, 0, 0)')
+        this.scale = new Expression(raw?.scale, 'new Vector3(1, 1, 1)')
+        this.visible = new Expression(raw?.visible, 'true')
     }
 
     public encode() {
@@ -116,16 +109,16 @@ export class GLBModelConfiguration {
 }
 
 export class PointLightConfiguration {
-    public position: CommonPositionConfiguration
-    public intensity: ExpressionConfiguration
-    public color: ExpressionConfiguration
-    public visible: ExpressionConfiguration
+    public position: Expression
+    public intensity: Expression
+    public color: Expression
+    public visible: Expression
 
     constructor(raw: any) {
-        this.position = new CommonPositionConfiguration(raw?.position)
-        this.intensity = new ExpressionConfiguration(raw?.intensity, '"1000"')
-        this.color = new ExpressionConfiguration(raw?.color, 'new Color("#ffffff")')
-        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+        this.position = new Expression(raw?.position, 'new Vector3(0, 0, 0)')
+        this.intensity = new Expression(raw?.intensity, '"1000"')
+        this.color = new Expression(raw?.color, 'new Color("#ffffff")')
+        this.visible = new Expression(raw?.visible, 'true')
     }
 
     public encode() {
@@ -140,14 +133,14 @@ export class PointLightConfiguration {
 }
 
 export class AmbientLightConfiguration {
-    public intensity: ExpressionConfiguration
-    public color: ExpressionConfiguration
-    public visible: ExpressionConfiguration
+    public intensity: Expression
+    public color: Expression
+    public visible: Expression
 
     constructor(raw: any) {
-        this.intensity = new ExpressionConfiguration(raw?.intensity, '"10"')
-        this.color = new ExpressionConfiguration(raw?.color, 'new Color("#ffffff")')
-        this.visible = new ExpressionConfiguration(raw?.visible, 'true')
+        this.intensity = new Expression(raw?.intensity, '"10"')
+        this.color = new Expression(raw?.color, 'new Color("#ffffff")')
+        this.visible = new Expression(raw?.visible, 'true')
     }
 
     public encode() {

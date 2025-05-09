@@ -31,33 +31,33 @@ export class PerspectiveOrbitalCamera {
         let projectionPropertiesChanged = false
 
         try {
-            const fov = this.evaluator.evaluate<number>(configuration.fov.value)
+            const fov = this.evaluator.evaluate<number>(configuration.fov)
             if (this.three.fov !== fov) {
                 projectionPropertiesChanged = true
                 this.three.fov = fov
             }
         } catch (error) {
-            throw new Error(`${configuration.fov.encode()}: Update field of view`, error)
+            throw new Error(`${configuration.fov.encode()}: Cannot evaluate field of view`, error)
         }
 
         try {
-            const near = this.evaluator.evaluate<number>(configuration.near.value)
+            const near = this.evaluator.evaluate<number>(configuration.near)
             if (this.three.near !== near) {
                 projectionPropertiesChanged = true
                 this.three.near = near
             }
         } catch (error) {
-            throw new Error(`${configuration.near.encode()}: Update near point`, error)
+            throw new Error(`${configuration.near.encode()}: Cannot evaluate near point`, error)
         }
 
         try {
-            const far = this.evaluator.evaluate<number>(configuration.far.value)
+            const far = this.evaluator.evaluate<number>(configuration.far)
             if (this.three.far !== far) {
                 projectionPropertiesChanged = true
                 this.three.far = far
             }
         } catch (error) {
-            throw new Error(`${configuration.far.encode()}: Update far point`, error)
+            throw new Error(`${configuration.far.encode()}: Cannot evaluate far point`, error)
         }
 
         if (projectionPropertiesChanged) this.three.updateProjectionMatrix()
@@ -66,65 +66,20 @@ export class PerspectiveOrbitalCamera {
         this.hadFirstUpdate = true
 
         try {
-            this.updatePosition(configuration.position)
+            const position = this.evaluator.evaluate<Vector3>(configuration.position)
+            this.three.position.copy(position)
         } catch (error) {
-            throw new Error('Update position', error)
+            throw new Error('Cannot evaluate position', error)
         }
 
         try {
-            this.updateLookAt(configuration.lookAt)
+            const lookAt = this.evaluator.evaluate<Vector3>(configuration.lookAt)
+            this.control.target = lookAt
         } catch (error) {
-            throw new Error('Update lookAt', error)
+            throw new Error('Cannot evaluate lookAt', error)
         }
 
         this.control.update()
-    }
-
-    private updateLookAt(configuration: PerspectiveOrbitalCameraConfiguration['lookAt']) {
-        let x, y, z
-
-        try {
-            x = this.evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = this.evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = this.evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.control.target = new Vector3(x, y, z)
-    }
-
-    private updatePosition(configuration: PerspectiveOrbitalCameraConfiguration['position']) {
-        try {
-            const x = this.evaluator.evaluate<number>(configuration.x.value)
-            this.three.position.x = x
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            const y = this.evaluator.evaluate<number>(configuration.y.value)
-            this.three.position.y = y
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            const z = this.evaluator.evaluate<number>(configuration.z.value)
-            this.three.position.z = z
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
     }
 
     public updateSize(size: Size) {

@@ -1,9 +1,8 @@
-import { Group } from 'three'
+import { Euler, Group, Vector3 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
-import { ExpressionConfiguration } from '@/configuration/common'
 import { GLBModelConfiguration } from '@/configuration/objects'
 
 import { Error } from '@/utility/error'
@@ -19,6 +18,7 @@ export class GLBModel {
     private disposed: boolean = false
     private resourceManager: ResourceManager
     private evaluator: Evaluator
+
     constructor(name: string, resourceManager: ResourceManager, evaluator: Evaluator) {
         this.three = new Group()
         this.name = name
@@ -30,52 +30,48 @@ export class GLBModel {
     public updateProperties(configuration: GLBModelConfiguration) {
         const evaluator = this.evaluator.withContextValue('Self', {
             url: this.url,
-            position: {
-                x: this.three.position.x,
-                y: this.three.position.y,
-                z: this.three.position.z,
-            },
-            rotation: {
-                x: this.three.rotation.x,
-                y: this.three.rotation.y,
-                z: this.three.rotation.z,
-            },
-            scale: {
-                x: this.three.scale.x,
-                y: this.three.scale.y,
-                z: this.three.scale.z,
-            },
+            position: this.three.position.clone(),
+            rotation: this.three.rotation.clone(),
+            scale: this.three.scale.clone(),
         })
 
         try {
-            this.updateUrl(configuration.url, evaluator)
+            const visible = evaluator.evaluate<boolean>(configuration.visible)
+            this.three.visible = visible
         } catch (error) {
-            throw new Error(`Update url`, error)
-        }
-
-        try {
-            this.updateVisible(configuration.visible, evaluator)
-        } catch (error) {
-            throw new Error(`Update visible`, error)
+            throw new Error(`Error evaluating visible`, error)
         }
 
         if (this.three.visible) {
             try {
-                this.updatePosition(configuration.position, evaluator)
+                const url = evaluator.evaluate<string>(configuration.url)
+                if (this.url !== url) {
+                    this.url = url
+                    this.loadModel(url)
+                }
             } catch (error) {
-                throw new Error('Update position', error)
+                throw new Error(`${configuration.url.encode()}: Error evaluating url`, error)
             }
 
             try {
-                this.updateRotation(configuration.rotation, evaluator)
+                const position = evaluator.evaluate<Vector3>(configuration.position)
+                this.three.position.copy(position)
             } catch (error) {
-                throw new Error('Update rotation', error)
+                throw new Error(`${configuration.position.encode()}: Error evaluating position`, error)
             }
 
             try {
-                this.updateScale(configuration.scale, evaluator)
+                const rotation = evaluator.evaluate<Euler>(configuration.rotation)
+                this.three.rotation.copy(rotation)
             } catch (error) {
-                throw new Error('Update scale', error)
+                throw new Error(`${configuration.rotation.encode()}: Error evaluating rotation`, error)
+            }
+
+            try {
+                const scale = evaluator.evaluate<Vector3>(configuration.scale)
+                this.three.scale.copy(scale)
+            } catch (error) {
+                throw new Error(`${configuration.scale.encode()}: Error evaluating scale`, error)
             }
         }
     }
@@ -83,102 +79,6 @@ export class GLBModel {
     public dispose() {
         this.disposed = true
         if (this.three) dispose(this.three)
-    }
-
-    private updateUrl(configuration: GLBModelConfiguration['url'], evaluator: Evaluator) {
-        let url
-        try {
-            url = evaluator.evaluate<string>(configuration.value)
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-        if (this.url !== url) {
-            this.url = url
-            this.loadModel(url)
-            return
-        }
-    }
-
-    private updateVisible(configuration: ExpressionConfiguration, evaluator: Evaluator) {
-        let visible
-        try {
-            visible = evaluator.evaluate<boolean>(configuration.value)
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-        this.three.visible = visible
-    }
-
-    private updatePosition(configuration: GLBModelConfiguration['position'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.position.set(x, y, z)
-    }
-
-    private updateRotation(configuration: GLBModelConfiguration['rotation'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.rotation.set(x, y, z)
-    }
-
-    private updateScale(configuration: GLBModelConfiguration['scale'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.scale.set(x, y, z)
     }
 
     private async loadModel(url: string) {

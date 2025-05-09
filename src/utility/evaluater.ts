@@ -1,8 +1,8 @@
-import { Color } from 'three'
+import { Color, Euler, Vector2, Vector3 } from 'three'
+
+import { Expression } from '@/configuration/expression'
 
 import { Error } from './error'
-
-export type Expression = string
 
 export type EvaluatorContext = { [key: string]: unknown }
 
@@ -21,13 +21,22 @@ export class Evaluator {
     }
 
     public evaluate<T>(expression: Expression): T {
-        const parameters = ['Math', 'Color', ...Object.keys(this.context)]
-        const argumentValues = [Math, Color, ...Object.values(this.context)]
+        const parameters = ['Math', 'Color', 'Vector3', 'Vector2', 'HTMLSize', 'Euler', ...Object.keys(this.context)]
+        const argumentValues = [Math, Color, Vector3, Vector2, HTMLSize, Euler, ...Object.values(this.context)]
 
         try {
-            return new Function(...parameters, `return ${expression}`)(...argumentValues)
+            return new Function(...parameters, `return ${expression.value}`)(...argumentValues)
         } catch (error) {
             throw new Error((error as any).toString())
         }
+    }
+}
+
+export class HTMLSize {
+    public height: string
+    public width: string
+    constructor(height: string, width: string) {
+        this.height = height
+        this.width = width
     }
 }

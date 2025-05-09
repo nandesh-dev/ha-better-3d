@@ -1,6 +1,4 @@
-import { Color, PointLight as ThreePointLight } from 'three'
-
-import { dispose } from '@/visual/dispose'
+import { Color, PointLight as ThreePointLight, Vector3 } from 'three'
 
 import { PointLightConfiguration } from '@/configuration/objects'
 
@@ -21,95 +19,42 @@ export class PointLight {
 
     public updateProperties(configuration: PointLightConfiguration) {
         const evaluator = this.evaluator.withContextValue('Self', {
-            position: {
-                x: this.three.position.x,
-                y: this.three.position.y,
-                z: this.three.position.z,
-            },
             visible: this.three.visible,
             color: this.three.color.clone(),
             intensity: this.three.intensity,
+            position: this.three.position.clone(),
         })
 
         try {
-            this.updateVisible(configuration.visible, evaluator)
+            const visible = evaluator.evaluate<boolean>(configuration.visible)
+            this.three.visible = visible
         } catch (error) {
-            throw new Error(`Update visible`, error)
+            throw new Error(`${configuration.visible.encode()}: Error evaluating visible`, error)
         }
 
         if (this.three.visible) {
             try {
-                this.updatePosition(configuration.position, evaluator)
+                const color = evaluator.evaluate<Color>(configuration.color)
+                this.three.color.copy(color)
             } catch (error) {
-                throw new Error(`Update position`, error)
+                throw new Error(`${configuration.color.encode()}: Error evaluating color`, error)
             }
 
             try {
-                this.updateColor(configuration.color, evaluator)
+                const intensity = evaluator.evaluate<number>(configuration.intensity)
+                this.three.intensity = intensity
             } catch (error) {
-                throw new Error(`Update color`, error)
+                throw new Error(`${configuration.intensity.encode()}: Error evaluating intensity`, error)
             }
 
             try {
-                this.updateIntensity(configuration.intensity, evaluator)
+                const position = evaluator.evaluate<Vector3>(configuration.position)
+                this.three.position.copy(position)
             } catch (error) {
-                throw new Error(`Update intensity`, error)
+                throw new Error(`${configuration.intensity.encode()}: Error evaluating intensity`, error)
             }
         }
     }
 
-    public dispose() {
-        dispose(this.three)
-    }
-
-    private updateVisible(configuration: PointLightConfiguration['visible'], evaluator: Evaluator) {
-        try {
-            const visible = evaluator.evaluate<boolean>(configuration.value)
-            this.three.visible = visible
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updateColor(configuration: PointLightConfiguration['color'], evaluator: Evaluator) {
-        try {
-            const color = evaluator.evaluate<Color>(configuration.value)
-            this.three.color = color
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updateIntensity(configuration: PointLightConfiguration['intensity'], evaluator: Evaluator) {
-        try {
-            const intensity = evaluator.evaluate<number>(configuration.value)
-            this.three.intensity = intensity
-        } catch (error) {
-            throw new Error(`${configuration.encode()}: Error evaluating expression`, error)
-        }
-    }
-
-    private updatePosition(configuration: PointLightConfiguration['position'], evaluator: Evaluator) {
-        let x, y, z
-
-        try {
-            x = evaluator.evaluate<number>(configuration.x.value)
-        } catch (error) {
-            throw new Error(`${configuration.x.encode()}: Error evaluating x expression`, error)
-        }
-
-        try {
-            y = evaluator.evaluate<number>(configuration.y.value)
-        } catch (error) {
-            throw new Error(`${configuration.y.encode()}: Error evaluating y expression`, error)
-        }
-
-        try {
-            z = evaluator.evaluate<number>(configuration.z.value)
-        } catch (error) {
-            throw new Error(`${configuration.z.encode()}: Error evaluating z expression`, error)
-        }
-
-        this.three.position.set(x, y, z)
-    }
+    public dispose() {}
 }
