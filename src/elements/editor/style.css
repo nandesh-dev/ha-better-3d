@@ -129,6 +129,21 @@
     border-radius: var(--spacing-md);
     padding: var(--spacing-md);
 }
+
+.input {
+    padding-top: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+}
+
+.input-input {
+    box-sizing: border-box;
+    width: 100% !important;
+    border: 0px;
+    background-color: var(--color-neutral__light);
+    border-radius: var(--spacing-md);
+    padding: var(--spacing-md);
+}
+
 .config-editor {
     padding-top: var(--spacing-md);
     padding-bottom: var(--spacing-md);

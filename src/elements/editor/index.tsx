@@ -29,6 +29,7 @@ import {
     HTMLSizePattern,
     Vector3Pattern,
 } from './components/expression'
+import { Input } from './components/input'
 import { LightIcon } from './components/light_icon'
 import { ModelIcon } from './components/model_icon'
 import { Select } from './components/select'
@@ -67,6 +68,38 @@ export function Editor({ config: rawConfiguration, setConfig }: ComponentProps) 
         setConfiguration(new Configuration(configuration.encode()))
     }
 
+    const updateSelectedSceneChildrenName = (newName: string) => {
+        if (selectedSceneName == null || selectedSceneChildrenType == null || selectedSceneChildrenName == null) return
+
+        if (selectedSceneChildrenType == 'object') {
+            while (configuration.scenes[selectedSceneName].objects[newName]) {
+                newName = '_' + newName
+            }
+            configuration.scenes[selectedSceneName].objects[newName] =
+                configuration.scenes[selectedSceneName].objects[selectedSceneChildrenName]
+            delete configuration.scenes[selectedSceneName].objects[selectedSceneChildrenName]
+        } else if (selectedSceneChildrenType == 'camera') {
+            while (configuration.scenes[selectedSceneName].cameras[newName]) {
+                newName = '_' + newName
+            }
+            configuration.scenes[selectedSceneName].cameras[newName] =
+                configuration.scenes[selectedSceneName].cameras[selectedSceneChildrenName]
+            delete configuration.scenes[selectedSceneName].cameras[selectedSceneChildrenName]
+        }
+
+        updateConfiguration()
+        setSelectedSceneChildrenName(newName)
+    }
+
+    const updateSelectedSceneName = (newName: string) => {
+        if (selectedSceneName == null) return
+
+        configuration.scenes[newName] = configuration.scenes[selectedSceneName]
+        delete configuration.scenes[selectedSceneName]
+        updateConfiguration()
+        setSelectedSceneName(newName)
+    }
+
     return (
         <>
             <style>{Style}</style>
@@ -85,6 +118,8 @@ export function Editor({ config: rawConfiguration, setConfig }: ComponentProps) 
                     selectedSceneChildrenType={selectedSceneChildrenType}
                     configuration={configuration}
                     onChange={updateConfiguration}
+                    updateSelectedSceneName={updateSelectedSceneName}
+                    updateSelectedSceneChildrenName={updateSelectedSceneChildrenName}
                 />
             </div>
         </>
@@ -101,6 +136,8 @@ type SelectedPanelSettingProperties = {
     selectedSceneChildrenType: 'camera' | 'object' | null
     configuration: Configuration
     onChange: () => void
+    updateSelectedSceneName: (newName: string) => void
+    updateSelectedSceneChildrenName: (newName: string) => void
 }
 
 function SelectedPanelSetting({
@@ -109,6 +146,8 @@ function SelectedPanelSetting({
     selectedSceneChildrenType,
     configuration,
     onChange,
+    updateSelectedSceneName,
+    updateSelectedSceneChildrenName,
 }: SelectedPanelSettingProperties) {
     if (selectedSceneName !== null) {
         const selectedScene = configuration.scenes[selectedSceneName]
@@ -147,12 +186,15 @@ function SelectedPanelSetting({
 
                         onChange()
                     }
+
                     return (
                         <ObjectSettings
                             key={selectedSceneChildrenName}
                             configuration={selectedScene.objects[selectedSceneChildrenName]}
                             onChange={onChange}
                             changeType={changeObjectType}
+                            name={selectedSceneChildrenName}
+                            updateName={updateSelectedSceneChildrenName}
                         />
                     )
                 }
@@ -163,6 +205,8 @@ function SelectedPanelSetting({
                             key={selectedSceneChildrenName}
                             configuration={selectedScene.cameras[selectedSceneChildrenName]}
                             onChange={onChange}
+                            name={selectedSceneChildrenName}
+                            updateName={updateSelectedSceneChildrenName}
                         />
                     )
                 }
@@ -172,6 +216,8 @@ function SelectedPanelSetting({
                 <SceneSettings
                     key={selectedSceneName}
                     configuration={configuration.scenes[selectedSceneName]}
+                    name={selectedSceneName}
+                    updateName={updateSelectedSceneName}
                     onChange={onChange}
                 />
             )
@@ -314,10 +360,12 @@ function Sidebar({
 
 type SceneSettingsProperties = {
     configuration: SceneConfiguration
+    name: string
+    updateName: (newName: string) => void
     onChange: () => void
 }
 
-function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
+function SceneSettings({ configuration, onChange, name, updateName }: SceneSettingsProperties) {
     const addCamera = () => {
         if (!configuration.cameras['untitled']) {
             configuration.cameras['untitled'] = new PerspectiveOrbitalCameraConfiguration({})
@@ -352,6 +400,7 @@ function SceneSettings({ configuration, onChange }: SceneSettingsProperties) {
         <div class="panel scene">
             <span class="panel-name">Scene Settings</span>
             <div class="scene-inner">
+                <Input label="Name" value={name} setValue={updateName} />
                 <Expression
                     label="Active Camera"
                     configuration={configuration.activeCamera}
@@ -381,9 +430,11 @@ type ObjectSettingsProperties = {
     configuration: ObjectConfiguration
     changeType: (type: string) => void
     onChange: () => void
+    name: string
+    updateName: (newName: string) => void
 }
 
-function ObjectSettings({ configuration, onChange, changeType }: ObjectSettingsProperties) {
+function ObjectSettings({ configuration, name, updateName, onChange, changeType }: ObjectSettingsProperties) {
     let objectType = ''
     if (configuration instanceof Card2DConfiguration) {
         objectType = 'card.2d'
@@ -401,6 +452,7 @@ function ObjectSettings({ configuration, onChange, changeType }: ObjectSettingsP
         <div class="panel object">
             <span class="panel-name">Object Settings</span>
             <div class="object-inner">
+                <Input label="Name" value={name} setValue={updateName} />
                 <Select
                     label="Type"
                     selected={objectType}
@@ -534,13 +586,16 @@ function ObjectSettings({ configuration, onChange, changeType }: ObjectSettingsP
 type CameraSettingsProperties = {
     configuration: CameraConfiguration
     onChange: () => void
+    name: string
+    updateName: (newName: string) => void
 }
 
-function CameraSettings({ configuration, onChange }: CameraSettingsProperties) {
+function CameraSettings({ configuration, name, onChange, updateName }: CameraSettingsProperties) {
     return (
         <div class="panel camera">
             <span class="panel-name">Camera Settings</span>
             <div class="camera-inner">
+                <Input label="Name" value={name} setValue={updateName} />
                 <Expression
                     label="FOV"
                     configuration={configuration.fov}
