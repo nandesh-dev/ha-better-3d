@@ -30,29 +30,27 @@ export const DEFAULT_CONFIG = {
     scenes: {
         primary_scene: {
             active_camera: '"primary_camera"',
-            background_color: 'new Color("#eeeeee")',
-            cameras: {
+            background_color: 'new color("#eeeeee")',
+            objects: {
                 primary_camera: {
-                    type: 'orbital.perspective',
+                    type: 'camera.perspective',
                     fov: '50',
                     near: '0.1',
                     far: '10000',
-                    position: 'new Vector3(100, 20, 300)',
-                    look_at: 'new Vector3(0, 0, 0)',
+                    position: 'new vector3(100, 20, 300)',
+                    look_at: 'new vector3(0, 0, 0)',
                 },
-            },
-            objects: {
                 point_light: {
                     type: 'light.point',
-                    position: 'new Vector3(0, 0, 0)',
+                    position: 'new vector3(0, 0, 0)',
                     intensity: '2000',
-                    color: 'new Color("#ffffff")',
+                    color: 'new color("#ffffff")',
                     visible: 'true',
                 },
                 ambient_light: {
                     type: 'light.ambient',
                     intensity: '1',
-                    color: 'new Color("#ffffff")',
+                    color: 'new color("#ffffff")',
                     visible: 'true',
                 },
                 logo: {
@@ -67,10 +65,10 @@ export const DEFAULT_CONFIG = {
 }`,
                         },
                     },
-                    size: 'new HTMLSize("auto", "auto")',
-                    position: 'new Vector3(0, 0, 0)',
-                    rotation: 'new Euler(0, 0, 0)',
-                    scale: 'new Vector3(1, 1, 1)',
+                    size: 'new htmlsize("auto", "auto")',
+                    position: 'new vector3(0, 0, 0)',
+                    rotation: 'new euler(0, 0, 0)',
+                    scale: 'new vector3(1, 1, 1)',
                     visible: 'true',
                 },
             },

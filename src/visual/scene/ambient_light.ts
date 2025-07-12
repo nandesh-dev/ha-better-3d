@@ -1,6 +1,7 @@
 import { Color, AmbientLight as ThreeAmbientLight } from 'three'
 
 import { AmbientLightConfiguration } from '@/configuration/objects'
+import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
@@ -29,7 +30,7 @@ export class AmbientLight {
             const visible = evaluator.evaluate<boolean>(configuration.visible)
             this.three.visible = visible
         } catch (error) {
-            throw new Error(`${configuration.visible.encode()}: Error evaluating visible`, error)
+            throw new Error(`${encodeExpression(configuration.visible)}: Error evaluating visible`, error)
         }
 
         if (this.three.visible) {
@@ -37,14 +38,14 @@ export class AmbientLight {
                 const color = evaluator.evaluate<Color>(configuration.color)
                 this.three.color.copy(color)
             } catch (error) {
-                throw new Error(`${configuration.color.encode()}: Error evaluating color`, error)
+                throw new Error(`${encodeExpression(configuration.color)}: Error evaluating color`, error)
             }
 
             try {
                 const intensity = evaluator.evaluate<number>(configuration.intensity)
                 this.three.intensity = intensity
             } catch (error) {
-                throw new Error(`${configuration.intensity.encode()}: Error evaluating intensity`, error)
+                throw new Error(`${encodeExpression(configuration.intensity)}: Error evaluating intensity`, error)
             }
         }
     }

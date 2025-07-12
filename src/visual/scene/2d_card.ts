@@ -4,6 +4,7 @@ import { CSS3DSprite } from 'three/examples/jsm/Addons.js'
 import { dispose } from '@/visual/dispose'
 
 import { Card2DConfiguration } from '@/configuration/objects'
+import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
 import { Evaluator, HTMLSize } from '@/utility/evaluater'
@@ -74,28 +75,28 @@ export class Card2D {
                 const size = evaluator.evaluate<HTMLSize>(configuration.size)
                 Object.assign(this.cardOuterElement.style, size)
             } catch (error) {
-                throw new Error(`${configuration.size.encode()}: Error evaluating size`, error)
+                throw new Error(`${encodeExpression(configuration.size)}: Error evaluating size`, error)
             }
 
             try {
                 const position = evaluator.evaluate<Vector3>(configuration.position)
                 this.three.position.copy(position)
             } catch (error) {
-                throw new Error(`${configuration.position.encode()}: Error evaluating position`, error)
+                throw new Error(`${encodeExpression(configuration.position)}: Error evaluating position`, error)
             }
 
             try {
                 const rotation = evaluator.evaluate<Euler>(configuration.rotation)
                 this.three.rotation.copy(rotation)
             } catch (error) {
-                throw new Error(`${configuration.rotation.encode()}: Error evaluating rotation`, error)
+                throw new Error(`${encodeExpression(configuration.rotation)}: Error evaluating rotation`, error)
             }
 
             try {
                 const scale = evaluator.evaluate<Vector2>(configuration.scale)
                 this.three.scale.set(scale.x, scale.y, 1)
             } catch (error) {
-                throw new Error(`${configuration.scale.encode()}: Error evaluating scale`, error)
+                throw new Error(`${encodeExpression(configuration.scale)}: Error evaluating scale`, error)
             }
         }
     }

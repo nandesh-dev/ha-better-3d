@@ -1,7 +1,8 @@
 import { PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
-import { PerspectiveOrbitalCameraConfiguration } from '@/configuration/cameras'
+import { PerspectiveCameraConfiguration } from '@/configuration/objects'
+import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
@@ -11,7 +12,7 @@ type Size = {
     height: number
 }
 
-export class PerspectiveOrbitalCamera {
+export class PerspectiveCamera {
     public type: string = 'orbital.perspective'
     public name: string
     public three: ThreePerspectiveCamera
@@ -19,6 +20,7 @@ export class PerspectiveOrbitalCamera {
     private hadFirstUpdate: boolean = false
     private control: OrbitControls
     private evaluator: Evaluator
+
     constructor(name: string, domElement: HTMLElement, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreePerspectiveCamera()
@@ -27,7 +29,7 @@ export class PerspectiveOrbitalCamera {
         this.evaluator = evaluator
     }
 
-    public updateProperties(configuration: PerspectiveOrbitalCameraConfiguration) {
+    public updateProperties(configuration: PerspectiveCameraConfiguration) {
         let projectionPropertiesChanged = false
 
         try {
@@ -37,7 +39,7 @@ export class PerspectiveOrbitalCamera {
                 this.three.fov = fov
             }
         } catch (error) {
-            throw new Error(`${configuration.fov.encode()}: Cannot evaluate field of view`, error)
+            throw new Error(`${encodeExpression(configuration.fov)}: Cannot evaluate field of view`, error)
         }
 
         try {
@@ -47,7 +49,7 @@ export class PerspectiveOrbitalCamera {
                 this.three.near = near
             }
         } catch (error) {
-            throw new Error(`${configuration.near.encode()}: Cannot evaluate near point`, error)
+            throw new Error(`${encodeExpression(configuration.near)}: Cannot evaluate near point`, error)
         }
 
         try {
@@ -57,7 +59,7 @@ export class PerspectiveOrbitalCamera {
                 this.three.far = far
             }
         } catch (error) {
-            throw new Error(`${configuration.far.encode()}: Cannot evaluate far point`, error)
+            throw new Error(`${encodeExpression(configuration.far)}: Cannot evaluate far point`, error)
         }
 
         if (projectionPropertiesChanged) this.three.updateProjectionMatrix()

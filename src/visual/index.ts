@@ -1,6 +1,8 @@
 import { Configuration } from '@/configuration'
 import { GlobalResourceManager } from '@/global'
 
+import { encodeExpression } from '@/configuration/value'
+
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { encodeStates } from '@/utility/home_assistant/encode_states'
@@ -36,6 +38,8 @@ export class Visual {
         this.size = size
         this.configuration = configuration
         this.homeAssistant = homeAssistant
+
+        console.log(this.configuration)
 
         this.resourceManager = GlobalResourceManager
         this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
@@ -105,7 +109,10 @@ export class Visual {
             try {
                 activeSceneName = this.evaluator.evaluate<string>(this.configuration.activeScene)
             } catch (error) {
-                throw new Error(`${this.configuration.activeScene.encode()}: Error evaluating active scene`, error)
+                throw new Error(
+                    `${encodeExpression(this.configuration.activeScene)}: Error evaluating active scene`,
+                    error
+                )
             }
             this.activeScene = this.scenes[activeSceneName]
             if (!this.activeScene) return

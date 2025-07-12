@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 import { dispose } from '@/visual/dispose'
 
 import { GLBModelConfiguration } from '@/configuration/objects'
+import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
@@ -50,28 +51,28 @@ export class GLBModel {
                     this.loadModel(url)
                 }
             } catch (error) {
-                throw new Error(`${configuration.url.encode()}: Error evaluating url`, error)
+                throw new Error(`${encodeExpression(configuration.url)}: Error evaluating url`, error)
             }
 
             try {
                 const position = evaluator.evaluate<Vector3>(configuration.position)
                 this.three.position.copy(position)
             } catch (error) {
-                throw new Error(`${configuration.position.encode()}: Error evaluating position`, error)
+                throw new Error(`${encodeExpression(configuration.position)}: Error evaluating position`, error)
             }
 
             try {
                 const rotation = evaluator.evaluate<Euler>(configuration.rotation)
                 this.three.rotation.copy(rotation)
             } catch (error) {
-                throw new Error(`${configuration.rotation.encode()}: Error evaluating rotation`, error)
+                throw new Error(`${encodeExpression(configuration.rotation)}: Error evaluating rotation`, error)
             }
 
             try {
                 const scale = evaluator.evaluate<Vector3>(configuration.scale)
                 this.three.scale.copy(scale)
             } catch (error) {
-                throw new Error(`${configuration.scale.encode()}: Error evaluating scale`, error)
+                throw new Error(`${encodeExpression(configuration.scale)}: Error evaluating scale`, error)
             }
         }
     }
