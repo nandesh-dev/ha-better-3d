@@ -87,7 +87,6 @@ export class Card3D {
 
             try {
                 const rotation = evaluator.evaluate<Euler>(configuration.rotation)
-                console.log(rotation)
                 this.three.rotation.copy(rotation)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.rotation)}: Error evaluating rotation`, error)

@@ -39,8 +39,6 @@ export class Visual {
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
-        console.log(this.configuration)
-
         this.resourceManager = GlobalResourceManager
         this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
 
