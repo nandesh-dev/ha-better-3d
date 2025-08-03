@@ -63,7 +63,7 @@ export type SceneConfiguration = {
 
 export const DEFAULT_SCENE_CONFIGURATION: SceneConfiguration = {
     activeCamera: '"primary_camera"',
-    backgroundColor: 'new color("#eeeeee")',
+    backgroundColor: 'new Color("#eeeeee")',
     objects: {
         primary_camera: DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
         point_light: DEFAULT_POINT_LIGHT_CONFIGURATION,
