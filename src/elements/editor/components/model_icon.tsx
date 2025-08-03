@@ -1,8 +1,8 @@
-export type ModelIconParameters = {
+export type FlowerPotIconParameters = {
     selected?: boolean
 }
 
-export function ModelIcon(paramters: ModelIconParameters) {
+export function FlowerPotIcon(paramters: FlowerPotIconParameters) {
     return (
         <svg
             xmlns="http://www.w3.org/2000/svg"

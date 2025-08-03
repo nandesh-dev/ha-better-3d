@@ -6,6 +6,9 @@ import { ObjectConfiguration } from '@/configuration/objects'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 
 import { CameraIcon } from './components/camera_icon'
+import { CardIcon } from './components/card_icon'
+import { LightIcon } from './components/light_icon'
+import { FlowerPotIcon } from './components/model_icon'
 import { ParkIcon } from './components/park_icon'
 import { SettingIcon } from './components/setting_icon'
 import { StyleIcon } from './components/style_icon'
@@ -158,9 +161,30 @@ export function Editor(parameters: EditorParameters) {
                                     setActiveEditor('object')
                                     setActiveObject(name)
                                 }
+                                let type: SidebarItemParameters['type']
+                                switch (configuration.scenes[activeScene].objects[name].type) {
+                                    case 'card.2d':
+                                        type = 'card'
+                                        break
+                                    case 'card.3d':
+                                        type = 'card'
+                                        break
+                                    case 'model.glb':
+                                        type = 'model'
+                                        break
+                                    case 'light.point':
+                                        type = 'light'
+                                        break
+                                    case 'light.ambient':
+                                        type = 'light'
+                                        break
+                                    case 'camera.perspective':
+                                        type = 'camera'
+                                        break
+                                }
                                 return (
                                     <SidebarItem
-                                        type="camera"
+                                        type={type}
                                         name={name}
                                         onClick={switchToObjectEditor}
                                         selected={name === activeObject}
@@ -204,7 +228,7 @@ export function Editor(parameters: EditorParameters) {
 }
 
 type SidebarItemParameters = {
-    type: 'setting' | 'style' | 'camera' | 'scene'
+    type: 'setting' | 'style' | 'camera' | 'scene' | 'light' | 'model' | 'card'
     name: string
     selected?: boolean
     onClick: () => void
@@ -225,6 +249,16 @@ function SidebarItem(parameters: SidebarItemParameters) {
             break
         case 'scene':
             Icon = ParkIcon
+            break
+        case 'light':
+            Icon = LightIcon
+            break
+        case 'model':
+            Icon = FlowerPotIcon
+            break
+        case 'card':
+            Icon = CardIcon
+            break
     }
     return (
         <a
