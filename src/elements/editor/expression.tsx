@@ -1,121 +1,116 @@
-import { FormEventHandler, HTMLInputTypeAttribute } from 'preact/compat'
 import { useState } from 'preact/hooks'
 
-import { Expression as ConfigurationExpression } from '@/configuration/expression'
+import { Expression as ConfigurationExpression } from '@/configuration/value'
 
-export type Properties = {
+import { Checkbox } from './components/checkbox'
+import { Dropdown } from './components/dropdown'
+import { Input } from './components/input'
+import { Slider } from './components/slider'
+import { TextArea } from './components/text_area'
+
+export type ExpressionParameters = {
     label: string
-    configuration: ConfigurationExpression
-    onChange: () => void
+    value: ConfigurationExpression
+    onValueChange: (newValue: ConfigurationExpression) => void
     patterns: { [name: string]: Pattern }
 }
 
-export function Expression({ label, configuration, onChange, patterns }: Properties) {
+export function Expression(parameters: ExpressionParameters) {
     const [selectedPattern, setSelectedPattern] = useState(() => {
-        for (const patternName in patterns) {
-            const result = patterns[patternName].matchRegex(configuration.value)
+        for (const patternName in parameters.patterns) {
+            const result = parameters.patterns[patternName].matchRegex(parameters.value)
             if (result !== null) return patternName
         }
         return 'Custom'
     })
 
-    let values = ['']
+    let values
     if (selectedPattern == 'Custom') {
-        values = [configuration.value]
+        values = [parameters.value]
     } else {
-        const result = patterns[selectedPattern].matchRegex(configuration.value)
-        if (result !== null) values = result
-        else for (let i = values.length; i < patterns[selectedPattern].inputs.length; i++) values.push('')
-    }
-
-    const createOnValueChangeHandler = (i: number): FormEventHandler<HTMLInputElement> => {
-        return (e) => {
-            if (selectedPattern == 'Custom') {
-                configuration.value = e.currentTarget.value
-            } else {
-                values[i] = e.currentTarget.value
-                configuration.value = patterns[selectedPattern].computeValue(values)
-            }
-            onChange()
+        const result = parameters.patterns[selectedPattern].matchRegex(parameters.value)
+        if (result !== null) {
+            values = [...result]
+        } else {
+            values = new Array(parameters.patterns[selectedPattern].inputs.length).map(() => '')
         }
     }
 
-    const createOnCheckedHandler = (i: number): FormEventHandler<HTMLInputElement> => {
-        return (e) => {
-            if (selectedPattern == 'Custom') {
-                configuration.value = e.currentTarget.checked ? 'true' : 'false'
-            } else {
-                values[i] = e.currentTarget.checked ? 'true' : 'false'
-                configuration.value = patterns[selectedPattern].computeValue(values)
-            }
-            onChange()
-        }
+    const selectPattern = (newPatternName: string) => {
+        setSelectedPattern(newPatternName)
     }
 
-    const onSelectedPatternChange: FormEventHandler<HTMLSelectElement> = (e) => {
-        setSelectedPattern(e.currentTarget.value)
+    const updateValue = (newValue: string, index: number) => {
+        if (selectedPattern === 'Custom') {
+            parameters.onValueChange(newValue)
+            return
+        }
+        const newValues = [...values]
+        newValues[index] = newValue.toString()
+        parameters.onValueChange(parameters.patterns[selectedPattern].computeValue(newValues))
     }
 
     return (
         <div class="expression">
-            <span>{label}</span>
-            <div class="expression-inner">
+            <span class="panel__label">{parameters.label.toUpperCase()}</span>
+            <Dropdown
+                options={['Custom', ...Object.keys(parameters.patterns)]}
+                selected={selectedPattern}
+                onSelectedChange={selectPattern}
+            />
+            <div class="expression__values">
                 {selectedPattern == 'Custom' ? (
-                    <input value={values[0]} onInput={createOnValueChangeHandler(0)} type="string" />
+                    <TextArea
+                        value={values[0]}
+                        placeholder="Javascript Code"
+                        onValueChange={(newValue) => updateValue(newValue, 0)}
+                    />
                 ) : (
-                    patterns[selectedPattern].inputs.map(({ type, name }, i) => {
-                        if (type == 'number') {
+                    parameters.patterns[selectedPattern].inputs.map((input, i) => {
+                        const { type, name } = input
+                        if (type === 'number') {
                             return (
-                                <input
-                                    class="expression-input"
-                                    value={values[i]}
-                                    onInput={createOnValueChangeHandler(i)}
-                                    type="number"
-                                    step={Math.min(Math.ceil(Math.abs(parseFloat(values[i])) / 10), 5)}
-                                    key={name}
-                                    placeholder={name}
+                                <Slider
+                                    key={selectedPattern + i}
+                                    label={name}
+                                    value={parseFloat(values[i])}
+                                    onValueChange={(newValue) => updateValue(newValue.toString(), i)}
+                                    min={input.min}
+                                    max={input.max}
                                 />
                             )
                         }
 
-                        if (type == 'checkbox') {
+                        if (type === 'bool') {
                             return (
-                                <input
-                                    class="expression-input"
-                                    checked={values[i] == 'true'}
-                                    onInput={createOnCheckedHandler(i)}
-                                    type="checkbox"
-                                    key={name}
+                                <Checkbox
+                                    key={selectedPattern + i}
+                                    label={name}
+                                    value={values[i] === 'true'}
+                                    onValueChange={(newValue) => updateValue(newValue ? 'true' : 'false', i)}
                                 />
                             )
                         }
 
                         return (
-                            <input
-                                class="expression-input"
-                                value={values[i]}
-                                onInput={createOnValueChangeHandler(i)}
-                                type={type}
-                                key={name}
+                            <Input
+                                key={selectedPattern + i}
                                 placeholder={name}
+                                value={values[i]}
+                                onValueChange={(newValue) => updateValue(newValue, i)}
                             />
                         )
                     })
                 )}
-                <select class="expression-input" value={selectedPattern} onChange={onSelectedPatternChange}>
-                    {['Custom', ...Object.keys(patterns)].map((patternName) => {
-                        return <option>{patternName}</option>
-                    })}
-                </select>
             </div>
         </div>
     )
 }
 
 export type Pattern = {
-    matchRegex: (expression: ConfigurationExpression['value']) => string[] | null
-    computeValue: (values: string[]) => ConfigurationExpression['value']
-    inputs: { name: string; type: HTMLInputTypeAttribute }[]
+    matchRegex: (expression: ConfigurationExpression) => string[] | null
+    computeValue: (values: string[]) => ConfigurationExpression
+    inputs: ({ name: string; type: 'string' | 'bool' } | { name: string; type: 'number'; min?: number; max?: number })[]
 }
 
 export const FixedStringPattern: Pattern = {
@@ -173,7 +168,7 @@ export const EntityBrightnessPattern: Pattern = {
     ],
 }
 
-export const Vector3Pattern: Pattern = {
+export const FixedVector3Pattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new Vector3\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
         return match !== null ? [match[1].trim(), match[2].trim(), match[3].trim()] : null
@@ -186,19 +181,41 @@ export const Vector3Pattern: Pattern = {
     ],
 }
 
-export const Vector2Pattern: Pattern = {
+export const FixedCombinedVector3Pattern: Pattern = {
+    matchRegex: (value) => {
+        const match = /^new Vector3\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
+        if (match === null) return null
+        if (match[1].trim() === match[2].trim() && match[2].trim() === match[3].trim()) return [match[1].trim()]
+        return null
+    },
+    computeValue: (values) => `new Vector3(${parseFloat(values[0])},${parseFloat(values[0])},${parseFloat(values[0])})`,
+    inputs: [{ name: 'xyz', type: 'number' }],
+}
+
+export const FixedVector2Pattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new Vector2\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
         return match !== null ? [match[1].trim(), match[2].trim()] : null
     },
-    computeValue: (values) => `new Vector3(${parseFloat(values[0])},${parseFloat(values[1])})`,
+    computeValue: (values) => `new Vector2(${parseFloat(values[0])},${parseFloat(values[1])})`,
     inputs: [
         { name: 'x', type: 'number' },
         { name: 'y', type: 'number' },
     ],
 }
 
-export const EulerPattern: Pattern = {
+export const FixedCombinedVector2Pattern: Pattern = {
+    matchRegex: (value) => {
+        const match = /^new Vector2\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
+        if (match === null) return null
+        if (match[1].trim() === match[2].trim()) return [match[1].trim()]
+        return null
+    },
+    computeValue: (values) => `new Vector2(${parseFloat(values[0])},${parseFloat(values[0])})`,
+    inputs: [{ name: 'xy', type: 'number' }],
+}
+
+export const FixedEulerPattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new Euler\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
         return match !== null ? match.slice(1).map((str) => `${(parseFloat(str) * 180) / Math.PI}`) : null
@@ -206,13 +223,13 @@ export const EulerPattern: Pattern = {
     computeValue: (values) =>
         `new Euler(${(parseFloat(values[0]) * Math.PI) / 180},${(parseFloat(values[1]) * Math.PI) / 180},${(parseFloat(values[2]) * Math.PI) / 180})`,
     inputs: [
-        { name: 'x', type: 'number' },
-        { name: 'y', type: 'number' },
-        { name: 'z', type: 'number' },
+        { name: 'x', type: 'number', min: -180, max: 180 },
+        { name: 'y', type: 'number', min: -180, max: 180 },
+        { name: 'z', type: 'number', min: -180, max: 180 },
     ],
 }
 
-export const HTMLSizePattern: Pattern = {
+export const FixedHTMLSizePattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new HTMLSize\("((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)$/.exec(value)
         return match !== null ? [match[1], match[2]] : null
@@ -230,7 +247,7 @@ export const FixedBoolPattern: Pattern = {
         return match !== null ? [match[1]] : null
     },
     computeValue: (values) => `${values[0]}`,
-    inputs: [{ name: 'value', type: 'checkbox' }],
+    inputs: [{ name: 'value', type: 'bool' }],
 }
 
 export const EntityBoolPattern: Pattern = {

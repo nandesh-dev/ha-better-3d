@@ -1,6 +1,6 @@
 import { Color, Euler, Vector2, Vector3 } from 'three'
 
-import { Expression } from '@/configuration/expression'
+import { Expression } from '@/configuration/value'
 
 import { Error } from './error'
 
@@ -25,7 +25,7 @@ export class Evaluator {
         const argumentValues = [Math, Color, Vector3, Vector2, HTMLSize, Euler, ...Object.values(this.context)]
 
         try {
-            return new Function(...parameters, `return ${expression.value}`)(...argumentValues)
+            return new Function(...parameters, `return ${expression}`)(...argumentValues)
         } catch (error) {
             throw new Error((error as any).toString())
         }

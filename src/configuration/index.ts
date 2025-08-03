@@ -1,116 +1,138 @@
-import { CameraConfiguration, PerspectiveOrbitalCameraConfiguration } from './cameras'
-import { Expression } from './expression'
+import { CARD_CUSTOM_ELEMENT_TAGNAME } from '@/elements/card'
+
 import {
-    AmbientLightConfiguration,
-    Card2DConfiguration,
-    Card3DConfiguration,
-    GLBModelConfiguration,
+    DEFAULT_AMBIENT_LIGHT_CONFIGURATION,
+    DEFAULT_CARD_3D_CONFIGURATION,
+    DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
+    DEFAULT_POINT_LIGHT_CONFIGURATION,
     ObjectConfiguration,
-    PointLightConfiguration,
+    decodeAmbientLightConfiguration,
+    decodeCard2DConfiguration,
+    decodeCard3DConfiguration,
+    decodeGLBModelConfiguration,
+    decodePerspectiveCameraConfiguration,
+    decodePointLightConfiguration,
+    encodeAmbientLightConfiguration,
+    encodeCard2DConfiguration,
+    encodeCard3DConfiguration,
+    encodeGLBModelConfiguration,
+    encodePerspectiveCameraConfiguration,
+    encodePointLightConfiguration,
 } from './objects'
+import { Expression, decodeExpression, decodeString, encodeExpression, encodeString } from './value'
 
-export class Configuration {
-    public type: string
-    public activeScene: Expression
-    public scenes: { [name: string]: SceneConfiguration }
-    public styles: string
+export type Configuration = {
+    type: string
+    activeScene: Expression
+    scenes: { [name: string]: SceneConfiguration }
+    styles: string
+}
 
-    constructor(raw: any) {
-        this.type = raw.type
-
-        this.activeScene = new Expression(raw?.active_scene, '""')
-
-        this.scenes = {}
-        if (raw?.scenes !== undefined) {
-            for (const name in raw.scenes) {
-                const properties = raw.scenes[name]
-                this.scenes[name] = new SceneConfiguration(properties)
-            }
-        }
-
-        this.styles = raw?.styles || ''
+export function decodeConfiguration(raw: any): Configuration {
+    const scenes: { [name: string]: SceneConfiguration } = {}
+    for (const name in raw.scenes || []) {
+        scenes[name] = decodeSceneConfiguration(raw.scenes[name])
     }
 
-    public encode() {
-        const encodedScenes: { [name: string]: any } = {}
-
-        for (const name in this.scenes) {
-            encodedScenes[name] = this.scenes[name].encode()
-        }
-
-        return {
-            type: this.type,
-            active_scene: this.activeScene.encode(),
-            scenes: encodedScenes,
-            styles: this.styles,
-        }
+    return {
+        type: decodeString(raw, `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`),
+        activeScene: decodeExpression(raw.active_scene, "''"),
+        styles: decodeString(raw.styles, ''),
+        scenes,
     }
 }
 
-export class SceneConfiguration {
-    public activeCamera: Expression
-    public backgroundColor: Expression
-    public cameras: { [name: string]: CameraConfiguration }
-    public objects: { [name: string]: ObjectConfiguration }
+export function encodeConfiguration(config: Configuration): unknown {
+    const scenes: { [name: string]: unknown } = {}
+    for (const name in config.scenes || []) {
+        scenes[name] = encodeSceneConfiguration(config.scenes[name])
+    }
+    return {
+        type: encodeString(config.type),
+        active_scene: encodeExpression(config.activeScene),
+        styles: encodeString(config.styles),
+        scenes,
+    }
+}
 
-    constructor(raw: any) {
-        this.activeCamera = new Expression(raw?.active_camera, '""')
+export type SceneConfiguration = {
+    activeCamera: Expression
+    backgroundColor: Expression
+    objects: { [name: string]: ObjectConfiguration }
+}
 
-        this.backgroundColor = new Expression(raw?.background_color, 'new Color("#eeeeee")')
+export const DEFAULT_SCENE_CONFIGURATION: SceneConfiguration = {
+    activeCamera: '"primary_camera"',
+    backgroundColor: 'new color("#eeeeee")',
+    objects: {
+        primary_camera: DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
+        point_light: DEFAULT_POINT_LIGHT_CONFIGURATION,
+        ambient_light: DEFAULT_AMBIENT_LIGHT_CONFIGURATION,
+        logo: DEFAULT_CARD_3D_CONFIGURATION,
+    },
+} as const
 
-        this.cameras = {}
-        if (raw?.cameras !== undefined) {
-            for (const name in raw.cameras) {
-                const properties = raw.cameras[name]
-                switch (properties.type) {
-                    case 'orbital.perspective':
-                        this.cameras[name] = new PerspectiveOrbitalCameraConfiguration(properties)
-                        break
-                }
-            }
-        }
-
-        this.objects = {}
-        if (raw?.objects !== undefined) {
-            for (const name in raw.objects) {
-                const properties = raw.objects[name]
-                switch (properties.type) {
-                    case 'card.2d':
-                        this.objects[name] = new Card2DConfiguration(properties)
-                        break
-                    case 'card.3d':
-                        this.objects[name] = new Card3DConfiguration(properties)
-                        break
-                    case 'model.glb':
-                        this.objects[name] = new GLBModelConfiguration(properties)
-                        break
-                    case 'light.point':
-                        this.objects[name] = new PointLightConfiguration(properties)
-                        break
-                    case 'light.ambient':
-                        this.objects[name] = new AmbientLightConfiguration(properties)
-                        break
-                }
-            }
+export function decodeSceneConfiguration(raw: any): SceneConfiguration {
+    const objects: { [name: string]: ObjectConfiguration } = {}
+    for (const name in raw.objects ?? []) {
+        const properties = raw.objects[name]
+        switch (properties.type) {
+            case 'card.2d':
+                objects[name] = decodeCard2DConfiguration(properties)
+                break
+            case 'card.3d':
+                objects[name] = decodeCard3DConfiguration(properties)
+                break
+            case 'model.glb':
+                objects[name] = decodeGLBModelConfiguration(properties)
+                break
+            case 'light.point':
+                objects[name] = decodePointLightConfiguration(properties)
+                break
+            case 'light.ambient':
+                objects[name] = decodeAmbientLightConfiguration(properties)
+                break
+            case 'camera.perspective':
+                objects[name] = decodePerspectiveCameraConfiguration(properties)
+                break
         }
     }
 
-    public encode() {
-        const encodedCameras: { [name: string]: any } = {}
-        for (const name in this.cameras) {
-            encodedCameras[name] = this.cameras[name].encode()
-        }
+    return {
+        activeCamera: decodeExpression(raw.active_camera, '""'),
+        backgroundColor: decodeExpression(raw.background_color, 'new Color("#eeeeee")'),
+        objects,
+    }
+}
 
-        const encodedObjects: { [name: string]: any } = {}
-        for (const name in this.objects) {
-            encodedObjects[name] = this.objects[name].encode()
+export function encodeSceneConfiguration(config: SceneConfiguration): unknown {
+    const objects: { [name: string]: unknown } = {}
+    for (const name in config.objects) {
+        const properties = config.objects[name]
+        switch (properties.type) {
+            case 'card.2d':
+                objects[name] = encodeCard2DConfiguration(properties)
+                break
+            case 'card.3d':
+                objects[name] = encodeCard3DConfiguration(properties)
+                break
+            case 'model.glb':
+                objects[name] = encodeGLBModelConfiguration(properties)
+                break
+            case 'light.point':
+                objects[name] = encodePointLightConfiguration(properties)
+                break
+            case 'light.ambient':
+                objects[name] = encodeAmbientLightConfiguration(properties)
+                break
+            case 'camera.perspective':
+                objects[name] = encodePerspectiveCameraConfiguration(properties)
+                break
         }
-
-        return {
-            active_camera: this.activeCamera.encode(),
-            background_color: this.backgroundColor.encode(),
-            cameras: encodedCameras,
-            objects: encodedObjects,
-        }
+    }
+    return {
+        active_camera: encodeExpression(config.activeCamera),
+        background_color: encodeExpression(config.backgroundColor),
+        objects,
     }
 }

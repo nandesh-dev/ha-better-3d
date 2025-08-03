@@ -1,10 +1,10 @@
-import { Configuration } from '@/configuration'
+import { decodeConfiguration, encodeConfiguration } from '@/configuration'
 import { Visual } from '@/visual'
 import { useEffect, useRef, useState } from 'preact/hooks'
 
 import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
 
-import { EDITOR_CUSTOM_ELEMENT_TAGNAME } from '../editor'
+import { EDITOR_ELEMENT_TAG_NAME } from '../editor'
 import { DEFAULT_CONFIG } from './default_config'
 
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
@@ -21,7 +21,7 @@ function Card({ config, homeAssistant }: ComponentProps) {
 
         const visual = new Visual(
             { height: ref.current.clientHeight, width: ref.current.clientWidth },
-            new Configuration(config),
+            decodeConfiguration(config),
             homeAssistant
         )
         ref.current.append(visual.domElement)
@@ -44,7 +44,7 @@ function Card({ config, homeAssistant }: ComponentProps) {
     }, [ref.current])
 
     useEffect(() => {
-        const configuration = new Configuration(config)
+        const configuration = decodeConfiguration(config)
         setStyles(configuration.styles)
 
         if (!visual) return
@@ -71,10 +71,10 @@ export function registerCard() {
         Card,
         {
             getStubConfig: () => {
-                return DefaultConfiguration.encode()
+                return encodeConfiguration(DefaultConfiguration)
             },
             getConfigElement: () => {
-                return document.createElement(EDITOR_CUSTOM_ELEMENT_TAGNAME)
+                return document.createElement(EDITOR_ELEMENT_TAG_NAME)
             },
         },
         {
@@ -85,4 +85,4 @@ export function registerCard() {
     )
 }
 
-const DefaultConfiguration = new Configuration(DEFAULT_CONFIG)
+const DefaultConfiguration = decodeConfiguration(DEFAULT_CONFIG)
