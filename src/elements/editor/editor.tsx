@@ -215,7 +215,7 @@ export function Editor(parameters: EditorParameters) {
                 activeObject &&
                 configuration.scenes[activeScene]?.objects[activeObject] && (
                     <ObjectEditor
-                        key={activeObject}
+                        key={[activeScene, activeObject]}
                         objectName={activeObject}
                         objectConfiguration={configuration.scenes[activeScene].objects[activeObject]}
                         onObjectConfigurationChange={updateObjectConfiguration}
