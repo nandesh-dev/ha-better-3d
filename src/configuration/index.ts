@@ -9,12 +9,14 @@ import {
     decodeAmbientLightConfiguration,
     decodeCard2DConfiguration,
     decodeCard3DConfiguration,
+    decodeCustomLightConfiguration,
     decodeGLBModelConfiguration,
     decodePerspectiveCameraConfiguration,
     decodePointLightConfiguration,
     encodeAmbientLightConfiguration,
     encodeCard2DConfiguration,
     encodeCard3DConfiguration,
+    encodeCustomLightConfiguration,
     encodeGLBModelConfiguration,
     encodePerspectiveCameraConfiguration,
     encodePointLightConfiguration,
@@ -92,6 +94,9 @@ export function decodeSceneConfiguration(raw: any): SceneConfiguration {
             case 'light.ambient':
                 objects[name] = decodeAmbientLightConfiguration(properties)
                 break
+            case 'light.custom':
+                objects[name] = decodeCustomLightConfiguration(properties)
+                break
             case 'camera.perspective':
                 objects[name] = decodePerspectiveCameraConfiguration(properties)
                 break
@@ -124,6 +129,9 @@ export function encodeSceneConfiguration(config: SceneConfiguration): unknown {
                 break
             case 'light.ambient':
                 objects[name] = encodeAmbientLightConfiguration(properties)
+                break
+            case 'light.custom':
+                objects[name] = encodeCustomLightConfiguration(properties)
                 break
             case 'camera.perspective':
                 objects[name] = encodePerspectiveCameraConfiguration(properties)

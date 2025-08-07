@@ -178,6 +178,9 @@ export function Editor(parameters: EditorParameters) {
                                     case 'light.ambient':
                                         type = 'light'
                                         break
+                                    case 'light.custom':
+                                        type = 'light'
+                                        break
                                     case 'camera.perspective':
                                         type = 'camera'
                                         break
@@ -215,7 +218,7 @@ export function Editor(parameters: EditorParameters) {
                 activeObject &&
                 configuration.scenes[activeScene]?.objects[activeObject] && (
                     <ObjectEditor
-                        key={[activeScene, activeObject]}
+                        key={activeObject}
                         objectName={activeObject}
                         objectConfiguration={configuration.scenes[activeScene].objects[activeObject]}
                         onObjectConfigurationChange={updateObjectConfiguration}

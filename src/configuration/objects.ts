@@ -202,6 +202,58 @@ export function encodeAmbientLightConfiguration(config: AmbientLightConfiguratio
     }
 }
 
+export type CustomLightConfiguration = {
+    type: 'light.custom'
+    url: Expression
+    position: Expression
+    rotation: Expression
+    scale: Expression
+    intensity: Expression
+    color: Expression
+    density: Expression
+    visible: Expression
+}
+
+export const DEFAULT_CUSTOM_LIGHT_CONFIGURATION: CustomLightConfiguration = {
+    type: 'light.custom',
+    url: '',
+    position: 'new Vector3(0, 0, 0)',
+    rotation: 'new Euler(0, 0, 0)',
+    scale: 'new Vector3(1, 1, 1)',
+    intensity: '2000',
+    color: 'new Color("#ffffff")',
+    density: '0.5',
+    visible: 'true',
+} as const
+
+export function decodeCustomLightConfiguration(raw: any): CustomLightConfiguration {
+    return {
+        type: 'light.custom',
+        url: decodeExpression(raw.url, ''),
+        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
+        rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
+        scale: decodeExpression(raw.scale, 'new Vector3(1, 1, 1)'),
+        intensity: decodeExpression(raw.intensity, '"10"'),
+        color: decodeExpression(raw.color, 'new Color("#ffffff")'),
+        density: decodeExpression(raw.density, '0.5'),
+        visible: decodeExpression(raw.visible, 'true'),
+    }
+}
+
+export function encodeCustomLightConfiguration(config: CustomLightConfiguration): unknown {
+    return {
+        type: 'light.custom',
+        url: encodeExpression(config.url),
+        position: encodeExpression(config.position),
+        rotation: encodeExpression(config.rotation),
+        scale: encodeExpression(config.scale),
+        intensity: encodeExpression(config.intensity),
+        color: encodeExpression(config.color),
+        density: encodeExpression(config.density),
+        visible: encodeExpression(config.visible),
+    }
+}
+
 export type PerspectiveCameraConfiguration = {
     type: 'camera.perspective'
     fov: Expression
@@ -248,4 +300,5 @@ export type ObjectConfiguration =
     | GLBModelConfiguration
     | PointLightConfiguration
     | AmbientLightConfiguration
+    | CustomLightConfiguration
     | PerspectiveCameraConfiguration
