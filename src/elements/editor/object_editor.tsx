@@ -5,6 +5,7 @@ import {
     AmbientLightConfiguration,
     Card2DConfiguration,
     Card3DConfiguration,
+    CustomLightConfiguration,
     GLBModelConfiguration,
     ObjectConfiguration,
     PerspectiveCameraConfiguration,
@@ -248,6 +249,69 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         value={objectConfiguration.visible}
                         patterns={{ Fixed: FixedBoolPattern }}
                         onValueChange={createOnValueChangeHandler<AmbientLightConfiguration>('visible')}
+                    />
+                </>
+            )
+            break
+        case 'light.custom':
+            PropertyEditors = (
+                <>
+                    <Expression
+                        label="URL"
+                        value={objectConfiguration.url}
+                        patterns={{ Fixed: FixedStringPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('url')}
+                    />
+                    <Expression
+                        label="Position"
+                        value={objectConfiguration.position}
+                        patterns={{ Fixed: FixedVector3Pattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('position')}
+                    />
+                    <Expression
+                        label="Rotation"
+                        value={objectConfiguration.rotation}
+                        patterns={{ Fixed: FixedEulerPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('rotation')}
+                    />
+                    <Expression
+                        label="Scale"
+                        value={objectConfiguration.scale}
+                        patterns={{ 'Fixed Combined': FixedCombinedVector3Pattern, Fixed: FixedVector3Pattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('scale')}
+                    />
+                    <Expression
+                        label="Density"
+                        value={objectConfiguration.density}
+                        patterns={{
+                            Fixed: {
+                                matchRegex: (value) => {
+                                    const match = /^(\s*-?\d*\.?\d*\s*)$/.exec(value)
+                                    return match !== null ? [match[1].trim()] : null
+                                },
+                                computeValue: (values) => `${parseFloat(values[0])}`,
+                                inputs: [{ name: 'number', type: 'number', min: 0, max: 1 }],
+                            },
+                        }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('density')}
+                    />
+                    <Expression
+                        label="Intensity"
+                        value={objectConfiguration.intensity}
+                        patterns={{ Fixed: FixedNumberPattern, 'Entity Intensity': EntityBrightnessPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('intensity')}
+                    />
+                    <Expression
+                        label="Color"
+                        value={objectConfiguration.color}
+                        patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('color')}
+                    />
+                    <Expression
+                        label="Visible"
+                        value={objectConfiguration.visible}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('visible')}
                     />
                 </>
             )

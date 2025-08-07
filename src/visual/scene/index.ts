@@ -14,11 +14,12 @@ import { Renderer } from '../renderer'
 import { Card2D } from './2d_card'
 import { Card3D } from './3d_card'
 import { AmbientLight } from './ambient_light'
+import { CustomLight } from './custom_light'
 import { GLBModel } from './glb_model'
 import { PerspectiveCamera } from './perspective_camera'
 import { PointLight } from './point_light'
 
-type Object = Card2D | Card3D | GLBModel | PointLight | AmbientLight
+type Object = Card2D | Card3D | GLBModel | PointLight | AmbientLight | CustomLight
 type Camera = PerspectiveCamera
 
 type Size = {
@@ -138,7 +139,8 @@ export class Scene {
                     (objectProperties.type === 'card.3d' && object instanceof Card3D) ||
                     (objectProperties.type === 'model.glb' && object instanceof GLBModel) ||
                     (objectProperties.type === 'light.point' && object instanceof PointLight) ||
-                    (objectProperties.type === 'light.ambient' && object instanceof AmbientLight))
+                    (objectProperties.type === 'light.ambient' && object instanceof AmbientLight) ||
+                    (objectProperties.type === 'light.custom' && object instanceof CustomLight))
 
             if (!inUse) {
                 if (object.three) this.three.remove(object.three)
@@ -170,6 +172,9 @@ export class Scene {
                     case 'light.ambient':
                         object = new AmbientLight(objectName, this.evaluator)
                         break
+                    case 'light.custom':
+                        object = new CustomLight(objectName, this.resourceManager, this.evaluator)
+                        break
                 }
 
                 if (object) {
@@ -183,7 +188,8 @@ export class Scene {
                 object instanceof Card3D ||
                 object instanceof GLBModel ||
                 object instanceof PointLight ||
-                object instanceof AmbientLight
+                object instanceof AmbientLight ||
+                object instanceof CustomLight
             ) {
                 try {
                     object.updateProperties(objectProperties as any, homeAssistant)
