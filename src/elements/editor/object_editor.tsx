@@ -308,6 +308,12 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('color')}
                     />
                     <Expression
+                        label="Helper"
+                        value={objectConfiguration.helper}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('helper')}
+                    />
+                    <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
                         patterns={{ Fixed: FixedBoolPattern }}

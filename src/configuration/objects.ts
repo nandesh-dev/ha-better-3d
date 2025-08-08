@@ -211,6 +211,7 @@ export type CustomLightConfiguration = {
     intensity: Expression
     color: Expression
     density: Expression
+    helper: Expression
     visible: Expression
 }
 
@@ -223,6 +224,7 @@ export const DEFAULT_CUSTOM_LIGHT_CONFIGURATION: CustomLightConfiguration = {
     intensity: '2000',
     color: 'new Color("#ffffff")',
     density: '0.5',
+    helper: 'false',
     visible: 'true',
 } as const
 
@@ -236,6 +238,7 @@ export function decodeCustomLightConfiguration(raw: any): CustomLightConfigurati
         intensity: decodeExpression(raw.intensity, '"10"'),
         color: decodeExpression(raw.color, 'new Color("#ffffff")'),
         density: decodeExpression(raw.density, '0.5'),
+        helper: decodeExpression(raw.helper, 'false'),
         visible: decodeExpression(raw.visible, 'true'),
     }
 }
@@ -250,6 +253,7 @@ export function encodeCustomLightConfiguration(config: CustomLightConfiguration)
         intensity: encodeExpression(config.intensity),
         color: encodeExpression(config.color),
         density: encodeExpression(config.density),
+        helper: encodeExpression(config.helper),
         visible: encodeExpression(config.visible),
     }
 }
