@@ -139,6 +139,7 @@ export type PointLightConfiguration = {
     position: Expression
     intensity: Expression
     color: Expression
+    helper: Expression
     visible: Expression
 }
 
@@ -147,6 +148,7 @@ export const DEFAULT_POINT_LIGHT_CONFIGURATION: PointLightConfiguration = {
     position: 'new Vector3(0, 0, 0)',
     intensity: '2000',
     color: 'new Color("#ffffff")',
+    helper: 'false',
     visible: 'true',
 } as const
 
@@ -156,6 +158,7 @@ export function decodePointLightConfiguration(raw: any): PointLightConfiguration
         position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
         intensity: decodeExpression(raw.intensity, '"1000"'),
         color: decodeExpression(raw.color, 'new Color("#ffffff")'),
+        helper: decodeExpression(raw.helper, 'false'),
         visible: decodeExpression(raw.visible, 'true'),
     }
 }
@@ -166,6 +169,7 @@ export function encodePointLightConfiguration(config: PointLightConfiguration): 
         position: encodeExpression(config.position),
         intensity: encodeExpression(config.intensity),
         color: encodeExpression(config.color),
+        helper: encodeExpression(config.helper),
         visible: encodeExpression(config.visible),
     }
 }
