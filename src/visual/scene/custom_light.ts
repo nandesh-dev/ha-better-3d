@@ -95,6 +95,9 @@ export class CustomLight {
 
             try {
                 this.color = evaluator.evaluate<Color>(configuration.color)
+                for (const helper of this.helperGroup.children) {
+                    ;(helper as PointLightHelper).color = this.color
+                }
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.color)}: Error evaluating color`, error)
             }
@@ -144,7 +147,7 @@ export class CustomLight {
                         light.position.fromBufferAttribute(position, i)
                         this.lightGroup.add(light)
 
-                        const helper = new PointLightHelper(light)
+                        const helper = new PointLightHelper(light, 1, light.color)
                         this.helperGroup.add(helper)
                     }
 
