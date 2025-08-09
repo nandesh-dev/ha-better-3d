@@ -221,6 +221,12 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         onValueChange={createOnValueChangeHandler<PointLightConfiguration>('color')}
                     />
                     <Expression
+                        label="Helper"
+                        value={objectConfiguration.helper}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<PointLightConfiguration>('helper')}
+                    />
+                    <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
                         patterns={{ Fixed: FixedBoolPattern }}
@@ -306,6 +312,12 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         value={objectConfiguration.color}
                         patterns={{ Fixed: FixedColorPattern, 'Entity RGB': EntityRGBColorPattern }}
                         onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('color')}
+                    />
+                    <Expression
+                        label="Helper"
+                        value={objectConfiguration.helper}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('helper')}
                     />
                     <Expression
                         label="Visible"
