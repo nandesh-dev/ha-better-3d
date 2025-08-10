@@ -51,6 +51,8 @@ export class CardHTMLElement extends HTMLElement {
         if (this.visual) return
         this.visual = new Visual(configuration, this.homeAssistant)
 
+        this.className = 'better-3d__card'
+
         this.appendChild(this.styleElement)
         this.appendChild(this.visual.domElement)
     }

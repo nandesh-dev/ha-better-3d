@@ -44,16 +44,22 @@ export class Visual {
         this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
 
         this.domElement = document.createElement('div')
-        this.domElement.classList.add('visual')
+        Object.assign(this.domElement.style, { position: 'relative', width: '100%', height: '100%' })
 
         this.renderer = new Renderer()
         const rendererContainerElement = document.createElement('div')
-        rendererContainerElement.classList.add('visual__renderer')
+        Object.assign(rendererContainerElement.style, { overflow: 'hidden', width: '100%', height: '100%' })
         rendererContainerElement.append(this.renderer.domElement)
         this.domElement.append(rendererContainerElement)
 
         this.errorElement = document.createElement('p')
-        this.errorElement.classList.add('visual__error')
+        Object.assign(this.errorElement.style, {
+            position: 'absolute',
+            inset: '0',
+            overflowY: 'scroll',
+            whiteSpace: 'pre',
+            color: 'var(--primary-text-color)',
+        })
 
         this.size = { height: 0, width: 0 }
         this.resizeObserver = new ResizeObserver(() => this.updateSize())

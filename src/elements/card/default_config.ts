@@ -3,30 +3,11 @@ import { CARD_CUSTOM_ELEMENT_TAGNAME } from '.'
 export const DEFAULT_CONFIG = {
     type: `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`,
     active_scene: '"primary_scene"',
-    styles: `.card {
+    styles: `.better-3d__card {
+  display: block;
   position: relative;
   width: 100%;
   aspect-ratio: 2/1;
-}
-
-.visual {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.visual__renderer {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.visual__error {
-  position: absolute;
-  inset: 0;
-  overflow-y: scroll;
-  white-space: pre;
-  color: var(--primary-text-color);
 }`,
     scenes: {
         primary_scene: {
