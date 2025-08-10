@@ -18,7 +18,6 @@ export type Size = {
 }
 
 export class Visual {
-    private size: Size
     private configuration: Configuration
     private homeAssistant: HomeAssistant
 
@@ -33,9 +32,11 @@ export class Visual {
     private paused: boolean = false
     private errorElement: HTMLParagraphElement
 
+    private size: Size
+    private resizeObserver: ResizeObserver
+
     public domElement: HTMLDivElement
-    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
-        this.size = size
+    constructor(configuration: Configuration, homeAssistant: HomeAssistant) {
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
@@ -54,6 +55,11 @@ export class Visual {
         this.errorElement = document.createElement('p')
         this.errorElement.classList.add('visual__error')
 
+        this.size = { height: 0, width: 0 }
+        this.resizeObserver = new ResizeObserver(() => this.updateSize())
+        this.resizeObserver.observe(this.domElement)
+        this.updateSize()
+
         this.animate()
     }
 
@@ -68,12 +74,16 @@ export class Visual {
         this.updateProperties()
     }
 
-    public updateSize(size: Size) {
-        this.size = size
+    public updateSize() {
+        this.size = {
+            height: this.domElement.clientHeight,
+            width: this.domElement.clientWidth,
+        }
         this.updateProperties()
     }
 
     public dispose() {
+        this.resizeObserver.disconnect()
         this.disposed = true
         for (const scene of Object.values(this.scenes)) {
             scene.dispose()

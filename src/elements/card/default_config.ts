@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG = {
 .visual__renderer {
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .visual__error {
