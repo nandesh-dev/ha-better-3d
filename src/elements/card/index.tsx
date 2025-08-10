@@ -61,7 +61,7 @@ export class CardHTMLElement extends HTMLElement {
         return DEFAULT_CONFIG
     }
 
-    public getConfigElement() {
+    public static getConfigElement() {
         return document.createElement(EDITOR_ELEMENT_TAG_NAME)
     }
 }
