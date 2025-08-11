@@ -18,7 +18,6 @@ export type Size = {
 }
 
 export class Visual {
-    private size: Size
     private configuration: Configuration
     private homeAssistant: HomeAssistant
 
@@ -33,9 +32,11 @@ export class Visual {
     private paused: boolean = false
     private errorElement: HTMLParagraphElement
 
+    private size: Size
+    private resizeObserver: ResizeObserver
+
     public domElement: HTMLDivElement
-    constructor(size: Size, configuration: Configuration, homeAssistant: HomeAssistant) {
-        this.size = size
+    constructor(configuration: Configuration, homeAssistant: HomeAssistant) {
         this.configuration = configuration
         this.homeAssistant = homeAssistant
 
@@ -43,16 +44,27 @@ export class Visual {
         this.evaluator = new Evaluator({ Entities: encodeStates(homeAssistant.states) })
 
         this.domElement = document.createElement('div')
-        this.domElement.classList.add('visual')
+        Object.assign(this.domElement.style, { position: 'relative', width: '100%', height: '100%' })
 
         this.renderer = new Renderer()
         const rendererContainerElement = document.createElement('div')
-        rendererContainerElement.classList.add('visual__renderer')
+        Object.assign(rendererContainerElement.style, { overflow: 'hidden', width: '100%', height: '100%' })
         rendererContainerElement.append(this.renderer.domElement)
         this.domElement.append(rendererContainerElement)
 
         this.errorElement = document.createElement('p')
-        this.errorElement.classList.add('visual__error')
+        Object.assign(this.errorElement.style, {
+            position: 'absolute',
+            inset: '0',
+            overflowY: 'scroll',
+            whiteSpace: 'pre',
+            color: 'var(--primary-text-color)',
+        })
+
+        this.size = { height: 0, width: 0 }
+        this.resizeObserver = new ResizeObserver(() => this.updateSize())
+        this.resizeObserver.observe(this.domElement)
+        this.updateSize()
 
         this.animate()
     }
@@ -68,12 +80,16 @@ export class Visual {
         this.updateProperties()
     }
 
-    public updateSize(size: Size) {
-        this.size = size
+    public updateSize() {
+        this.size = {
+            height: this.domElement.clientHeight,
+            width: this.domElement.clientWidth,
+        }
         this.updateProperties()
     }
 
     public dispose() {
+        this.resizeObserver.disconnect()
         this.disposed = true
         for (const scene of Object.values(this.scenes)) {
             scene.dispose()

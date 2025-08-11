@@ -1,88 +1,70 @@
-import { decodeConfiguration, encodeConfiguration } from '@/configuration'
+import { decodeConfiguration } from '@/configuration'
 import { Visual } from '@/visual'
-import { useEffect, useRef, useState } from 'preact/hooks'
 
-import { ComponentProps, registerElement } from '@/utility/home_assistant/register_element'
+import { HomeAssistant } from '@/utility/home_assistant/types'
+import { setLastCreatedVisual } from '@/utility/hot_reload'
 
 import { EDITOR_ELEMENT_TAG_NAME } from '../editor'
 import { DEFAULT_CONFIG } from './default_config'
 
 export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
 
-function Card({ config, homeAssistant }: ComponentProps) {
-    if (!config || !homeAssistant) return
+export class CardHTMLElement extends HTMLElement {
+    private homeAssistant: HomeAssistant | null = null
+    private rawConfiguration: unknown | null = null
+    private visual: Visual | null = null
+    private connected: boolean = false
+    private styleElement: HTMLStyleElement
 
-    const ref = useRef<HTMLDivElement>(null)
-    const [styles, setStyles] = useState('')
-    const [visual, setVisual] = useState<Visual>()
+    constructor() {
+        super()
+        this.styleElement = document.createElement('style')
+    }
 
-    useEffect(() => {
-        if (!ref.current) return
+    public set hass(hass: HomeAssistant) {
+        this.homeAssistant = hass
+        this.update()
+    }
 
-        const visual = new Visual(
-            { height: ref.current.clientHeight, width: ref.current.clientWidth },
-            decodeConfiguration(config),
-            homeAssistant
-        )
-        ref.current.append(visual.domElement)
-        setVisual(visual)
+    public setConfig(rawConfig: unknown) {
+        this.rawConfiguration = rawConfig
+        this.update()
+    }
 
-        const resizeObserver = new ResizeObserver(() => {
-            if (!ref.current) return
-            visual.updateSize({ height: ref.current.clientHeight, width: ref.current.clientWidth })
-        })
+    public connectedCallback() {
+        this.connected = true
+        this.update()
+    }
 
-        resizeObserver.observe(ref.current)
+    public disconnectedCallback() {
+        if (!this.visual) return
+        this.removeChild(this.visual.domElement)
+        this.visual.dispose()
+        this.visual = null
+    }
 
-        return () => {
-            resizeObserver.disconnect()
-            if (ref.current?.contains(visual.domElement)) {
-                ref.current.removeChild(visual.domElement)
-            }
-            visual?.dispose()
-        }
-    }, [ref.current])
+    private update() {
+        if (!this.homeAssistant || !this.rawConfiguration || !this.connected) return
 
-    useEffect(() => {
-        const configuration = decodeConfiguration(config)
-        setStyles(configuration.styles)
+        const configuration = decodeConfiguration(this.rawConfiguration)
+        this.styleElement.innerText = configuration.styles
 
-        if (!visual) return
-        visual.updateConfig(configuration)
-    }, [config, visual])
+        if (this.visual) return
+        this.visual = new Visual(configuration, this.homeAssistant)
 
-    useEffect(() => {
-        if (!visual) return
+        setLastCreatedVisual(this.visual)
 
-        visual.updateHomeAssistant(homeAssistant)
-    }, [homeAssistant, visual])
+        this.className = 'better-3d__card'
 
-    return (
-        <>
-            <style>{styles}</style>
-            <div class="card" ref={ref} />
-        </>
-    )
+        this.appendChild(this.styleElement)
+        this.appendChild(this.visual.domElement)
+    }
+
+    public getStubConfig() {
+        return DEFAULT_CONFIG
+    }
+
+    public static getConfigElement() {
+        return document.createElement(EDITOR_ELEMENT_TAG_NAME)
+    }
 }
-
-export function registerCard() {
-    registerElement(
-        CARD_CUSTOM_ELEMENT_TAGNAME,
-        Card,
-        {
-            getStubConfig: () => {
-                return encodeConfiguration(DefaultConfiguration)
-            },
-            getConfigElement: () => {
-                return document.createElement(EDITOR_ELEMENT_TAG_NAME)
-            },
-        },
-        {
-            name: 'Better 3D',
-            description: 'Fully customizable 3D rendering card',
-            documentationURL: 'https://github.com/nandesh-dev/ha-better-3d',
-        }
-    )
-}
-
-const DefaultConfiguration = decodeConfiguration(DEFAULT_CONFIG)
