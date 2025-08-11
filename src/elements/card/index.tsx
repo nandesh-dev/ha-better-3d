@@ -2,6 +2,7 @@ import { decodeConfiguration } from '@/configuration'
 import { Visual } from '@/visual'
 
 import { HomeAssistant } from '@/utility/home_assistant/types'
+import { setLastCreatedVisual } from '@/utility/hot_reload'
 
 import { EDITOR_ELEMENT_TAG_NAME } from '../editor'
 import { DEFAULT_CONFIG } from './default_config'
@@ -50,6 +51,8 @@ export class CardHTMLElement extends HTMLElement {
 
         if (this.visual) return
         this.visual = new Visual(configuration, this.homeAssistant)
+
+        setLastCreatedVisual(this.visual)
 
         this.className = 'better-3d__card'
 

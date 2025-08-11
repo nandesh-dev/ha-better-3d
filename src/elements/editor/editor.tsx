@@ -1,17 +1,22 @@
 import { Configuration, SceneConfiguration, decodeConfiguration, encodeConfiguration } from '@/configuration'
+import { Visual } from '@/visual'
 import { useEffect, useState } from 'preact/hooks'
 
 import { ObjectConfiguration } from '@/configuration/objects'
 
 import { HomeAssistant } from '@/utility/home_assistant/types'
+import { getLastCreatedVisual } from '@/utility/hot_reload'
 
+import { Button } from './components/button'
 import { CameraIcon } from './components/camera_icon'
 import { CardIcon } from './components/card_icon'
 import { LightIcon } from './components/light_icon'
 import { FlowerPotIcon } from './components/model_icon'
 import { ParkIcon } from './components/park_icon'
+import { PenIcon } from './components/pen_icon'
 import { SettingIcon } from './components/setting_icon'
 import { StyleIcon } from './components/style_icon'
+import { EditorEditor } from './editor_editor'
 import { GeneralEditor } from './general_editor'
 import { ObjectEditor } from './object_editor'
 import { SceneEditor } from './scene_editor'
@@ -27,10 +32,31 @@ export type EditorParameters = {
 }
 
 export function Editor(parameters: EditorParameters) {
+    const [visual, setVisual] = useState<Visual | null | undefined>(null)
+    const [hotReload, setHotReload] = useState(true)
     const [configuration, setConfiguration] = useState(() => decodeConfiguration(parameters.rawConfiguration))
-    const [activeEditor, setActiveEditor] = useState<'general' | 'style' | 'scene' | 'object'>('general')
+    const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'style' | 'scene' | 'object'>('editor')
     const [activeScene, setActiveScene] = useState<string | null>(null)
     const [activeObject, setActiveObject] = useState<string | null>(null)
+
+    useEffect(() => {
+        getLastCreatedVisual()
+            .then(setVisual)
+            .catch(() => {
+                setVisual(undefined)
+            })
+    }, [])
+
+    const updateHotReload = (newHotReload: boolean) => {
+        if (newHotReload || !visual) return
+        setHotReload(newHotReload)
+    }
+
+    const switchToEditorEditor = () => {
+        setActiveEditor('editor')
+        setActiveScene(null)
+        setActiveObject(null)
+    }
 
     const switchToGeneralEditor = () => {
         setActiveEditor('general')
@@ -44,13 +70,22 @@ export function Editor(parameters: EditorParameters) {
         setActiveObject(null)
     }
 
+    const saveConfigurationToHomeAssistant = () => {
+        parameters.updateRawConfiguration(encodeConfiguration(configuration))
+    }
+
     useEffect(() => {
+        if (hotReload && visual) {
+            visual.updateConfig(configuration)
+            return
+        }
         const timeout = setTimeout(() => {
-            parameters.updateRawConfiguration(encodeConfiguration(configuration))
+            if (hotReload) return
+            saveConfigurationToHomeAssistant()
         }, CONFIGURATION_UPDATE_DELAY)
 
         return () => clearTimeout(timeout)
-    }, [configuration])
+    }, [configuration, hotReload])
 
     const updateConfiguration = (newConfiguration: Configuration) => {
         setConfiguration({ ...newConfiguration })
@@ -120,6 +155,12 @@ export function Editor(parameters: EditorParameters) {
             <div class="panel sidebar">
                 <div class="panel__section">
                     <span class="panel__label">GENERAL</span>
+                    <SidebarItem
+                        type="editor"
+                        name="Editor"
+                        onClick={switchToEditorEditor}
+                        selected={activeEditor === 'editor'}
+                    />
                     <SidebarItem
                         type="setting"
                         name="Settings"
@@ -196,7 +237,15 @@ export function Editor(parameters: EditorParameters) {
                             })}
                     </div>
                 )}
+                {hotReload && (
+                    <div class="panel__section">
+                        <Button name="Save" onClick={saveConfigurationToHomeAssistant} />
+                    </div>
+                )}
             </div>
+            {activeEditor === 'editor' && (
+                <EditorEditor visual={visual} hotReload={hotReload} onHotReloadChange={updateHotReload} />
+            )}
             {activeEditor === 'general' && (
                 <GeneralEditor configuration={configuration} onConfigurationChange={updateConfiguration} />
             )}
@@ -231,7 +280,7 @@ export function Editor(parameters: EditorParameters) {
 }
 
 type SidebarItemParameters = {
-    type: 'setting' | 'style' | 'camera' | 'scene' | 'light' | 'model' | 'card'
+    type: 'editor' | 'setting' | 'style' | 'camera' | 'scene' | 'light' | 'model' | 'card'
     name: string
     selected?: boolean
     onClick: () => void
@@ -240,6 +289,9 @@ type SidebarItemParameters = {
 function SidebarItem(parameters: SidebarItemParameters) {
     let Icon
     switch (parameters.type) {
+        case 'editor':
+            Icon = PenIcon
+            break
         case 'setting':
             Icon = SettingIcon
             break
