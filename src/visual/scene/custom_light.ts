@@ -54,22 +54,23 @@ export class CustomLight {
             throw new Error(`Error evaluating visible`, error)
         }
 
-        try {
-            const density = evaluator.evaluate<number>(configuration.density)
-            this.density = density
-        } catch (error) {
-            throw new Error(`Error evaluating density`, error)
-        }
-
         if (this.lightGroup.visible) {
+            let density, url
             try {
-                const url = evaluator.evaluate<string>(configuration.url)
-                if (this.url !== url) {
-                    this.url = url
-                    this.loadModel(url)
-                }
+                density = evaluator.evaluate<number>(configuration.density)
+            } catch (error) {
+                throw new Error(`${encodeExpression(configuration.density)}: Error evaluating density`, error)
+            }
+            try {
+                url = evaluator.evaluate<string>(configuration.url)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.url)}: Error evaluating url`, error)
+            }
+
+            if (density !== this.density || url !== this.url) {
+                this.density = density
+                this.url = url
+                this.reloadModel()
             }
 
             try {
@@ -105,6 +106,13 @@ export class CustomLight {
                 throw new Error(`${encodeExpression(configuration.intensity)}: Error evaluating intensity`, error)
             }
 
+            for (const child of this.lightGroup.children) {
+                if (child instanceof PointLight) {
+                    child.color.copy(this.color)
+                    child.intensity = this.intensity
+                }
+            }
+
             try {
                 const helper = evaluator.evaluate<boolean>(configuration.helper)
                 this.helperGroup.visible = helper
@@ -116,13 +124,6 @@ export class CustomLight {
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.helper)}: Error evaluating helper`, error)
             }
-
-            for (const child of this.lightGroup.children) {
-                if (child instanceof PointLight) {
-                    child.color.copy(this.color)
-                    child.intensity = this.intensity
-                }
-            }
         }
     }
 
@@ -131,12 +132,15 @@ export class CustomLight {
         if (this.lightGroup) dispose(this.lightGroup)
     }
 
-    private async loadModel(url: string) {
-        const rawData = await this.resourceManager.load(url)
+    private async reloadModel() {
+        if (!this.url) return
+        const rawData = await this.resourceManager.load(this.url)
         if (this.disposed || this.density == null || this.color == null || this.intensity == null) return
 
         for (const child of this.lightGroup.children) dispose(child)
+        for (const child of this.helperGroup.children) dispose(child)
         this.lightGroup.children = []
+        this.helperGroup.children = []
 
         const model = new OBJLoader().parse(new TextDecoder().decode(rawData))
         const boundingSize = new Box3().setFromObject(model).getSize(new Vector3())
