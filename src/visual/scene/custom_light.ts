@@ -1,4 +1,16 @@
-import { Box3, Color, Euler, Group, LineSegments, Mesh, PointLight, PointLightHelper, Vector3 } from 'three'
+import {
+    Box3,
+    Color,
+    Euler,
+    Group,
+    LineSegments,
+    Mesh,
+    MeshStandardMaterial,
+    PointLight,
+    PointLightHelper,
+    ShaderMaterial,
+    Vector3,
+} from 'three'
 import { OBJLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
@@ -14,6 +26,7 @@ export class CustomLight {
     public three: Group
     public lightGroup: Group
     public helperGroup: Group
+    public modelGroup: Group
 
     public name: string
     private url: string | null = null
@@ -29,11 +42,13 @@ export class CustomLight {
         this.three = new Group()
         this.lightGroup = new Group()
         this.helperGroup = new Group()
-
-        this.name = name
+        this.modelGroup = new Group()
 
         this.three.add(this.lightGroup)
         this.three.add(this.helperGroup)
+        this.three.add(this.modelGroup)
+
+        this.name = name
 
         this.resourceManager = resourceManager
         this.evaluator = evaluator
@@ -50,6 +65,7 @@ export class CustomLight {
         try {
             const visible = evaluator.evaluate<boolean>(configuration.visible)
             this.lightGroup.visible = visible
+            this.modelGroup.visible = visible
         } catch (error) {
             throw new Error(`Error evaluating visible`, error)
         }
@@ -76,6 +92,7 @@ export class CustomLight {
             try {
                 const position = evaluator.evaluate<Vector3>(configuration.position)
                 this.lightGroup.position.copy(position)
+                this.modelGroup.position.copy(position)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.position)}: Error evaluating position`, error)
             }
@@ -83,6 +100,7 @@ export class CustomLight {
             try {
                 const rotation = evaluator.evaluate<Euler>(configuration.rotation)
                 this.lightGroup.rotation.copy(rotation)
+                this.modelGroup.rotation.copy(rotation)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.rotation)}: Error evaluating rotation`, error)
             }
@@ -90,6 +108,7 @@ export class CustomLight {
             try {
                 const scale = evaluator.evaluate<Vector3>(configuration.scale)
                 this.lightGroup.scale.copy(scale)
+                this.modelGroup.scale.copy(scale)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.scale)}: Error evaluating scale`, error)
             }
@@ -110,6 +129,14 @@ export class CustomLight {
                 if (child instanceof PointLight) {
                     child.color.copy(this.color)
                     child.intensity = this.intensity
+                }
+            }
+
+            for (const child of this.modelGroup.children) {
+                if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
+                    child.material.color.copy(this.color)
+                    child.material.emissive.copy(this.color)
+                    child.material.emissiveIntensity = this.intensity
                 }
             }
 
@@ -139,12 +166,20 @@ export class CustomLight {
 
         for (const child of this.lightGroup.children) dispose(child)
         for (const child of this.helperGroup.children) dispose(child)
+        for (const child of this.modelGroup.children) dispose(child)
         this.lightGroup.children = []
         this.helperGroup.children = []
+        this.modelGroup.children = []
 
         const model = new OBJLoader().parse(new TextDecoder().decode(rawData))
         const boundingSize = new Box3().setFromObject(model).getSize(new Vector3())
         const helperRadius = Math.max(Math.max(boundingSize.x, boundingSize.y, boundingSize.z) / 16, 0.01)
+
+        const material = new MeshStandardMaterial({
+            color: this.color,
+            emissive: this.color,
+            emissiveIntensity: this.intensity,
+        })
 
         let a = 0
         model.traverse((object) => {
@@ -163,6 +198,9 @@ export class CustomLight {
                     a += this.density || 0
                     if (a >= 1) a = 0
                 }
+
+                object.material = material
+                this.modelGroup.add(object)
             }
         })
     }
