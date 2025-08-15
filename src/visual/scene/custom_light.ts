@@ -1,4 +1,4 @@
-import { Color, Euler, Group, LineSegments, Mesh, PointLight, PointLightHelper, Vector3 } from 'three'
+import { Box3, Color, Euler, Group, LineSegments, Mesh, PointLight, PointLightHelper, Vector3 } from 'three'
 import { OBJLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
@@ -139,6 +139,9 @@ export class CustomLight {
         this.lightGroup.children = []
 
         const model = new OBJLoader().parse(new TextDecoder().decode(rawData))
+        const boundingSize = new Box3().setFromObject(model).getSize(new Vector3())
+        const helperRadius = Math.max(Math.max(boundingSize.x, boundingSize.y, boundingSize.z) / 16, 0.01)
+
         let a = 0
         model.traverse((object) => {
             if (object instanceof Mesh || object instanceof LineSegments) {
@@ -149,7 +152,7 @@ export class CustomLight {
                         light.position.fromBufferAttribute(position, i)
                         this.lightGroup.add(light)
 
-                        const helper = new PointLightHelper(light, 1, light.color)
+                        const helper = new PointLightHelper(light, helperRadius, light.color)
                         this.helperGroup.add(helper)
                     }
 
