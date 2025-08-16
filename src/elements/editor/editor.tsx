@@ -70,7 +70,12 @@ export function Editor(parameters: EditorParameters) {
         setActiveObject(null)
     }
 
-    const saveConfigurationToHomeAssistant = () => {
+    const saveHotReloadConfiguration = () => {
+        getLastCreatedVisual()
+            .then(setVisual)
+            .catch(() => {
+                setVisual(undefined)
+            })
         parameters.updateRawConfiguration(encodeConfiguration(configuration))
     }
 
@@ -81,7 +86,7 @@ export function Editor(parameters: EditorParameters) {
         }
         const timeout = setTimeout(() => {
             if (hotReload) return
-            saveConfigurationToHomeAssistant()
+            saveHotReloadConfiguration()
         }, CONFIGURATION_UPDATE_DELAY)
 
         return () => clearTimeout(timeout)
@@ -239,7 +244,7 @@ export function Editor(parameters: EditorParameters) {
                 )}
                 {hotReload && (
                     <div class="panel__section">
-                        <Button name="Save" onClick={saveConfigurationToHomeAssistant} />
+                        <Button name="Save" onClick={saveHotReloadConfiguration} />
                     </div>
                 )}
             </div>
