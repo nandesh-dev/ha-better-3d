@@ -37,6 +37,7 @@ export function Expression(parameters: ExpressionParameters) {
     }
 
     const selectPattern = (newPatternName: string) => {
+        parameters.onValueChange(parameters.patterns[newPatternName].computeValue([]))
         setSelectedPattern(newPatternName)
     }
 
@@ -73,7 +74,7 @@ export function Expression(parameters: ExpressionParameters) {
                                 <Slider
                                     key={selectedPattern + i}
                                     label={name}
-                                    value={parseFloat(values[i])}
+                                    value={isNaN(parseFloat(values[i])) ? 0 : parseFloat(values[i])}
                                     onValueChange={(newValue) => updateValue(newValue.toString(), i)}
                                     min={input.min}
                                     max={input.max}
@@ -96,7 +97,7 @@ export function Expression(parameters: ExpressionParameters) {
                             <Input
                                 key={selectedPattern + i}
                                 placeholder={name}
-                                value={values[i]}
+                                value={values[i] || ''}
                                 onValueChange={(newValue) => updateValue(newValue, i)}
                             />
                         )
@@ -118,7 +119,7 @@ export const FixedStringPattern: Pattern = {
         const match = /^"((?:[^"\\]|\\.)*)"$/.exec(value)
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\')] : null
     },
-    computeValue: (values) => `"${values[0].replace('"', '\\"').replace('\\', '\\\\')}"`,
+    computeValue: (values) => `"${(values[0] || '').replace('"', '\\"').replace('\\', '\\\\')}"`,
     inputs: [{ name: 'string', type: 'string' }],
 }
 
@@ -127,7 +128,7 @@ export const FixedNumberPattern: Pattern = {
         const match = /^(\s*-?\d*\.?\d*\s*)$/.exec(value)
         return match !== null ? [match[1].trim()] : null
     },
-    computeValue: (values) => `${parseFloat(values[0])}`,
+    computeValue: (values) => `${parseFloat(values[0] || '0')}`,
     inputs: [{ name: 'number', type: 'number' }],
 }
 
@@ -136,7 +137,7 @@ export const FixedColorPattern: Pattern = {
         const match = /^new Color\("((?:[^"\\]|\\.)*)"\)$/.exec(value)
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\')] : null
     },
-    computeValue: (values) => `new Color("${values[0].replace('"', '\\"').replace('\\', '\\\\')}")`,
+    computeValue: (values) => `new Color("${(values[0] || '').replace('"', '\\"').replace('\\', '\\\\')}")`,
     inputs: [{ name: 'color', type: 'string' }],
 }
 
@@ -149,7 +150,7 @@ export const EntityRGBColorPattern: Pattern = {
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\')] : null
     },
     computeValue: (values) =>
-        `new Color(...(Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.rgb_color"] || [0,0,0]).map(a=>a/255))`,
+        `new Color(...(Entities["${(values[0] || '').replace('"', '\\"').replace('\\', '\\\\')}.rgb_color"] || [0,0,0]).map(a=>a/255))`,
     inputs: [{ name: 'entity', type: 'string' }],
 }
 
@@ -160,7 +161,7 @@ export const EntityBrightnessPattern: Pattern = {
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\'), match[2].trim()] : null
     },
     computeValue: (values) => {
-        return `(Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}.brightness"] || 0) * ${values[1]} / 255`
+        return `(Entities["${(values[0] || '').replace('"', '\\"').replace('\\', '\\\\')}.brightness"] || 0) * ${values[1] || '1'} / 255`
     },
     inputs: [
         { name: 'entity', type: 'string' },
@@ -173,7 +174,8 @@ export const FixedVector3Pattern: Pattern = {
         const match = /^new Vector3\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
         return match !== null ? [match[1].trim(), match[2].trim(), match[3].trim()] : null
     },
-    computeValue: (values) => `new Vector3(${parseFloat(values[0])},${parseFloat(values[1])},${parseFloat(values[2])})`,
+    computeValue: (values) =>
+        `new Vector3(${parseFloat(values[0] || '0')},${parseFloat(values[1] || '0')},${parseFloat(values[2] || '0')})`,
     inputs: [
         { name: 'x', type: 'number' },
         { name: 'y', type: 'number' },
@@ -188,7 +190,8 @@ export const FixedCombinedVector3Pattern: Pattern = {
         if (match[1].trim() === match[2].trim() && match[2].trim() === match[3].trim()) return [match[1].trim()]
         return null
     },
-    computeValue: (values) => `new Vector3(${parseFloat(values[0])},${parseFloat(values[0])},${parseFloat(values[0])})`,
+    computeValue: (values) =>
+        `new Vector3(${parseFloat(values[0] || '0')},${parseFloat(values[0] || '0')},${parseFloat(values[0] || '0')})`,
     inputs: [{ name: 'xyz', type: 'number' }],
 }
 
@@ -197,7 +200,7 @@ export const FixedVector2Pattern: Pattern = {
         const match = /^new Vector2\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
         return match !== null ? [match[1].trim(), match[2].trim()] : null
     },
-    computeValue: (values) => `new Vector2(${parseFloat(values[0])},${parseFloat(values[1])})`,
+    computeValue: (values) => `new Vector2(${parseFloat(values[0] || '0')},${parseFloat(values[1] || '0')})`,
     inputs: [
         { name: 'x', type: 'number' },
         { name: 'y', type: 'number' },
@@ -211,7 +214,7 @@ export const FixedCombinedVector2Pattern: Pattern = {
         if (match[1].trim() === match[2].trim()) return [match[1].trim()]
         return null
     },
-    computeValue: (values) => `new Vector2(${parseFloat(values[0])},${parseFloat(values[0])})`,
+    computeValue: (values) => `new Vector2(${parseFloat(values[0] || '0')},${parseFloat(values[0] || '0')})`,
     inputs: [{ name: 'xy', type: 'number' }],
 }
 
@@ -221,7 +224,7 @@ export const FixedEulerPattern: Pattern = {
         return match !== null ? match.slice(1).map((str) => `${(parseFloat(str) * 180) / Math.PI}`) : null
     },
     computeValue: (values) =>
-        `new Euler(${(parseFloat(values[0]) * Math.PI) / 180},${(parseFloat(values[1]) * Math.PI) / 180},${(parseFloat(values[2]) * Math.PI) / 180})`,
+        `new Euler(${(parseFloat(values[0] || '0') * Math.PI) / 180},${(parseFloat(values[1] || '0') * Math.PI) / 180},${(parseFloat(values[2] || '0') * Math.PI) / 180})`,
     inputs: [
         { name: 'x', type: 'number', min: -180, max: 180 },
         { name: 'y', type: 'number', min: -180, max: 180 },
@@ -234,7 +237,7 @@ export const FixedHTMLSizePattern: Pattern = {
         const match = /^new HTMLSize\("((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"\)$/.exec(value)
         return match !== null ? [match[1], match[2]] : null
     },
-    computeValue: (values) => `new HTMLSize("${values[0]}", "${values[1]}")`,
+    computeValue: (values) => `new HTMLSize("${values[0] || ''}", "${values[1] || ''}")`,
     inputs: [
         { name: 'height', type: 'string' },
         { name: 'width', type: 'string' },
@@ -246,7 +249,7 @@ export const FixedBoolPattern: Pattern = {
         const match = /^(true|false)$/.exec(value)
         return match !== null ? [match[1]] : null
     },
-    computeValue: (values) => `${values[0]}`,
+    computeValue: (values) => `${values[0] || 'false'}`,
     inputs: [{ name: 'value', type: 'bool' }],
 }
 
@@ -255,6 +258,6 @@ export const EntityBoolPattern: Pattern = {
         const match = /^Entities\["((?:[^"\\]|\\.)*)"\] == "on"$/.exec(value)
         return match !== null ? [match[1].replace('\\"', '"').replace('\\\\', '\\')] : null
     },
-    computeValue: (values) => `Entities["${values[0].replace('"', '\\"').replace('\\', '\\\\')}"] == "on"`,
+    computeValue: (values) => `Entities["${(values[0] || '').replace('"', '\\"').replace('\\', '\\\\')}"] == "on"`,
     inputs: [{ name: 'entity', type: 'string' }],
 }
