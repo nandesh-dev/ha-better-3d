@@ -215,6 +215,8 @@ export type CustomLightConfiguration = {
     intensity: Expression
     color: Expression
     density: Expression
+    meshVisible: Expression
+    meshIntensity: Expression
     helper: Expression
     visible: Expression
 }
@@ -225,9 +227,11 @@ export const DEFAULT_CUSTOM_LIGHT_CONFIGURATION: CustomLightConfiguration = {
     position: 'new Vector3(0, 0, 0)',
     rotation: 'new Euler(0, 0, 0)',
     scale: 'new Vector3(1, 1, 1)',
-    intensity: '2000',
+    intensity: '0.1',
     color: 'new Color("#ffffff")',
-    density: '0.5',
+    density: '0.01',
+    meshVisible: 'true',
+    meshIntensity: '0.1',
     helper: 'false',
     visible: 'true',
 } as const
@@ -235,15 +239,17 @@ export const DEFAULT_CUSTOM_LIGHT_CONFIGURATION: CustomLightConfiguration = {
 export function decodeCustomLightConfiguration(raw: any): CustomLightConfiguration {
     return {
         type: 'light.custom',
-        url: decodeExpression(raw.url, ''),
-        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
-        rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
-        scale: decodeExpression(raw.scale, 'new Vector3(1, 1, 1)'),
-        intensity: decodeExpression(raw.intensity, '"10"'),
-        color: decodeExpression(raw.color, 'new Color("#ffffff")'),
-        density: decodeExpression(raw.density, '0.5'),
-        helper: decodeExpression(raw.helper, 'false'),
-        visible: decodeExpression(raw.visible, 'true'),
+        url: decodeExpression(raw.url, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.url),
+        position: decodeExpression(raw.position, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.position),
+        rotation: decodeExpression(raw.rotation, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.rotation),
+        scale: decodeExpression(raw.scale, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.scale),
+        intensity: decodeExpression(raw.intensity, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.intensity),
+        color: decodeExpression(raw.color, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.color),
+        density: decodeExpression(raw.density, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.density),
+        meshVisible: decodeExpression(raw.meshVisible, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.meshVisible),
+        meshIntensity: decodeExpression(raw.meshIntensity, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.meshIntensity),
+        helper: decodeExpression(raw.helper, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.helper),
+        visible: decodeExpression(raw.visible, DEFAULT_CUSTOM_LIGHT_CONFIGURATION.visible),
     }
 }
 
@@ -257,6 +263,8 @@ export function encodeCustomLightConfiguration(config: CustomLightConfiguration)
         intensity: encodeExpression(config.intensity),
         color: encodeExpression(config.color),
         density: encodeExpression(config.density),
+        meshVisible: encodeExpression(config.meshVisible),
+        meshIntensity: encodeExpression(config.meshIntensity),
         helper: encodeExpression(config.helper),
         visible: encodeExpression(config.visible),
     }
