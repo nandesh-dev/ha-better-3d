@@ -8,7 +8,6 @@ import {
     MeshStandardMaterial,
     PointLight,
     PointLightHelper,
-    ShaderMaterial,
     Vector3,
 } from 'three'
 import { OBJLoader } from 'three/examples/jsm/Addons.js'
@@ -21,6 +20,8 @@ import { encodeExpression } from '@/configuration/value'
 import { Error } from '@/utility/error'
 import { Evaluator } from '@/utility/evaluater'
 import { ResourceManager } from '@/utility/resource_manager'
+
+const MAX_LIGHT_LIMIT = 200
 
 export class CustomLight {
     public three: Group
@@ -186,6 +187,7 @@ export class CustomLight {
             if (object instanceof Mesh || object instanceof LineSegments) {
                 const position = object.geometry.getAttribute('position')
                 for (let i = 0; i < position.count; i++) {
+                    if (this.lightGroup.children.length > MAX_LIGHT_LIMIT) return
                     if (a == 0) {
                         const light = new PointLight(this.color || undefined, this.intensity || undefined)
                         light.position.fromBufferAttribute(position, i)
