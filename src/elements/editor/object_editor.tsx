@@ -314,6 +314,18 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('color')}
                     />
                     <Expression
+                        label="Mesh Intensity"
+                        value={objectConfiguration.meshIntensity}
+                        patterns={{ Fixed: FixedNumberPattern, 'Entity Intensity': EntityBrightnessPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('meshIntensity')}
+                    />
+                    <Expression
+                        label="Mesh Visible"
+                        value={objectConfiguration.meshVisible}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('meshVisible')}
+                    />
+                    <Expression
                         label="Helper"
                         value={objectConfiguration.helper}
                         patterns={{ Fixed: FixedBoolPattern }}

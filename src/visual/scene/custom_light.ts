@@ -34,6 +34,8 @@ export class CustomLight {
     private density: number | null = null
     private color: Color | null = null
     private intensity: number | null = null
+    private meshVisible: boolean | null = null
+    private meshIntensity: number | null = null
 
     private disposed: boolean = false
     private resourceManager: ResourceManager
@@ -65,8 +67,7 @@ export class CustomLight {
 
         try {
             const visible = evaluator.evaluate<boolean>(configuration.visible)
-            this.lightGroup.visible = visible
-            this.modelGroup.visible = visible
+            this.three.visible = visible
         } catch (error) {
             throw new Error(`Error evaluating visible`, error)
         }
@@ -126,6 +127,22 @@ export class CustomLight {
                 throw new Error(`${encodeExpression(configuration.intensity)}: Error evaluating intensity`, error)
             }
 
+            try {
+                const meshVisible = evaluator.evaluate<boolean>(configuration.meshVisible)
+                this.modelGroup.visible = meshVisible
+            } catch (error) {
+                throw new Error(`${encodeExpression(configuration.meshVisible)}: Error evaluating mesh visible`, error)
+            }
+
+            try {
+                this.meshIntensity = evaluator.evaluate<number>(configuration.meshIntensity)
+            } catch (error) {
+                throw new Error(
+                    `${encodeExpression(configuration.meshIntensity)}: Error evaluating mesh intensity`,
+                    error
+                )
+            }
+
             for (const child of this.lightGroup.children) {
                 if (child instanceof PointLight) {
                     child.color.copy(this.color)
@@ -137,7 +154,7 @@ export class CustomLight {
                 if (child instanceof Mesh && child.material instanceof MeshStandardMaterial) {
                     child.material.color.copy(this.color)
                     child.material.emissive.copy(this.color)
-                    child.material.emissiveIntensity = this.intensity
+                    child.material.emissiveIntensity = this.meshIntensity
                 }
             }
 
@@ -179,7 +196,7 @@ export class CustomLight {
         const material = new MeshStandardMaterial({
             color: this.color,
             emissive: this.color,
-            emissiveIntensity: this.intensity,
+            emissiveIntensity: this.meshIntensity || 0,
         })
 
         let a = 0
