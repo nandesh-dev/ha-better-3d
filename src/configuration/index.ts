@@ -23,11 +23,14 @@ import {
 } from './objects'
 import { Expression, decodeExpression, decodeString, encodeExpression, encodeString } from './value'
 
+const CONFIGURATION_RESERVED_KEYS: string[] = ['type', 'activeScene', 'scenes', 'styles'] as const
+
 export type Configuration = {
     type: string
     activeScene: Expression
     scenes: { [name: string]: SceneConfiguration }
     styles: string
+    extra: { [key: string]: unknown }
 }
 
 export function decodeConfiguration(raw: any): Configuration {
@@ -36,12 +39,20 @@ export function decodeConfiguration(raw: any): Configuration {
         scenes[name] = decodeSceneConfiguration(raw.scenes[name])
     }
 
-    return {
+    const configuration: Configuration = {
         type: decodeString(raw, `custom:${CARD_CUSTOM_ELEMENT_TAGNAME}`),
         activeScene: decodeExpression(raw.active_scene, "''"),
         styles: decodeString(raw.styles, ''),
         scenes,
+        extra: {},
     }
+
+    Object.keys(raw).map((key) => {
+        if (CONFIGURATION_RESERVED_KEYS.includes(key)) return
+        configuration.extra[key] = raw[key]
+    })
+
+    return configuration
 }
 
 export function encodeConfiguration(config: Configuration): unknown {
@@ -49,11 +60,13 @@ export function encodeConfiguration(config: Configuration): unknown {
     for (const name in config.scenes || []) {
         scenes[name] = encodeSceneConfiguration(config.scenes[name])
     }
+
     return {
         type: encodeString(config.type),
         active_scene: encodeExpression(config.activeScene),
         styles: encodeString(config.styles),
         scenes,
+        ...config.extra,
     }
 }
 
