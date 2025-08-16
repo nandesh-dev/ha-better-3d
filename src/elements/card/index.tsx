@@ -23,11 +23,13 @@ export class CardHTMLElement extends HTMLElement {
 
     public set hass(hass: HomeAssistant) {
         this.homeAssistant = hass
+        if (this.visual) this.visual.updateHomeAssistant(hass)
         this.update()
     }
 
     public setConfig(rawConfig: unknown) {
         this.rawConfiguration = rawConfig
+        if (this.visual) this.visual.updateConfig(decodeConfiguration(rawConfig))
         this.update()
     }
 
