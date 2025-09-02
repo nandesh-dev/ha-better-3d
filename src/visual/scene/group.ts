@@ -107,7 +107,14 @@ export class Group {
         }
     }
 
-    public dispose() {}
+    public dispose() {
+        for (const objectName in this.children) {
+            const object = this.children[objectName]
+            this.group.remove(object.three)
+            object.dispose()
+            delete this.children[objectName]
+        }
+    }
 
     private updateObjects(configuration: GroupConfiguration, homeAssistant: HomeAssistant) {
         // Remove objects which are no longer in use
@@ -116,7 +123,7 @@ export class Group {
             const objectConfiguration = configuration.children[objectName]
             const inUse = objectConfiguration && matchObjectInstanceAndConfigurationType(objectConfiguration, object)
             if (!inUse) {
-                if (object.three) this.three.remove(object.three)
+                this.group.remove(object.three)
                 object.dispose()
                 delete this.children[objectName]
             }
@@ -156,7 +163,7 @@ export class Group {
                 }
 
                 this.children[objectName] = object
-                this.three.add(object.three)
+                this.group.add(object.three)
             }
 
             try {

@@ -103,7 +103,6 @@ export class Scene {
         }
 
         this.activeCamera = this.searchCamera(activeCameraName, this.objects)
-        console.log(this.activeCamera)
     }
 
     public updateBackgroundColor(configuration: SceneConfiguration['backgroundColor'], evaluator: Evaluator) {
