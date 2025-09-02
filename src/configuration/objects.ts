@@ -310,6 +310,105 @@ export function encodePerspectiveCameraConfiguration(config: PerspectiveCameraCo
     }
 }
 
+export type GroupConfiguration = {
+    type: 'group'
+    children: ObjectMap
+}
+
+export const DEFAULT_GROUP_CONFIGURATION: GroupConfiguration = {
+    type: 'group',
+    children: {},
+}
+
+export function decodeGroupConfiguration(raw: any): GroupConfiguration {
+    return {
+        type: 'group',
+        children: decodeObjectMap(raw?.children),
+    }
+}
+
+export function encodeGroupConfiguration(config: GroupConfiguration): unknown {
+    return {
+        type: 'group',
+        children: encodeObjectMap(config.children),
+    }
+}
+
+export type ObjectMap = { [name: string]: ObjectConfiguration }
+
+export function decodeObjectMap(raw: any): ObjectMap {
+    const objects: ObjectMap = {}
+    for (const name in raw ?? {}) {
+        let properties
+        switch (raw[name].type) {
+            case 'card.2d':
+                properties = decodeCard2DConfiguration(raw[name])
+                break
+            case 'card.3d':
+                properties = decodeCard3DConfiguration(raw[name])
+                break
+            case 'model.glb':
+                properties = decodeGLBModelConfiguration(raw[name])
+                break
+            case 'light.point':
+                properties = decodePointLightConfiguration(raw[name])
+                break
+            case 'light.ambient':
+                properties = decodeAmbientLightConfiguration(raw[name])
+                break
+            case 'light.custom':
+                properties = decodeCustomLightConfiguration(raw[name])
+                break
+            case 'camera.perspective':
+                properties = decodePerspectiveCameraConfiguration(raw[name])
+                break
+            case 'group':
+                properties = encodeGroupConfiguration(raw[name])
+                break
+        }
+        if (properties) {
+            objects[name] = properties
+        }
+    }
+    return objects
+}
+
+export function encodeObjectMap(objectMap: ObjectMap): unknown {
+    const objects: { [name: string]: unknown } = {}
+    for (const name in objectMap ?? {}) {
+        let properties
+        switch (objectMap[name].type) {
+            case 'card.2d':
+                properties = encodeCard2DConfiguration(objectMap[name])
+                break
+            case 'card.3d':
+                properties = encodeCard3DConfiguration(objectMap[name])
+                break
+            case 'model.glb':
+                properties = encodeGLBModelConfiguration(objectMap[name])
+                break
+            case 'light.point':
+                properties = encodePointLightConfiguration(objectMap[name])
+                break
+            case 'light.ambient':
+                properties = encodeAmbientLightConfiguration(objectMap[name])
+                break
+            case 'light.custom':
+                properties = encodeCustomLightConfiguration(objectMap[name])
+                break
+            case 'camera.perspective':
+                properties = encodePerspectiveCameraConfiguration(objectMap[name])
+                break
+            case 'group':
+                properties = encodeGroupConfiguration(objectMap[name])
+                break
+        }
+        objects[name] = properties
+    }
+
+    return objects
+}
+
 export type ObjectConfiguration =
     | Card2DConfiguration
     | Card3DConfiguration
@@ -318,3 +417,4 @@ export type ObjectConfiguration =
     | AmbientLightConfiguration
     | CustomLightConfiguration
     | PerspectiveCameraConfiguration
+    | GroupConfiguration
