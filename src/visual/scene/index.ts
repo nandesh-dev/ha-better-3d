@@ -1,8 +1,9 @@
 import { SceneConfiguration } from '@/configuration'
-import { Color, Scene as ThreeScene } from 'three'
+import { Color, Euler, Scene as ThreeScene, Vector3 } from 'three'
 
 import { dispose } from '@/visual/dispose'
 
+import { ObjectConfigurationMap, PerspectiveCameraConfiguration } from '@/configuration/objects'
 import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
@@ -16,10 +17,11 @@ import { Card3D } from './3d_card'
 import { AmbientLight } from './ambient_light'
 import { CustomLight } from './custom_light'
 import { GLBModel } from './glb_model'
+import { Group, ObjectInstance, ObjectMap, matchObjectInstanceAndConfigurationType } from './group'
 import { PerspectiveCamera } from './perspective_camera'
 import { PointLight } from './point_light'
 
-type Object = Card2D | Card3D | GLBModel | PointLight | AmbientLight | CustomLight
+type CameraConfiguration = PerspectiveCameraConfiguration
 type Camera = PerspectiveCamera
 
 type Size = {
@@ -32,7 +34,7 @@ export class Scene {
     public name: string
 
     public activeCamera: Camera | null = null
-    private objects: { [name: string]: Object } = {}
+    private objects: { [name: string]: ObjectInstance } = {}
 
     private renderer: Renderer
     private resourceManager: ResourceManager
@@ -48,7 +50,7 @@ export class Scene {
         this.evaluator = evaluator
     }
 
-    public updateActiveCamera(configuration: SceneConfiguration) {
+    public updateProperties(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
         let activeCameraName
         try {
             activeCameraName = this.evaluator.evaluate<string>(configuration.activeCamera)
@@ -59,39 +61,34 @@ export class Scene {
             )
         }
 
-        const activeCameraConfiguration = configuration.objects[activeCameraName]
-        if (activeCameraConfiguration && activeCameraConfiguration.type === 'camera.perspective') {
-            if (
-                !this.activeCamera ||
-                this.activeCamera.name !== activeCameraName ||
-                (activeCameraConfiguration.type === 'camera.perspective' &&
-                    !(this.activeCamera instanceof PerspectiveCamera))
-            ) {
-                if (activeCameraConfiguration.type === 'camera.perspective') {
-                    this.activeCamera?.dispose()
-                    this.activeCamera = new PerspectiveCamera(
-                        activeCameraName,
-                        this.renderer.domElement,
-                        this.evaluator
-                    )
-                } else {
-                    throw new Error(`${activeCameraName}: Invalid type`)
-                }
+        if (this.activeCamera) {
+            const activeCameraConfiguration = this.searchCameraConfiguration(activeCameraName, configuration.objects)
+            if (activeCameraConfiguration) {
+                this.activeCamera.updateProperties(activeCameraConfiguration)
+            } else {
+                this.activeCamera = null
             }
-
-            try {
-                this.activeCamera?.updateProperties(activeCameraConfiguration as any)
-            } catch (error) {
-                throw new Error(`${activeCameraName}: Update properties`, error)
-            }
-        } else {
-            this.activeCamera?.dispose()
-            this.activeCamera = null
         }
-    }
 
-    public updateProperties(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
-        this.removeUnnecessaryObjects(configuration)
+        if (this.activeCamera) {
+            this.evaluator.setContextValue('Camera', {
+                position: {
+                    x: this.activeCamera.three.position.x,
+                    y: this.activeCamera.three.position.y,
+                    z: this.activeCamera.three.position.z,
+                },
+                rotation: {
+                    x: this.activeCamera.three.rotation.x,
+                    y: this.activeCamera.three.rotation.y,
+                    z: this.activeCamera.three.rotation.z,
+                },
+            })
+        } else {
+            this.evaluator.setContextValue('Camera', {
+                position: new Vector3(),
+                rotation: new Euler(),
+            })
+        }
 
         try {
             this.updateObjects(configuration, homeAssistant)
@@ -104,6 +101,9 @@ export class Scene {
         } catch (error) {
             throw new Error(`Update background color`, error)
         }
+
+        this.activeCamera = this.searchCamera(activeCameraName, this.objects)
+        console.log(this.activeCamera)
     }
 
     public updateBackgroundColor(configuration: SceneConfiguration['backgroundColor'], evaluator: Evaluator) {
@@ -127,30 +127,46 @@ export class Scene {
         dispose(this.three)
     }
 
-    private removeUnnecessaryObjects(configuration: SceneConfiguration) {
+    private searchCameraConfiguration(name: string, objectMap: ObjectConfigurationMap): CameraConfiguration | null {
+        for (const objectName in objectMap) {
+            if (objectMap[objectName].type === 'group') {
+                const cameraConfiguration = this.searchCameraConfiguration(name, objectMap[objectName].children)
+                if (cameraConfiguration) return cameraConfiguration
+            }
+            if (objectName == name && objectMap[objectName].type === 'camera.perspective') {
+                return objectMap[objectName]
+            }
+        }
+        return null
+    }
+
+    private searchCamera(name: string, objectMap: ObjectMap): Camera | null {
+        for (const objectName in objectMap) {
+            if (objectMap[objectName] instanceof Group) {
+                const camera = this.searchCamera(name, objectMap[objectName].children)
+                if (camera) return camera
+            }
+            if (objectName == name && objectMap[objectName] instanceof PerspectiveCamera) {
+                return objectMap[objectName]
+            }
+        }
+        return null
+    }
+
+    private updateObjects(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
+        // Remove objects which are no longer in use
         for (const objectName in this.objects) {
             const object = this.objects[objectName]
-            const objectProperties = configuration.objects[objectName]
-            if (objectProperties.type === 'camera.perspective') continue
-
-            const inUse =
-                objectProperties &&
-                ((objectProperties.type === 'card.2d' && object instanceof Card2D) ||
-                    (objectProperties.type === 'card.3d' && object instanceof Card3D) ||
-                    (objectProperties.type === 'model.glb' && object instanceof GLBModel) ||
-                    (objectProperties.type === 'light.point' && object instanceof PointLight) ||
-                    (objectProperties.type === 'light.ambient' && object instanceof AmbientLight) ||
-                    (objectProperties.type === 'light.custom' && object instanceof CustomLight))
-
+            const objectConfiguration = configuration.objects[objectName]
+            const inUse = objectConfiguration && matchObjectInstanceAndConfigurationType(objectConfiguration, object)
             if (!inUse) {
                 if (object.three) this.three.remove(object.three)
                 object.dispose()
                 delete this.objects[objectName]
             }
         }
-    }
 
-    private updateObjects(configuration: SceneConfiguration, homeAssistant: HomeAssistant) {
+        // Update existing objects or create a new object if it doesn't exist
         for (const objectName in configuration.objects) {
             const objectProperties = configuration.objects[objectName]
             let object = this.objects[objectName]
@@ -175,27 +191,22 @@ export class Scene {
                     case 'light.custom':
                         object = new CustomLight(objectName, this.resourceManager, this.evaluator)
                         break
+                    case 'camera.perspective':
+                        object = new PerspectiveCamera(objectName, this.renderer.domElement, this.evaluator)
+                        break
+                    case 'group':
+                        object = new Group(objectName, this.renderer, this.resourceManager, this.evaluator)
+                        break
                 }
 
-                if (object) {
-                    this.objects[objectName] = object
-                    this.three.add(object.three)
-                }
+                this.objects[objectName] = object
+                this.three.add(object.three)
             }
 
-            if (
-                object instanceof Card2D ||
-                object instanceof Card3D ||
-                object instanceof GLBModel ||
-                object instanceof PointLight ||
-                object instanceof AmbientLight ||
-                object instanceof CustomLight
-            ) {
-                try {
-                    object.updateProperties(objectProperties as any, homeAssistant)
-                } catch (error) {
-                    throw new Error(`${objectName}: Update object properties`, error)
-                }
+            try {
+                object.updateProperties(objectProperties as any, homeAssistant)
+            } catch (error) {
+                throw new Error(`${objectName}: Update object properties`, error)
             }
         }
     }

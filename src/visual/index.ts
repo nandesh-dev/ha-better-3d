@@ -133,27 +133,6 @@ export class Visual {
 
             const sceneConfiguration = this.configuration.scenes[activeSceneName]
             try {
-                this.activeScene.updateActiveCamera(sceneConfiguration)
-            } catch (error) {
-                throw new Error(`Update active camera`, error)
-            }
-            if (!this.activeScene.activeCamera) return
-
-            const camera = this.activeScene.activeCamera.three
-            this.evaluator.setContextValue('Camera', {
-                position: {
-                    x: camera.position.x,
-                    y: camera.position.y,
-                    z: camera.position.z,
-                },
-                rotation: {
-                    x: camera.rotation.x,
-                    y: camera.rotation.y,
-                    z: camera.rotation.z,
-                },
-            })
-
-            try {
                 this.activeScene.updateProperties(sceneConfiguration, this.homeAssistant)
             } catch (error) {
                 throw new Error(`Update scene properties`, error)
