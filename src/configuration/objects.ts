@@ -312,17 +312,32 @@ export function encodePerspectiveCameraConfiguration(config: PerspectiveCameraCo
 
 export type GroupConfiguration = {
     type: 'group'
-    children: ObjectMap
+    visible: Expression
+    position: Expression
+    rotation: Expression
+    scale: Expression
+    helper: Expression
+    children: ObjectConfigurationMap
 }
 
 export const DEFAULT_GROUP_CONFIGURATION: GroupConfiguration = {
     type: 'group',
+    visible: 'true',
+    position: 'new Vector3(0, 0, 0)',
+    rotation: 'new Euler(0, 0, 0)',
+    scale: 'new Vector3(1, 1, 1)',
+    helper: 'false',
     children: {},
 }
 
 export function decodeGroupConfiguration(raw: any): GroupConfiguration {
     return {
         type: 'group',
+        visible: decodeExpression(raw?.visible, DEFAULT_GROUP_CONFIGURATION.visible),
+        position: decodeExpression(raw?.position, DEFAULT_GROUP_CONFIGURATION.position),
+        rotation: decodeExpression(raw?.rotation, DEFAULT_GROUP_CONFIGURATION.rotation),
+        scale: decodeExpression(raw?.scale, DEFAULT_GROUP_CONFIGURATION.scale),
+        helper: decodeExpression(raw?.helper, DEFAULT_GROUP_CONFIGURATION.helper),
         children: decodeObjectMap(raw?.children),
     }
 }
@@ -330,14 +345,19 @@ export function decodeGroupConfiguration(raw: any): GroupConfiguration {
 export function encodeGroupConfiguration(config: GroupConfiguration): unknown {
     return {
         type: 'group',
+        visible: encodeExpression(config.visible),
+        position: encodeExpression(config.position),
+        rotation: encodeExpression(config.rotation),
+        scale: encodeExpression(config.scale),
+        helper: encodeExpression(config.helper),
         children: encodeObjectMap(config.children),
     }
 }
 
-export type ObjectMap = { [name: string]: ObjectConfiguration }
+export type ObjectConfigurationMap = { [name: string]: ObjectConfiguration }
 
-export function decodeObjectMap(raw: any): ObjectMap {
-    const objects: ObjectMap = {}
+export function decodeObjectMap(raw: any): ObjectConfigurationMap {
+    const objects: ObjectConfigurationMap = {}
     for (const name in raw ?? {}) {
         let properties
         switch (raw[name].type) {
@@ -363,17 +383,16 @@ export function decodeObjectMap(raw: any): ObjectMap {
                 properties = decodePerspectiveCameraConfiguration(raw[name])
                 break
             case 'group':
-                properties = encodeGroupConfiguration(raw[name])
+                properties = decodeGroupConfiguration(raw[name])
                 break
         }
-        if (properties) {
-            objects[name] = properties
-        }
+
+        if (properties) objects[name] = properties
     }
     return objects
 }
 
-export function encodeObjectMap(objectMap: ObjectMap): unknown {
+export function encodeObjectMap(objectMap: ObjectConfigurationMap): unknown {
     const objects: { [name: string]: unknown } = {}
     for (const name in objectMap ?? {}) {
         let properties

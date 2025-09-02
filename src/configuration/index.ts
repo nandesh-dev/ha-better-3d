@@ -5,24 +5,9 @@ import {
     DEFAULT_CARD_3D_CONFIGURATION,
     DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
     DEFAULT_POINT_LIGHT_CONFIGURATION,
-    ObjectConfiguration,
-    ObjectMap,
-    decodeAmbientLightConfiguration,
-    decodeCard2DConfiguration,
-    decodeCard3DConfiguration,
-    decodeCustomLightConfiguration,
-    decodeGLBModelConfiguration,
+    ObjectConfigurationMap,
     decodeObjectMap,
-    decodePerspectiveCameraConfiguration,
-    decodePointLightConfiguration,
-    encodeAmbientLightConfiguration,
-    encodeCard2DConfiguration,
-    encodeCard3DConfiguration,
-    encodeCustomLightConfiguration,
-    encodeGLBModelConfiguration,
     encodeObjectMap,
-    encodePerspectiveCameraConfiguration,
-    encodePointLightConfiguration,
 } from './objects'
 import { Expression, decodeExpression, decodeString, encodeExpression, encodeString } from './value'
 
@@ -76,7 +61,7 @@ export function encodeConfiguration(config: Configuration): unknown {
 export type SceneConfiguration = {
     activeCamera: Expression
     backgroundColor: Expression
-    objects: ObjectMap
+    objects: ObjectConfigurationMap
 }
 
 export const DEFAULT_SCENE_CONFIGURATION: SceneConfiguration = {
