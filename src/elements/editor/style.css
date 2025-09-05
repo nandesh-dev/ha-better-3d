@@ -17,7 +17,12 @@
     padding-right: 0.4rem;
     border-right: 1px solid var(--divider-color);
 }
-.sidebar__section__item {
+
+.sidebar__item {
+    width: 100%;
+}
+
+.sidebar__item__card {
     width: 100%;
     display: grid;
     grid-template-columns: auto 1fr;
@@ -28,17 +33,28 @@
     transition: background-color 0.2s;
 }
 
-.sidebar__section__item--selected {
+.sidebar__item--selected {
     background-color: color-mix(in srgb, var(--sidebar-selected-icon-color) 12%, transparent);
 }
 
-.sidebar__section__item__name {
+.sidebar__item__children {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding-left: 0.8rem;
+}
+
+.sidebar__item__card--selected {
+    background-color: color-mix(in srgb, var(--sidebar-selected-icon-color) 12%, transparent);
+}
+
+.sidebar__item__card__name {
     font-size: 1em;
     color: var(--sidebar-text-color);
     transition: color 0.2s;
 }
 
-.sidebar__section__item__name--selected {
+.sidebar__item__card__name--selected {
     color: var(--sidebar-selected-text-color);
 }
 

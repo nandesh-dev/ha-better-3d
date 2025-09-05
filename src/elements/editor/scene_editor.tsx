@@ -1,6 +1,8 @@
 import { SceneConfiguration } from '@/configuration'
 import { useState } from 'preact/hooks'
 
+import { OBJECT_TYPES } from '@/visual/scene/group'
+
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
@@ -9,9 +11,11 @@ import {
     DEFAULT_CARD_2D_CONFIGURATION,
     DEFAULT_CARD_3D_CONFIGURATION,
     DEFAULT_GLB_MODEL_CONFIGURATION,
+    DEFAULT_GROUP_CONFIGURATION,
     DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
     DEFAULT_POINT_LIGHT_CONFIGURATION,
     GLBModelConfiguration,
+    GroupConfiguration,
     PerspectiveCameraConfiguration,
     PointLightConfiguration,
 } from '@/configuration/objects'
@@ -22,18 +26,18 @@ import { Dropdown } from './components/dropdown'
 import { Input } from './components/input'
 import { EntityRGBColorPattern, Expression, FixedColorPattern, FixedStringPattern } from './expression'
 
-const OBJECT_TYPES = ['card.2d', 'card.3d', 'model.glb', 'camera.perspective', 'light.point', 'light.ambient'] as const
-
 export type SceneEditorParameters = {
     sceneName: string
     sceneConfiguration: SceneConfiguration
+    existingObjectNames: Set<string>
     onSceneConfigurationChange: (newConfiguration: SceneConfiguration) => void
     onSceneNameChange: (newName: string) => void
     onSceneDelete: () => void
 }
 
 export function SceneEditor(parameters: SceneEditorParameters) {
-    const [name, setName] = useState(parameters.sceneName)
+    const { sceneName, sceneConfiguration, existingObjectNames } = parameters
+    const [name, setName] = useState(sceneName)
     const [newObjectName, setNewObjectName] = useState('')
     const [newObjectType, setNewObjectType] = useState<(typeof OBJECT_TYPES)[number]>('card.2d')
 
@@ -42,19 +46,19 @@ export function SceneEditor(parameters: SceneEditorParameters) {
     }
 
     const updateActiveCamera = (newActiveCamera: ConfigurationExpression) => {
-        parameters.onSceneConfigurationChange({ ...parameters.sceneConfiguration, activeCamera: newActiveCamera })
+        parameters.onSceneConfigurationChange({ ...sceneConfiguration, activeCamera: newActiveCamera })
     }
 
     const updateBackgroundColor = (newBackgroundColor: ConfigurationExpression) => {
         parameters.onSceneConfigurationChange({
-            ...parameters.sceneConfiguration,
+            ...sceneConfiguration,
             backgroundColor: newBackgroundColor,
         })
     }
 
-    const handleAddNewObjectButton = () => {
+    const addNewObject = () => {
         if (!newObjectName) return
-        if (Object.keys(parameters.sceneConfiguration.objects).includes(newObjectName)) return
+        if (Object.keys(sceneConfiguration.objects).includes(newObjectName)) return
         let objectConfiguration
         switch (newObjectType) {
             case 'card.2d':
@@ -83,10 +87,13 @@ export function SceneEditor(parameters: SceneEditorParameters) {
                     JSON.stringify(DEFAULT_AMBIENT_LIGHT_CONFIGURATION)
                 ) as AmbientLightConfiguration
                 break
+            case 'group':
+                objectConfiguration = JSON.parse(JSON.stringify(DEFAULT_GROUP_CONFIGURATION)) as GroupConfiguration
+                break
         }
         parameters.onSceneConfigurationChange({
-            ...parameters.sceneConfiguration,
-            objects: { ...parameters.sceneConfiguration.objects, [newObjectName]: objectConfiguration },
+            ...sceneConfiguration,
+            objects: { ...sceneConfiguration.objects, [newObjectName]: objectConfiguration },
         })
     }
     return (
@@ -94,17 +101,17 @@ export function SceneEditor(parameters: SceneEditorParameters) {
             <div class="panel__section">
                 <span class="panel__label">NAME</span>
                 <Input value={name} onValueChange={setName} placeholder="Scene name" />
-                {name !== parameters.sceneName && <Button name="Update" onClick={updateSceneName} />}
+                {name !== sceneName && <Button name="Update" onClick={updateSceneName} />}
             </div>
             <Expression
                 label="Active Camera"
-                value={parameters.sceneConfiguration.activeCamera}
+                value={sceneConfiguration.activeCamera}
                 onValueChange={updateActiveCamera}
                 patterns={{ Fixed: FixedStringPattern }}
             />
             <Expression
                 label="Background Color"
-                value={parameters.sceneConfiguration.backgroundColor}
+                value={sceneConfiguration.backgroundColor}
                 onValueChange={updateBackgroundColor}
                 patterns={{ Fixed: FixedColorPattern, 'RGB Entity': EntityRGBColorPattern }}
             />
@@ -117,13 +124,13 @@ export function SceneEditor(parameters: SceneEditorParameters) {
                 <Input value={newObjectName} onValueChange={setNewObjectName} placeholder="Object name" />
                 {newObjectName && (
                     <>
-                        {Object.keys(parameters.sceneConfiguration.objects).includes(newObjectName) && (
+                        {existingObjectNames.has(newObjectName) && (
                             <p class="warning">An object with the name '{newObjectName}' already exists.</p>
                         )}
                         <Button
-                            name="Add Obejct"
-                            onClick={handleAddNewObjectButton}
-                            dissabled={Object.keys(parameters.sceneConfiguration.objects).includes(newObjectName)}
+                            name="Add Object"
+                            onClick={addNewObject}
+                            dissabled={existingObjectNames.has(newObjectName)}
                         />
                     </>
                 )}

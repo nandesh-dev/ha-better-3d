@@ -4,40 +4,50 @@ import { Checkbox } from './components/checkbox'
 
 export type EditorEditorParameters = {
     visual: Visual | null | undefined
-    hotReload: boolean
+    hotReloadEnabled: boolean
     onHotReloadChange: (newHotReload: boolean) => void
 }
 
 export function EditorEditor(parameters: EditorEditorParameters) {
+    const { visual, hotReloadEnabled } = parameters
+
+    const changeHotReload = parameters.onHotReloadChange
+
     return (
         <div class="panel">
             <div class="panel__section">
                 <span class="panel__label">HOT RELOAD</span>
-                {parameters.visual === null && <p class="warning">Connecting to visual...</p>}
-                {parameters.visual === undefined && (
-                    <p class="warning">
-                        Could not connect to visual, you can still (hope so) use visual editor without hot reload. Do
-                        report this!
-                    </p>
-                )}
-                <Checkbox
-                    label="Enable"
-                    value={parameters.hotReload}
-                    onValueChange={parameters.onHotReloadChange}
-                    disabled={!parameters.visual}
-                />
-                {parameters.hotReload && (
-                    <>
-                        <p class="warning">
-                            <b>HEADS UP! You will LOOSE your configuration if you didn't read this.</b>
-                            <br /> Make sure to save your configuration <b>FIRST</b> using the <b>LEFT</b> save button
-                            (below the sidebar), <i>then</i> using the save button provided by Home Assistant.
-                        </p>
-                        <Graphic />
-                    </>
-                )}
+                {visual === null && <VisualConnectingMessage />}
+                {visual === undefined && <VisualNotFoundWarning />}
+                <Checkbox label="Enable" value={hotReloadEnabled} onValueChange={changeHotReload} disabled={!visual} />
+                {hotReloadEnabled && <PrecautionMessage />}
             </div>
         </div>
+    )
+}
+
+function VisualConnectingMessage() {
+    return <p class="warning">Connecting to visual...</p>
+}
+
+function VisualNotFoundWarning() {
+    return (
+        <p class="warning">
+            Could not connect to visual, you may still (hope so) use visual editor without hot reload. Do report this!
+        </p>
+    )
+}
+
+function PrecautionMessage() {
+    return (
+        <>
+            <p class="warning">
+                <b>HEADS UP! You will LOOSE your configuration if you didn't read this.</b>
+                <br /> Make sure to save your configuration <b>FIRST</b> using the <b>LEFT</b> save button (below the
+                sidebar), <i>then</i> using the save button provided by Home Assistant.
+            </p>
+            <Graphic />
+        </>
     )
 }
 

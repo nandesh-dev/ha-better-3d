@@ -17,6 +17,16 @@ import { GLBModel } from './glb_model'
 import { PerspectiveCamera } from './perspective_camera'
 import { PointLight } from './point_light'
 
+export const OBJECT_TYPES = [
+    'card.2d',
+    'card.3d',
+    'model.glb',
+    'camera.perspective',
+    'light.point',
+    'light.ambient',
+    'group',
+] as const
+
 export type ObjectInstance =
     | Card2D
     | Card3D
