@@ -5,21 +5,9 @@ import {
     DEFAULT_CARD_3D_CONFIGURATION,
     DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
     DEFAULT_POINT_LIGHT_CONFIGURATION,
-    ObjectConfiguration,
-    decodeAmbientLightConfiguration,
-    decodeCard2DConfiguration,
-    decodeCard3DConfiguration,
-    decodeCustomLightConfiguration,
-    decodeGLBModelConfiguration,
-    decodePerspectiveCameraConfiguration,
-    decodePointLightConfiguration,
-    encodeAmbientLightConfiguration,
-    encodeCard2DConfiguration,
-    encodeCard3DConfiguration,
-    encodeCustomLightConfiguration,
-    encodeGLBModelConfiguration,
-    encodePerspectiveCameraConfiguration,
-    encodePointLightConfiguration,
+    ObjectConfigurationMap,
+    decodeObjectMap,
+    encodeObjectMap,
 } from './objects'
 import { Expression, decodeExpression, decodeString, encodeExpression, encodeString } from './value'
 
@@ -73,7 +61,7 @@ export function encodeConfiguration(config: Configuration): unknown {
 export type SceneConfiguration = {
     activeCamera: Expression
     backgroundColor: Expression
-    objects: { [name: string]: ObjectConfiguration }
+    objects: ObjectConfigurationMap
 }
 
 export const DEFAULT_SCENE_CONFIGURATION: SceneConfiguration = {
@@ -88,72 +76,17 @@ export const DEFAULT_SCENE_CONFIGURATION: SceneConfiguration = {
 } as const
 
 export function decodeSceneConfiguration(raw: any): SceneConfiguration {
-    const objects: { [name: string]: ObjectConfiguration } = {}
-    for (const name in raw.objects ?? []) {
-        const properties = raw.objects[name]
-        switch (properties.type) {
-            case 'card.2d':
-                objects[name] = decodeCard2DConfiguration(properties)
-                break
-            case 'card.3d':
-                objects[name] = decodeCard3DConfiguration(properties)
-                break
-            case 'model.glb':
-                objects[name] = decodeGLBModelConfiguration(properties)
-                break
-            case 'light.point':
-                objects[name] = decodePointLightConfiguration(properties)
-                break
-            case 'light.ambient':
-                objects[name] = decodeAmbientLightConfiguration(properties)
-                break
-            case 'light.custom':
-                objects[name] = decodeCustomLightConfiguration(properties)
-                break
-            case 'camera.perspective':
-                objects[name] = decodePerspectiveCameraConfiguration(properties)
-                break
-        }
-    }
-
     return {
         activeCamera: decodeExpression(raw.active_camera, '""'),
         backgroundColor: decodeExpression(raw.background_color, 'new Color("#eeeeee")'),
-        objects,
+        objects: decodeObjectMap(raw.objects),
     }
 }
 
 export function encodeSceneConfiguration(config: SceneConfiguration): unknown {
-    const objects: { [name: string]: unknown } = {}
-    for (const name in config.objects) {
-        const properties = config.objects[name]
-        switch (properties.type) {
-            case 'card.2d':
-                objects[name] = encodeCard2DConfiguration(properties)
-                break
-            case 'card.3d':
-                objects[name] = encodeCard3DConfiguration(properties)
-                break
-            case 'model.glb':
-                objects[name] = encodeGLBModelConfiguration(properties)
-                break
-            case 'light.point':
-                objects[name] = encodePointLightConfiguration(properties)
-                break
-            case 'light.ambient':
-                objects[name] = encodeAmbientLightConfiguration(properties)
-                break
-            case 'light.custom':
-                objects[name] = encodeCustomLightConfiguration(properties)
-                break
-            case 'camera.perspective':
-                objects[name] = encodePerspectiveCameraConfiguration(properties)
-                break
-        }
-    }
     return {
         active_camera: encodeExpression(config.activeCamera),
         background_color: encodeExpression(config.backgroundColor),
-        objects,
+        objects: encodeObjectMap(config.objects),
     }
 }

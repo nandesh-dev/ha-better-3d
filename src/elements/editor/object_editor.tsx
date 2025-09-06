@@ -1,12 +1,22 @@
 import { useState } from 'preact/hooks'
 import { parse, stringify } from 'yaml'
 
+import { OBJECT_TYPES } from '@/visual/scene/group'
+
 import {
     AmbientLightConfiguration,
     Card2DConfiguration,
     Card3DConfiguration,
     CustomLightConfiguration,
+    DEFAULT_AMBIENT_LIGHT_CONFIGURATION,
+    DEFAULT_CARD_2D_CONFIGURATION,
+    DEFAULT_CARD_3D_CONFIGURATION,
+    DEFAULT_GLB_MODEL_CONFIGURATION,
+    DEFAULT_GROUP_CONFIGURATION,
+    DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION,
+    DEFAULT_POINT_LIGHT_CONFIGURATION,
     GLBModelConfiguration,
+    GroupConfiguration,
     ObjectConfiguration,
     PerspectiveCameraConfiguration,
     PointLightConfiguration,
@@ -14,6 +24,7 @@ import {
 import { Expression as ConfigurationExpression } from '@/configuration/value'
 
 import { Button } from './components/button'
+import { Dropdown } from './components/dropdown'
 import { Input } from './components/input'
 import { TextArea } from './components/text_area'
 import {
@@ -35,24 +46,82 @@ import {
 export type ObjectEditorParameters = {
     objectName: string
     objectConfiguration: ObjectConfiguration
+    existingObjectNames: Set<string>
+    parentType: 'scene' | 'group'
+    parentName: string
+    existingGroupNames: Set<string>
+    existingSceneNames: Set<string>
     onObjectConfigurationChange: (newConfiguration: ObjectConfiguration) => void
     onObjectNameChange: (newName: string) => void
     onObjectDelete: () => void
+    onObjectParentChange: (parentType: 'scene' | 'group', parentName: string) => void
 }
 
 export function ObjectEditor(parameters: ObjectEditorParameters) {
-    const [name, setName] = useState(parameters.objectName)
+    const { objectName, objectConfiguration, existingObjectNames, existingSceneNames, existingGroupNames } = parameters
+    const [name, setName] = useState(objectName)
+    const [newObjectType, setNewObjectType] = useState<(typeof OBJECT_TYPES)[number]>('card.2d')
+    const [newObjectName, setNewObjectName] = useState('')
+    const [parentType, setParentType] = useState(parameters.parentType)
+    const [parentName, setParentName] = useState(parameters.parentName)
 
     const updateObjectName = () => {
         parameters.onObjectNameChange(name)
     }
 
-    const objectConfiguration = parameters.objectConfiguration
-
     const createOnValueChangeHandler = <T extends ObjectConfiguration>(property: keyof T) => {
         return (newValue: ConfigurationExpression) => {
             parameters.onObjectConfigurationChange({ ...objectConfiguration, [property]: newValue })
         }
+    }
+
+    const addNewObject = () => {
+        if (!newObjectName || objectConfiguration.type !== 'group') return
+        if (Object.keys(objectConfiguration.children).includes(newObjectName)) return
+        let newObjectConfiguration
+        switch (newObjectType) {
+            case 'card.2d':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_CARD_2D_CONFIGURATION)
+                ) as Card2DConfiguration
+                break
+            case 'card.3d':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_CARD_3D_CONFIGURATION)
+                ) as Card3DConfiguration
+                break
+            case 'model.glb':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_GLB_MODEL_CONFIGURATION)
+                ) as GLBModelConfiguration
+                break
+            case 'camera.perspective':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION)
+                ) as PerspectiveCameraConfiguration
+                break
+            case 'light.point':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_POINT_LIGHT_CONFIGURATION)
+                ) as PointLightConfiguration
+                break
+            case 'light.ambient':
+                newObjectConfiguration = JSON.parse(
+                    JSON.stringify(DEFAULT_AMBIENT_LIGHT_CONFIGURATION)
+                ) as AmbientLightConfiguration
+                break
+            case 'group':
+                newObjectConfiguration = JSON.parse(JSON.stringify(DEFAULT_GROUP_CONFIGURATION)) as GroupConfiguration
+                break
+        }
+        parameters.onObjectConfigurationChange({
+            ...objectConfiguration,
+            children: { ...objectConfiguration.children, [newObjectName]: newObjectConfiguration },
+        })
+    }
+
+    const moveObject = () => {
+        parameters.onObjectParentChange(parentType, parentName)
     }
 
     let PropertyEditors
@@ -376,6 +445,59 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                 </>
             )
             break
+        case 'group':
+            PropertyEditors = (
+                <>
+                    <Expression
+                        label="Position"
+                        value={objectConfiguration.position}
+                        patterns={{ Fixed: FixedVector3Pattern }}
+                        onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('position')}
+                    />
+                    <Expression
+                        label="Rotation"
+                        value={objectConfiguration.rotation}
+                        patterns={{ Fixed: FixedEulerPattern }}
+                        onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('rotation')}
+                    />
+                    <Expression
+                        label="Scale"
+                        value={objectConfiguration.scale}
+                        patterns={{ 'Fixed Combined': FixedCombinedVector3Pattern, Fixed: FixedVector3Pattern }}
+                        onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('scale')}
+                    />
+                    <Expression
+                        label="Visible"
+                        value={objectConfiguration.visible}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('visible')}
+                    />
+                    <Expression
+                        label="Helper"
+                        value={objectConfiguration.helper}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('helper')}
+                    />
+                    <div class="panel__section">
+                        <span class="panel__label">ADD CHILD</span>
+                        <Dropdown options={OBJECT_TYPES} selected={newObjectType} onSelectedChange={setNewObjectType} />
+                        <Input value={newObjectName} onValueChange={setNewObjectName} placeholder="Object name" />
+                        {newObjectName && (
+                            <>
+                                {existingObjectNames.has(newObjectName) && (
+                                    <p class="warning">An object with the name '{newObjectName}' already exists.</p>
+                                )}
+                                <Button
+                                    name="Add Child"
+                                    onClick={addNewObject}
+                                    dissabled={existingObjectNames.has(newObjectName)}
+                                />
+                            </>
+                        )}
+                    </div>
+                </>
+            )
+            break
     }
 
     return (
@@ -383,11 +505,37 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
             <div class="panel__section">
                 <span class="panel__label">NAME</span>
                 <Input value={name} onValueChange={setName} placeholder="Object name" />
-                {name !== parameters.objectName && <Button name="Update" onClick={updateObjectName} />}
+                {name !== objectName && <Button name="Update" onClick={updateObjectName} />}
             </div>
             {PropertyEditors}
             <div class="panel__section">
-                <Button name="Delete Object" type="danger" onClick={parameters.onObjectDelete} />
+                <span class="panel__label">MOVE TO</span>
+                <Dropdown
+                    options={['scene', 'group'] as const}
+                    selected={parentType}
+                    onSelectedChange={setParentType}
+                />
+                <Dropdown
+                    options={
+                        parentType === 'scene'
+                            ? Array.from(existingSceneNames)
+                            : Array.from(existingGroupNames).filter((name) => name !== objectName)
+                    }
+                    selected={parentName}
+                    onSelectedChange={setParentName}
+                />
+                <Button name="Move Object" onClick={moveObject} />
+            </div>
+            <div class="panel__section">
+                <Button
+                    name="Delete Object"
+                    type="danger"
+                    onClick={parameters.onObjectDelete}
+                    dissabled={parentType === 'group' && parentName === objectName}
+                />
+                {parentType === 'group' && parentName === objectName && (
+                    <p class="warning">An object with the name '{newObjectName}' already exists.</p>
+                )}
             </div>
         </div>
     )

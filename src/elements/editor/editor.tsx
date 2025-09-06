@@ -2,7 +2,7 @@ import { Configuration, SceneConfiguration, decodeConfiguration, encodeConfigura
 import { Visual } from '@/visual'
 import { useEffect, useState } from 'preact/hooks'
 
-import { ObjectConfiguration } from '@/configuration/objects'
+import { GroupConfiguration, ObjectConfiguration, ObjectConfigurationMap } from '@/configuration/objects'
 
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { getLastCreatedVisual } from '@/utility/hot_reload'
@@ -25,19 +25,8 @@ import { StyleEditor } from './style_editor'
 
 const CONFIGURATION_UPDATE_DELAY = 500
 
-export type EditorParameters = {
-    homeAssistant: HomeAssistant
-    rawConfiguration: unknown
-    updateRawConfiguration: (updatedRawConfiguration: unknown) => void
-}
-
-export function Editor(parameters: EditorParameters) {
+function useVisual() {
     const [visual, setVisual] = useState<Visual | null | undefined>(null)
-    const [hotReload, setHotReload] = useState(true)
-    const [configuration, setConfiguration] = useState(() => decodeConfiguration(parameters.rawConfiguration))
-    const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'style' | 'scene' | 'object'>('editor')
-    const [activeScene, setActiveScene] = useState<string | null>(null)
-    const [activeObject, setActiveObject] = useState<string | null>(null)
 
     useEffect(() => {
         getLastCreatedVisual()
@@ -47,50 +36,61 @@ export function Editor(parameters: EditorParameters) {
             })
     }, [])
 
-    const updateHotReload = (newHotReload: boolean) => {
-        if (newHotReload || !visual) return
-        setHotReload(newHotReload)
-    }
+    return visual
+}
 
-    const switchToEditorEditor = () => {
-        setActiveEditor('editor')
-        setActiveScene(null)
-        setActiveObject(null)
-    }
+export type EditorParameters = {
+    homeAssistant: HomeAssistant
+    rawConfiguration: unknown
+    updateRawConfiguration: (updatedRawConfiguration: unknown) => void
+}
 
-    const switchToGeneralEditor = () => {
-        setActiveEditor('general')
-        setActiveScene(null)
-        setActiveObject(null)
-    }
-
-    const switchToStyleEditor = () => {
-        setActiveEditor('style')
-        setActiveScene(null)
-        setActiveObject(null)
-    }
-
-    const saveHotReloadConfiguration = () => {
-        getLastCreatedVisual()
-            .then(setVisual)
-            .catch(() => {
-                setVisual(undefined)
-            })
-        parameters.updateRawConfiguration(encodeConfiguration(configuration))
-    }
+export function Editor(parameters: EditorParameters) {
+    const visual = useVisual()
+    const [hotReloadEnabled, setHotReloadEnabled] = useState(true)
+    const [configuration, setConfiguration] = useState(() => decodeConfiguration(parameters.rawConfiguration))
+    const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'style' | 'scene' | 'object'>('editor')
+    const [activeScene, setActiveScene] = useState<string | null>(null)
+    const [activeObject, setActiveObject] = useState<string | null>(null)
 
     useEffect(() => {
-        if (hotReload && visual) {
+        if (hotReloadEnabled && visual) {
             visual.updateConfig(configuration)
             return
         }
         const timeout = setTimeout(() => {
-            if (hotReload) return
-            saveHotReloadConfiguration()
+            if (hotReloadEnabled) return
+            forceSaveConfiguration()
         }, CONFIGURATION_UPDATE_DELAY)
 
         return () => clearTimeout(timeout)
-    }, [configuration, hotReload])
+    }, [configuration, hotReloadEnabled])
+
+    const changeHotReload = (value: boolean) => {
+        if (!visual) return
+        setHotReloadEnabled(value)
+    }
+
+    const changeActiveEditor = (value: typeof activeEditor) => {
+        setActiveEditor(value)
+        setActiveScene(null)
+        setActiveObject(null)
+    }
+
+    const selectScene = (value: string) => {
+        setActiveEditor('scene')
+        setActiveScene(value)
+        setActiveObject(null)
+    }
+
+    const selectObject = (value: string) => {
+        setActiveEditor('object')
+        setActiveObject(value)
+    }
+
+    const forceSaveConfiguration = () => {
+        parameters.updateRawConfiguration(encodeConfiguration(configuration))
+    }
 
     const updateConfiguration = (newConfiguration: Configuration) => {
         setConfiguration({ ...newConfiguration })
@@ -123,133 +123,124 @@ export function Editor(parameters: EditorParameters) {
     }
 
     const updateObjectConfiguration = (newObjectConfiguration: ObjectConfiguration) => {
-        if (!activeScene || !activeObject) return
+        if (!activeScene || !activeObject || !configuration.scenes[activeScene]) return
 
-        setConfiguration({
-            ...configuration,
-            scenes: {
-                ...configuration.scenes,
-                [activeScene]: {
-                    ...configuration.scenes[activeScene],
-                    objects: { ...configuration.scenes[activeScene].objects, [activeObject]: newObjectConfiguration },
-                },
-            },
-        })
+        const parent = searchObjectParentConfiguration(activeObject, configuration.scenes[activeScene])
+        const objectMap =
+            (parent as GroupConfiguration).type === 'group'
+                ? (parent as GroupConfiguration).children
+                : (parent as SceneConfiguration).objects
+        objectMap[activeObject] = newObjectConfiguration
+        setConfiguration({ ...configuration })
     }
 
     const updateObjectName = (newObjectName: string) => {
-        if (!activeScene || !activeObject) return
+        if (!activeScene || !activeObject || !configuration.scenes[activeScene]) return
 
-        const newScene = { ...configuration.scenes[activeScene] }
-        newScene.objects[newObjectName] = newScene.objects[activeObject]
-        delete newScene.objects[activeObject]
-        setConfiguration({ ...configuration, scenes: { ...configuration.scenes, [activeScene]: newScene } })
+        const parent = searchObjectParentConfiguration(activeObject, configuration.scenes[activeScene])
+        const objectMap =
+            (parent as GroupConfiguration).type === 'group'
+                ? (parent as GroupConfiguration).children
+                : (parent as SceneConfiguration).objects
+        objectMap[newObjectName] = objectMap[activeObject]
+        delete objectMap[activeObject]
+        setConfiguration({ ...configuration })
     }
 
     const deleteObject = () => {
-        if (!activeScene || !activeObject) return
+        if (!activeScene || !activeObject || !configuration.scenes[activeScene]) return
 
-        const newScene = { ...configuration.scenes[activeScene] }
-        delete newScene.objects[activeObject]
-        setConfiguration({ ...configuration, scenes: { ...configuration.scenes, [activeScene]: newScene } })
+        const parent = searchObjectParentConfiguration(activeObject, configuration.scenes[activeScene])
+        const objectMap =
+            (parent as GroupConfiguration).type === 'group'
+                ? (parent as GroupConfiguration).children
+                : (parent as SceneConfiguration).objects
+        delete objectMap[activeObject]
+        setConfiguration({ ...configuration })
+    }
+
+    const objectConfiguration =
+        activeScene && activeObject && configuration.scenes[activeScene]
+            ? searchObjectConfiguration(activeObject, configuration.scenes[activeScene].objects)
+            : null
+
+    const objectNames =
+        activeScene && configuration.scenes[activeScene]
+            ? flattenObjectNames(configuration.scenes[activeScene].objects)
+            : new Set<string>()
+
+    const groupNames =
+        activeScene && configuration.scenes[activeScene]
+            ? flattenGroupNames(configuration.scenes[activeScene].objects)
+            : new Set<string>()
+
+    const parentType =
+        !activeObject ||
+        !activeScene ||
+        !configuration.scenes[activeScene] ||
+        (searchObjectParentConfiguration(activeObject, configuration.scenes[activeScene]) as GroupConfiguration | null)
+            ?.type === 'group'
+            ? 'group'
+            : 'scene'
+    const parentName =
+        (activeObject &&
+            activeScene &&
+            searchObjectParentName(activeObject, activeScene, configuration.scenes[activeScene])) ||
+        ''
+
+    const changeObjectParent = (parentType: 'scene' | 'group', parentName: string) => {
+        if (
+            !activeObject ||
+            !activeScene ||
+            (parentType === 'scene' && !configuration.scenes[parentName]) ||
+            !objectConfiguration
+        )
+            return
+        const oldParent = searchObjectParentConfiguration(activeObject, configuration.scenes[activeScene])
+        const oldParentObjectMap =
+            (oldParent as GroupConfiguration).type === 'group'
+                ? (oldParent as GroupConfiguration).children
+                : (oldParent as SceneConfiguration).objects
+        delete oldParentObjectMap[activeObject]
+
+        const newParent =
+            parentType === 'scene'
+                ? configuration.scenes[parentName]
+                : searchObjectConfiguration(parentName, configuration.scenes[activeScene].objects)
+        if (!newParent) return
+        const newParentObjectMap =
+            (newParent as GroupConfiguration).type === 'group'
+                ? (newParent as GroupConfiguration).children
+                : (newParent as SceneConfiguration).objects
+        newParentObjectMap[activeObject] = objectConfiguration
+        setConfiguration({ ...configuration })
     }
 
     return (
         <div class="editor">
             <style>{StyleSheet}</style>
             <div class="panel sidebar">
-                <div class="panel__section">
-                    <span class="panel__label">GENERAL</span>
-                    <SidebarItem
-                        type="editor"
-                        name="Editor"
-                        onClick={switchToEditorEditor}
-                        selected={activeEditor === 'editor'}
+                <SidebarEditorsSection activeEditor={activeEditor} onActiveEditorChange={changeActiveEditor} />
+                <SidebarSceneListSection
+                    scenes={Object.keys(configuration.scenes)}
+                    activeScene={activeScene}
+                    onSceneChange={selectScene}
+                />
+                {activeScene && configuration.scenes[activeScene] && (
+                    <SidebarObjectListSection
+                        objects={configuration.scenes[activeScene].objects}
+                        activeObject={activeObject}
+                        onObjectChange={selectObject}
                     />
-                    <SidebarItem
-                        type="setting"
-                        name="Settings"
-                        onClick={switchToGeneralEditor}
-                        selected={activeEditor === 'general'}
-                    />
-                    <SidebarItem
-                        type="style"
-                        name="Style"
-                        onClick={switchToStyleEditor}
-                        selected={activeEditor === 'style'}
-                    />
-                </div>
-                <div class="panel__section">
-                    <span class="panel__label">SCENES</span>
-                    {Object.keys(configuration.scenes).map((name) => {
-                        const switchToSceneEditor = () => {
-                            setActiveEditor('scene')
-                            setActiveScene(name)
-                            setActiveObject(null)
-                        }
-                        return (
-                            <SidebarItem
-                                type="scene"
-                                name={name}
-                                onClick={switchToSceneEditor}
-                                selected={name === activeScene}
-                            />
-                        )
-                    })}
-                </div>
-                {activeScene && (
-                    <div class="panel__section">
-                        <span class="panel__label">OBJECTS</span>
-                        {activeScene &&
-                            configuration.scenes[activeScene] &&
-                            Object.keys(configuration.scenes[activeScene].objects).map((name) => {
-                                const switchToObjectEditor = () => {
-                                    setActiveEditor('object')
-                                    setActiveObject(name)
-                                }
-                                let type: SidebarItemParameters['type']
-                                switch (configuration.scenes[activeScene].objects[name].type) {
-                                    case 'card.2d':
-                                        type = 'card'
-                                        break
-                                    case 'card.3d':
-                                        type = 'card'
-                                        break
-                                    case 'model.glb':
-                                        type = 'model'
-                                        break
-                                    case 'light.point':
-                                        type = 'light'
-                                        break
-                                    case 'light.ambient':
-                                        type = 'light'
-                                        break
-                                    case 'light.custom':
-                                        type = 'light'
-                                        break
-                                    case 'camera.perspective':
-                                        type = 'camera'
-                                        break
-                                }
-                                return (
-                                    <SidebarItem
-                                        type={type}
-                                        name={name}
-                                        onClick={switchToObjectEditor}
-                                        selected={name === activeObject}
-                                    />
-                                )
-                            })}
-                    </div>
                 )}
-                {hotReload && (
+                {hotReloadEnabled && (
                     <div class="panel__section">
-                        <Button name="Save" onClick={saveHotReloadConfiguration} />
+                        <Button name="Save" onClick={forceSaveConfiguration} />
                     </div>
                 )}
             </div>
             {activeEditor === 'editor' && (
-                <EditorEditor visual={visual} hotReload={hotReload} onHotReloadChange={updateHotReload} />
+                <EditorEditor visual={visual} hotReloadEnabled={hotReloadEnabled} onHotReloadChange={changeHotReload} />
             )}
             {activeEditor === 'general' && (
                 <GeneralEditor configuration={configuration} onConfigurationChange={updateConfiguration} />
@@ -262,75 +253,259 @@ export function Editor(parameters: EditorParameters) {
                     key={activeScene}
                     sceneName={activeScene}
                     sceneConfiguration={configuration.scenes[activeScene]}
+                    existingObjectNames={objectNames}
                     onSceneConfigurationChange={updateSceneConfiguration}
                     onSceneNameChange={updateSceneName}
                     onSceneDelete={deleteScene}
                 />
             )}
-            {activeEditor === 'object' &&
-                activeScene &&
-                activeObject &&
-                configuration.scenes[activeScene]?.objects[activeObject] && (
-                    <ObjectEditor
-                        key={activeObject}
-                        objectName={activeObject}
-                        objectConfiguration={configuration.scenes[activeScene].objects[activeObject]}
-                        onObjectConfigurationChange={updateObjectConfiguration}
-                        onObjectNameChange={updateObjectName}
-                        onObjectDelete={deleteObject}
-                    />
-                )}
+            {activeEditor === 'object' && activeObject && objectConfiguration && (
+                <ObjectEditor
+                    key={activeObject}
+                    objectName={activeObject}
+                    objectConfiguration={objectConfiguration}
+                    existingObjectNames={objectNames}
+                    parentType={parentType}
+                    parentName={parentName}
+                    existingGroupNames={groupNames}
+                    existingSceneNames={new Set(Object.keys(configuration.scenes))}
+                    onObjectConfigurationChange={updateObjectConfiguration}
+                    onObjectNameChange={updateObjectName}
+                    onObjectDelete={deleteObject}
+                    onObjectParentChange={changeObjectParent}
+                />
+            )}
         </div>
     )
 }
 
-type SidebarItemParameters = {
-    type: 'editor' | 'setting' | 'style' | 'camera' | 'scene' | 'light' | 'model' | 'card'
-    name: string
-    selected?: boolean
-    onClick: () => void
+function flattenObjectNames(objectMap: ObjectConfigurationMap): Set<string> {
+    const names = new Set(Object.keys(objectMap))
+    for (const name in objectMap) {
+        if (objectMap[name].type === 'group') {
+            const nestedNames = flattenObjectNames(objectMap[name].children)
+            for (const nestedName of nestedNames) {
+                names.add(nestedName)
+            }
+        }
+    }
+    return names
 }
 
-function SidebarItem(parameters: SidebarItemParameters) {
-    let Icon
-    switch (parameters.type) {
-        case 'editor':
-            Icon = PenIcon
-            break
-        case 'setting':
-            Icon = SettingIcon
-            break
-        case 'style':
-            Icon = StyleIcon
-
-            break
-        case 'camera':
-            Icon = CameraIcon
-            break
-        case 'scene':
-            Icon = ParkIcon
-            break
-        case 'light':
-            Icon = LightIcon
-            break
-        case 'model':
-            Icon = FlowerPotIcon
-            break
-        case 'card':
-            Icon = CardIcon
-            break
+function flattenGroupNames(objectMap: ObjectConfigurationMap): Set<string> {
+    const names = new Set<string>()
+    for (const name in objectMap) {
+        if (objectMap[name].type === 'group') {
+            names.add(name)
+            const nestedNames = flattenGroupNames(objectMap[name].children)
+            for (const nestedName of nestedNames) {
+                names.add(nestedName)
+            }
+        }
     }
+    return names
+}
+
+function searchObjectConfiguration(objectName: string, objectMap: ObjectConfigurationMap): ObjectConfiguration | null {
+    for (const name in objectMap) {
+        if (name === objectName) {
+            return objectMap[name]
+        }
+
+        if (objectMap[name].type === 'group') {
+            const object = searchObjectConfiguration(objectName, objectMap[name].children)
+            if (object) return object
+        }
+    }
+    return null
+}
+
+function searchObjectParentName(
+    objectName: string,
+    parentName: string,
+    parentConfiguration: SceneConfiguration | GroupConfiguration
+): string | null {
+    const objectMap =
+        (parentConfiguration as GroupConfiguration).type === 'group'
+            ? (parentConfiguration as GroupConfiguration).children
+            : (parentConfiguration as SceneConfiguration).objects
+    for (const name in objectMap) {
+        if (name === objectName) {
+            return parentName
+        }
+
+        if (objectMap[name].type === 'group') {
+            const parentName = searchObjectParentName(objectName, name, objectMap[name])
+            if (parentName) return parentName
+        }
+    }
+    return null
+}
+
+function searchObjectParentConfiguration(
+    objectName: string,
+    configuration: SceneConfiguration | GroupConfiguration
+): SceneConfiguration | GroupConfiguration | null {
+    const objectMap =
+        (configuration as GroupConfiguration).type === 'group'
+            ? (configuration as GroupConfiguration).children
+            : (configuration as SceneConfiguration).objects
+    for (const name in objectMap) {
+        if (name === objectName) {
+            return configuration
+        }
+
+        if (objectMap[name].type === 'group') {
+            const parent = searchObjectParentConfiguration(objectName, objectMap[name])
+            if (parent) return parent
+        }
+    }
+    return null
+}
+
+type SidebarObjectListSectionParameters = {
+    objects: { [name: string]: ObjectConfiguration }
+    activeObject: string | null
+    onObjectChange: (newActiveObject: string) => void
+}
+
+function SidebarObjectListSection(parameters: SidebarObjectListSectionParameters) {
+    const { objects, activeObject } = parameters
+    const changeObject = parameters.onObjectChange
+
+    const Item = ({ name, objects }: { name: string; objects: ObjectConfigurationMap }) => {
+        const selected = name === activeObject
+        const handleOnClick = () => {
+            changeObject(name)
+        }
+
+        const object = objects[name]
+
+        let Icon
+        switch (object.type) {
+            case 'card.2d':
+                Icon = CardIcon
+                break
+            case 'card.3d':
+                Icon = CardIcon
+                break
+            case 'model.glb':
+                Icon = FlowerPotIcon
+                break
+            case 'light.point':
+                Icon = LightIcon
+                break
+            case 'light.ambient':
+                Icon = LightIcon
+                break
+            case 'light.custom':
+                Icon = LightIcon
+                break
+            case 'camera.perspective':
+                Icon = CameraIcon
+                break
+            case 'group':
+                Icon = CardIcon
+                break
+        }
+
+        return (
+            <div class="sidebar__item">
+                <a class={`sidebar__item__card ${selected && 'sidebar__item__card--selected'}`} onClick={handleOnClick}>
+                    <Icon selected={selected} />
+                    <span class={`sidebar__item__card__name ${selected && 'sidebar__item__card__name--selected'}`}>
+                        {name}
+                    </span>
+                </a>
+                <div class="sidebar__item__children">
+                    {object.type === 'group' &&
+                        Object.keys(object.children).map((name) => <Item name={name} objects={object.children} />)}
+                </div>
+            </div>
+        )
+    }
+
     return (
-        <a
-            class={`sidebar__section__item ${parameters.selected && 'sidebar__section__item--selected'}`}
-            onClick={parameters.onClick}
-        >
-            <Icon selected={parameters.selected} />
-            <span
-                class={`sidebar__section__item__name ${parameters.selected && 'sidebar__section__item__name--selected'}`}
-            >
-                {parameters.name}
-            </span>
-        </a>
+        <div class="panel__section">
+            <span class="panel__label">OBJECTS</span>
+            {Object.keys(objects).map((name) => (
+                <Item name={name} objects={objects} />
+            ))}
+        </div>
+    )
+}
+
+type SidebarSceneListSectionParameters = {
+    scenes: string[]
+    activeScene: string | null
+    onSceneChange: (newActiveScene: string) => void
+}
+
+function SidebarSceneListSection(parameters: SidebarSceneListSectionParameters) {
+    const { scenes, activeScene } = parameters
+    const changeScene = parameters.onSceneChange
+
+    return (
+        <div class="panel__section">
+            <span class="panel__label">SCENES</span>
+            {scenes.map((name) => {
+                const selected = name === activeScene
+                const handleOnClick = () => {
+                    changeScene(name)
+                }
+
+                return (
+                    <a
+                        class={`sidebar__item__card ${selected && 'sidebar__item__card--selected'}`}
+                        onClick={handleOnClick}
+                    >
+                        <ParkIcon selected={selected} />
+                        <span class={`sidebar__item__card__name ${selected && 'sidebar__item__card__name--selected'}`}>
+                            {name}
+                        </span>
+                    </a>
+                )
+            })}
+        </div>
+    )
+}
+
+type SidebarEditorsSectionParameters = {
+    activeEditor: 'editor' | 'general' | 'style' | string
+    onActiveEditorChange: (newActiveEditor: 'editor' | 'general' | 'style') => void
+}
+
+function SidebarEditorsSection(parameters: SidebarEditorsSectionParameters) {
+    const { activeEditor } = parameters
+    const changeActiveEditor = parameters.onActiveEditorChange
+
+    return (
+        <div class="panel__section">
+            <span class="panel__label">GENERAL</span>
+            {(
+                [
+                    { type: 'editor', name: 'Editor', Icon: PenIcon },
+                    { type: 'general', name: 'Settings', Icon: SettingIcon },
+                    { type: 'style', name: 'Style', Icon: StyleIcon },
+                ] as const
+            ).map(({ type, name, Icon }) => {
+                const selected = type === activeEditor
+                const handleOnClick = () => {
+                    changeActiveEditor(type)
+                }
+
+                return (
+                    <a
+                        class={`sidebar__item__card ${selected && 'sidebar__item__card--selected'}`}
+                        onClick={handleOnClick}
+                    >
+                        <Icon selected={selected} />
+                        <span class={`sidebar__item__card__name ${selected && 'sidebar__item__card__name--selected'}`}>
+                            {name}
+                        </span>
+                    </a>
+                )
+            })}
+        </div>
     )
 }
