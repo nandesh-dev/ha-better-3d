@@ -37,8 +37,12 @@ export function Expression(parameters: ExpressionParameters) {
     }
 
     const selectPattern = (newPatternName: string) => {
-        parameters.onValueChange(parameters.patterns[newPatternName].computeValue([]))
         setSelectedPattern(newPatternName)
+        if (selectedPattern === 'Custom') {
+            parameters.onValueChange('')
+            return
+        }
+        parameters.onValueChange(parameters.patterns[newPatternName].computeValue([]))
     }
 
     const updateValue = (newValue: string, index: number) => {
