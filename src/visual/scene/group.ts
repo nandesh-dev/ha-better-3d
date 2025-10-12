@@ -42,8 +42,8 @@ export class Group {
     public name: string
 
     public three: ThreeGroup
-    public group: ThreeGroup
-    public helper: BoxHelper
+    public helper: ThreeGroup
+    public boxHelper: BoxHelper
 
     public children: ObjectMap = {}
 
@@ -54,10 +54,10 @@ export class Group {
         this.name = name
 
         this.three = new ThreeGroup()
-        this.group = new ThreeGroup()
-        this.three.add(this.group)
-        this.helper = new BoxHelper(this.group)
-        this.three.add(this.helper)
+        this.three = new ThreeGroup()
+        this.helper = new ThreeGroup()
+        this.boxHelper = new BoxHelper(this.three)
+        this.helper.add(this.boxHelper)
 
         this.evaluator = evaluator
         this.resourceManager = resourceManager
@@ -66,45 +66,45 @@ export class Group {
 
     public updateProperties(configuration: GroupConfiguration, homeAssistant: HomeAssistant) {
         const evaluator = this.evaluator.withContextValue('Self', {
-            visible: this.group.visible,
-            position: this.group.position.clone(),
-            rotation: this.group.rotation.clone(),
-            scale: this.group.scale.clone(),
+            visible: this.three.visible,
+            position: this.three.position.clone(),
+            rotation: this.three.rotation.clone(),
+            scale: this.three.scale.clone(),
         })
 
         try {
             const visible = evaluator.evaluate<boolean>(configuration.visible)
-            this.group.visible = visible
+            this.three.visible = visible
         } catch (error) {
             throw new Error(`${encodeExpression(configuration.visible)}: Error evaluating visible`, error)
         }
 
-        if (this.group.visible) {
+        if (this.three.visible) {
             try {
                 const position = evaluator.evaluate<Vector3>(configuration.position)
-                this.group.position.copy(position)
+                this.three.position.copy(position)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.position)}: Error evaluating position`, error)
             }
 
             try {
                 const rotation = evaluator.evaluate<Euler>(configuration.rotation)
-                this.group.rotation.copy(rotation)
+                this.three.rotation.copy(rotation)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.rotation)}: Error evaluating rotation`, error)
             }
 
             try {
                 const scale = evaluator.evaluate<Vector3>(configuration.scale)
-                this.group.scale.copy(scale)
+                this.three.scale.copy(scale)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.scale)}: Error evaluating scale`, error)
             }
 
             try {
                 const helper = evaluator.evaluate<boolean>(configuration.helper)
-                this.helper.visible = helper
-                if (helper) this.helper.update()
+                this.boxHelper.visible = helper
+                if (helper) this.boxHelper.update()
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.helper)}: Error evaluating helper`, error)
             }
@@ -120,7 +120,7 @@ export class Group {
     public dispose() {
         for (const objectName in this.children) {
             const object = this.children[objectName]
-            this.group.remove(object.three)
+            this.three.remove(object.three)
             object.dispose()
             delete this.children[objectName]
         }
@@ -133,7 +133,8 @@ export class Group {
             const objectConfiguration = configuration.children[objectName]
             const inUse = objectConfiguration && matchObjectInstanceAndConfigurationType(objectConfiguration, object)
             if (!inUse) {
-                this.group.remove(object.three)
+                this.three.remove(object.three)
+                this.helper.remove(object.helper)
                 object.dispose()
                 delete this.children[objectName]
             }
@@ -173,7 +174,8 @@ export class Group {
                 }
 
                 this.children[objectName] = object
-                this.group.add(object.three)
+                this.three.add(object.three)
+                this.helper.add(object.helper)
             }
 
             try {

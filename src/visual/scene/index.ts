@@ -159,7 +159,9 @@ export class Scene {
             const objectConfiguration = configuration.objects[objectName]
             const inUse = objectConfiguration && matchObjectInstanceAndConfigurationType(objectConfiguration, object)
             if (!inUse) {
-                if (object.three) this.three.remove(object.three)
+                this.three.remove(object.three)
+                this.three.remove(object.helper)
+
                 object.dispose()
                 delete this.objects[objectName]
             }
@@ -200,6 +202,7 @@ export class Scene {
 
                 this.objects[objectName] = object
                 this.three.add(object.three)
+                this.three.add(object.helper)
             }
 
             try {

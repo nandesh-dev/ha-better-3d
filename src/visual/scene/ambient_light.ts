@@ -1,4 +1,4 @@
-import { Color, AmbientLight as ThreeAmbientLight } from 'three'
+import { Color, Group, AmbientLight as ThreeAmbientLight } from 'three'
 
 import { AmbientLightConfiguration } from '@/configuration/objects'
 import { encodeExpression } from '@/configuration/value'
@@ -8,6 +8,7 @@ import { Evaluator } from '@/utility/evaluater'
 
 export class AmbientLight {
     public three: ThreeAmbientLight
+    public helper: Group
     public name: string
 
     private evaluator: Evaluator
@@ -15,6 +16,7 @@ export class AmbientLight {
     constructor(name: string, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreeAmbientLight()
+        this.helper = new Group()
 
         this.evaluator = evaluator
     }

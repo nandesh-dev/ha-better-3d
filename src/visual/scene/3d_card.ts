@@ -12,6 +12,7 @@ import { HomeAssistant } from '@/utility/home_assistant/types'
 
 export class Card3D {
     public three: Group
+    public helper: Group
 
     public name: string
     private cardType: string | null = null
@@ -26,6 +27,7 @@ export class Card3D {
     constructor(name: string, configuration: Card3DConfiguration, evaluator: Evaluator) {
         this.name = name
         this.three = new Group()
+        this.helper = new Group()
 
         this.cardOuterElement = document.createElement('div')
         this.three.add(new CSS3DObject(this.cardOuterElement))
