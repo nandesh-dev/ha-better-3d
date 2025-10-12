@@ -41,6 +41,7 @@ import {
     FixedStringPattern,
     FixedVector2Pattern,
     FixedVector3Pattern,
+    WallVisibilityPattern,
 } from './expression'
 
 export type ObjectEditorParameters = {
@@ -173,7 +174,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<Card2DConfiguration>('visible')}
                     />
                 </>
@@ -226,7 +227,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<Card3DConfiguration>('visible')}
                     />
                 </>
@@ -262,7 +263,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('visible')}
                     />
                 </>
@@ -298,7 +299,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('visible')}
                     />
                 </>
@@ -403,7 +404,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<CustomLightConfiguration>('visible')}
                     />
                 </>
@@ -469,7 +470,7 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                     <Expression
                         label="Visible"
                         value={objectConfiguration.visible}
-                        patterns={{ Fixed: FixedBoolPattern }}
+                        patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('visible')}
                     />
                     <Expression
