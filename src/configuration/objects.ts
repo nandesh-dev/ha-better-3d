@@ -101,6 +101,7 @@ export type GLBModelConfiguration = {
     rotation: Expression
     scale: Expression
     visible: Expression
+    helper: Expression
 }
 
 export const DEFAULT_GLB_MODEL_CONFIGURATION: GLBModelConfiguration = {
@@ -110,6 +111,7 @@ export const DEFAULT_GLB_MODEL_CONFIGURATION: GLBModelConfiguration = {
     rotation: 'new Euler(0, 0, 0)',
     scale: 'new Vector3(1, 1, 1)',
     visible: 'true',
+    helper: 'false',
 } as const
 
 export function decodeGLBModelConfiguration(raw: any): GLBModelConfiguration {
@@ -120,6 +122,7 @@ export function decodeGLBModelConfiguration(raw: any): GLBModelConfiguration {
         rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
         scale: decodeExpression(raw.scale, 'new Vector3(1, 1, 1)'),
         visible: decodeExpression(raw.visible, 'true'),
+        helper: decodeExpression(raw.helper, DEFAULT_GLB_MODEL_CONFIGURATION.helper),
     }
 }
 
@@ -131,6 +134,7 @@ export function encodeGLBModelConfiguration(config: GLBModelConfiguration): unkn
         rotation: encodeExpression(config.rotation),
         scale: encodeExpression(config.scale),
         visible: encodeExpression(config.visible),
+        helper: encodeExpression(config.helper),
     }
 }
 

@@ -266,6 +266,12 @@ export function ObjectEditor(parameters: ObjectEditorParameters) {
                         patterns={{ Fixed: FixedBoolPattern, Wall: WallVisibilityPattern }}
                         onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('visible')}
                     />
+                    <Expression
+                        label="Helper"
+                        value={objectConfiguration.helper}
+                        patterns={{ Fixed: FixedBoolPattern }}
+                        onValueChange={createOnValueChangeHandler<GLBModelConfiguration>('helper')}
+                    />
                 </>
             )
             break

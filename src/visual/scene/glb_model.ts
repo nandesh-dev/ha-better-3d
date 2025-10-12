@@ -1,4 +1,4 @@
-import { Euler, Group, Vector3 } from 'three'
+import { BoxHelper, Euler, Group, Vector3 } from 'three'
 import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
@@ -12,7 +12,7 @@ import { ResourceManager } from '@/utility/resource_manager'
 
 export class GLBModel {
     public three: Group
-    public helper: Group
+    public helper: BoxHelper
 
     public name: string
     private url: string | null = null
@@ -24,7 +24,7 @@ export class GLBModel {
     constructor(name: string, resourceManager: ResourceManager, evaluator: Evaluator) {
         this.name = name
         this.three = new Group()
-        this.helper = new Group()
+        this.helper = new BoxHelper(this.three)
 
         this.resourceManager = resourceManager
         this.evaluator = evaluator
@@ -75,6 +75,14 @@ export class GLBModel {
                 this.three.scale.copy(scale)
             } catch (error) {
                 throw new Error(`${encodeExpression(configuration.scale)}: Error evaluating scale`, error)
+            }
+
+            try {
+                const helper = evaluator.evaluate<boolean>(configuration.helper)
+                this.helper.visible = helper
+                if (helper) this.helper.update()
+            } catch (error) {
+                throw new Error(`${encodeExpression(configuration.helper)}: Error evaluating helper`, error)
             }
         }
     }
