@@ -173,6 +173,29 @@ export const EntityBrightnessPattern: Pattern = {
     ],
 }
 
+export const WallVisibilityPattern: Pattern = {
+    matchRegex: (value) => {
+        const match =
+            /^\(\(\)=>{\n    const start = (\s*-?\d*\.?\d*\s*) \/ 180 \* Math\.PI;\n    const end = (\s*-?\d*\.?\d*\s*) \/ 180 \* Math\.PI;\n    const angle = Math\.atan2\(Self\.position\.x-Camera\.position\.x, Self\.position\.z - Camera\.position\.z\);\n    if \(start > end\) return angle > start \|\| angle < end;\n    return angle > start && angle < end;\n}\)\(\)$/.exec(
+                value
+            )
+        return match !== null ? [match[1].trim(), match[2].trim()] : null
+    },
+    computeValue: (values) => {
+        return `(()=>{
+    const start = ${parseFloat(values[0] || '0')} / 180 * Math.PI;
+    const end = ${parseFloat(values[1] || '0')} / 180 * Math.PI;
+    const angle = Math.atan2(Self.position.x-Camera.position.x, Self.position.z - Camera.position.z);
+    if (start > end) return angle > start || angle < end;
+    return angle > start && angle < end;
+})()`
+    },
+    inputs: [
+        { name: 'start', type: 'number', min: -180, max: 180 },
+        { name: 'end', type: 'number', min: -180, max: 180 },
+    ],
+}
+
 export const FixedVector3Pattern: Pattern = {
     matchRegex: (value) => {
         const match = /^new Vector3\((\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*),(\s*-?\d*\.?\d*\s*)\)$/.exec(value)
