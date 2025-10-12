@@ -12,6 +12,7 @@ import { ResourceManager } from '@/utility/resource_manager'
 
 export class GLBModel {
     public three: Group
+    public helper: Group
 
     public name: string
     private url: string | null = null
@@ -21,8 +22,9 @@ export class GLBModel {
     private evaluator: Evaluator
 
     constructor(name: string, resourceManager: ResourceManager, evaluator: Evaluator) {
-        this.three = new Group()
         this.name = name
+        this.three = new Group()
+        this.helper = new Group()
 
         this.resourceManager = resourceManager
         this.evaluator = evaluator

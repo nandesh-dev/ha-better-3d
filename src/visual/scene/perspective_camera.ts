@@ -1,4 +1,4 @@
-import { PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
+import { Group, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 import { PerspectiveCameraConfiguration } from '@/configuration/objects'
@@ -16,6 +16,7 @@ export class PerspectiveCamera {
     public type: string = 'orbital.perspective'
     public name: string
     public three: ThreePerspectiveCamera
+    public helper: Group
 
     private hadFirstUpdate: boolean = false
     private control: OrbitControls
@@ -24,6 +25,7 @@ export class PerspectiveCamera {
     constructor(name: string, domElement: HTMLElement, evaluator: Evaluator) {
         this.name = name
         this.three = new ThreePerspectiveCamera()
+        this.helper = new Group()
 
         this.control = new OrbitControls(this.three, domElement)
         this.evaluator = evaluator

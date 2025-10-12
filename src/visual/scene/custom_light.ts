@@ -26,15 +26,14 @@ const MAX_LIGHT_LIMIT = 200
 export class CustomLight {
     public three: Group
     public lightGroup: Group
-    public helperGroup: Group
     public modelGroup: Group
+    public helper: Group
 
     public name: string
     private url: string | null = null
     private density: number | null = null
     private color: Color | null = null
     private intensity: number | null = null
-    private meshVisible: boolean | null = null
     private meshIntensity: number | null = null
 
     private disposed: boolean = false
@@ -44,11 +43,10 @@ export class CustomLight {
     constructor(name: string, resourceManager: ResourceManager, evaluator: Evaluator) {
         this.three = new Group()
         this.lightGroup = new Group()
-        this.helperGroup = new Group()
         this.modelGroup = new Group()
+        this.helper = new Group()
 
         this.three.add(this.lightGroup)
-        this.three.add(this.helperGroup)
         this.three.add(this.modelGroup)
 
         this.name = name
@@ -160,9 +158,9 @@ export class CustomLight {
 
             try {
                 const helper = evaluator.evaluate<boolean>(configuration.helper)
-                this.helperGroup.visible = helper
+                this.helper.visible = helper
                 if (helper) {
-                    for (const helper of this.helperGroup.children) {
+                    for (const helper of this.helper.children) {
                         ;(helper as PointLightHelper).update()
                     }
                 }
@@ -183,10 +181,10 @@ export class CustomLight {
         if (this.disposed || this.density == null || this.color == null || this.intensity == null) return
 
         for (const child of this.lightGroup.children) dispose(child)
-        for (const child of this.helperGroup.children) dispose(child)
+        for (const child of this.helper.children) dispose(child)
         for (const child of this.modelGroup.children) dispose(child)
         this.lightGroup.children = []
-        this.helperGroup.children = []
+        this.helper.children = []
         this.modelGroup.children = []
 
         const model = new OBJLoader().parse(new TextDecoder().decode(rawData))
@@ -211,7 +209,7 @@ export class CustomLight {
                         this.lightGroup.add(light)
 
                         const helper = new PointLightHelper(light, helperRadius, light.color)
-                        this.helperGroup.add(helper)
+                        this.helper.add(helper)
                     }
 
                     a += this.density || 0
