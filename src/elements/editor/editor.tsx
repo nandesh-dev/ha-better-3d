@@ -25,18 +25,24 @@ import { StyleEditor } from './style_editor'
 
 const CONFIGURATION_UPDATE_DELAY = 500
 
-function useVisual() {
+function useVisual(): [Visual | null | undefined, () => void] {
     const [visual, setVisual] = useState<Visual | null | undefined>(null)
 
     useEffect(() => {
-        getLastCreatedVisual()
-            .then(setVisual)
-            .catch(() => {
-                setVisual(undefined)
-            })
-    }, [])
+        if (!visual) {
+            getLastCreatedVisual()
+                .then(setVisual)
+                .catch(() => {
+                    setVisual(undefined)
+                })
+        }
+    }, [visual])
 
-    return visual
+    const refetchVisual = () => {
+        setVisual(null)
+    }
+
+    return [visual, refetchVisual]
 }
 
 export type EditorParameters = {
@@ -46,7 +52,7 @@ export type EditorParameters = {
 }
 
 export function Editor(parameters: EditorParameters) {
-    const visual = useVisual()
+    const [visual, refetchVisual] = useVisual()
     const [hotReloadEnabled, setHotReloadEnabled] = useState(true)
     const [configuration, setConfiguration] = useState(() => decodeConfiguration(parameters.rawConfiguration))
     const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'style' | 'scene' | 'object'>('editor')
@@ -90,6 +96,7 @@ export function Editor(parameters: EditorParameters) {
 
     const forceSaveConfiguration = () => {
         parameters.updateRawConfiguration(encodeConfiguration(configuration))
+        refetchVisual()
     }
 
     const updateConfiguration = (newConfiguration: Configuration) => {
