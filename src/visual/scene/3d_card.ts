@@ -3,7 +3,7 @@ import { CSS3DObject } from 'three/examples/jsm/Addons.js'
 
 import { dispose } from '@/visual/dispose'
 
-import { Card2DConfiguration, Card3DConfiguration } from '@/configuration/objects'
+import { Card3DConfiguration } from '@/configuration/objects'
 import { encodeExpression } from '@/configuration/value'
 
 import { Error } from '@/utility/error'
@@ -115,7 +115,7 @@ export class Card3D {
         this.cardOuterElement.removeEventListener('pointermove', this.cardOuterElementCommonEventListener)
     }
 
-    private updateCardProperties(configuration: Card2DConfiguration['config'], homeAssistant: HomeAssistant) {
+    private updateCardProperties(configuration: Card3DConfiguration['config'], homeAssistant: HomeAssistant) {
         if (!this.cardConfigSet && typeof (this.card as any)?.setConfig == 'function') {
             try {
                 this.cardConfigSet = true
@@ -134,7 +134,7 @@ export class Card3D {
         }
     }
 
-    private async loadCard(configuration: Card2DConfiguration['config']) {
+    private async loadCard(configuration: Card3DConfiguration['config']) {
         const cardHelper = await (window as any).loadCardHelpers()
         this.card = cardHelper.createCardElement(configuration)
         if (this.card) this.cardOuterElement.append(this.card)

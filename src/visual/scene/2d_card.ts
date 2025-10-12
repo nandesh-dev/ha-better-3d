@@ -136,7 +136,7 @@ export class Card2D {
 
     private async loadCard(configuration: Card2DConfiguration['config']) {
         const cardHelper = await (window as any).loadCardHelpers()
-        this.card = cardHelper.createCardElement(configuration.config)
+        this.card = cardHelper.createCardElement(configuration)
         if (this.card) this.cardOuterElement.append(this.card)
     }
 }
