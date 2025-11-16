@@ -23,6 +23,7 @@
     },
     "dependencies": {
         "@types/three": "^0.174.0",
+        "idb": "^8.0.3",
         "preact": "^10.26.4",
         "three": "^0.174.0",
         "yaml": "^2.7.1"

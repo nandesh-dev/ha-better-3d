@@ -4,12 +4,14 @@ import { useEffect, useState } from 'preact/hooks'
 
 import { GroupConfiguration, ObjectConfiguration, ObjectConfigurationMap } from '@/configuration/objects'
 
+import { addConfigurationHistory } from '@/utility/configuration_history'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { getLastCreatedVisual } from '@/utility/hot_reload'
 
 import { Button } from './components/button'
 import { CameraIcon } from './components/camera_icon'
 import { CardIcon } from './components/card_icon'
+import { HistoryIcon } from './components/history_icon'
 import { LightIcon } from './components/light_icon'
 import { FlowerPotIcon } from './components/model_icon'
 import { ParkIcon } from './components/park_icon'
@@ -18,12 +20,14 @@ import { SettingIcon } from './components/setting_icon'
 import { StyleIcon } from './components/style_icon'
 import { EditorEditor } from './editor_editor'
 import { GeneralEditor } from './general_editor'
+import { HistoryEditor } from './history_editor'
 import { ObjectEditor } from './object_editor'
 import { SceneEditor } from './scene_editor'
 import StyleSheet from './style.css?raw'
 import { StyleEditor } from './style_editor'
 
 const CONFIGURATION_UPDATE_DELAY = 500
+const CONFIGURATION_HISTORY_SAVE_FREQUENCY = 1 * 1000
 
 function useVisual(): [Visual | null | undefined, () => void] {
     const [visual, setVisual] = useState<Visual | null | undefined>(null)
@@ -55,7 +59,9 @@ export function Editor(parameters: EditorParameters) {
     const [visual, refetchVisual] = useVisual()
     const [hotReloadEnabled, setHotReloadEnabled] = useState(true)
     const [configuration, setConfiguration] = useState(() => decodeConfiguration(parameters.rawConfiguration))
-    const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'style' | 'scene' | 'object'>('editor')
+    const [activeEditor, setActiveEditor] = useState<'editor' | 'general' | 'history' | 'style' | 'scene' | 'object'>(
+        'editor'
+    )
     const [activeScene, setActiveScene] = useState<string | null>(null)
     const [activeObject, setActiveObject] = useState<string | null>(null)
 
@@ -71,6 +77,16 @@ export function Editor(parameters: EditorParameters) {
 
         return () => clearTimeout(timeout)
     }, [configuration, hotReloadEnabled])
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            addConfigurationHistory(configuration)
+        }, CONFIGURATION_HISTORY_SAVE_FREQUENCY)
+
+        return () => {
+            clearTimeout(timeout)
+        }
+    }, [configuration])
 
     const changeHotReload = (value: boolean) => {
         if (!visual) return
@@ -227,19 +243,21 @@ export function Editor(parameters: EditorParameters) {
         <div class="editor">
             <style>{StyleSheet}</style>
             <div class="panel sidebar">
-                <SidebarEditorsSection activeEditor={activeEditor} onActiveEditorChange={changeActiveEditor} />
-                <SidebarSceneListSection
-                    scenes={Object.keys(configuration.scenes)}
-                    activeScene={activeScene}
-                    onSceneChange={selectScene}
-                />
-                {activeScene && configuration.scenes[activeScene] && (
-                    <SidebarObjectListSection
-                        objects={configuration.scenes[activeScene].objects}
-                        activeObject={activeObject}
-                        onObjectChange={selectObject}
+                <div class="sidebar__content">
+                    <SidebarEditorsSection activeEditor={activeEditor} onActiveEditorChange={changeActiveEditor} />
+                    <SidebarSceneListSection
+                        scenes={Object.keys(configuration.scenes)}
+                        activeScene={activeScene}
+                        onSceneChange={selectScene}
                     />
-                )}
+                    {activeScene && configuration.scenes[activeScene] && (
+                        <SidebarObjectListSection
+                            objects={configuration.scenes[activeScene].objects}
+                            activeObject={activeObject}
+                            onObjectChange={selectObject}
+                        />
+                    )}
+                </div>
                 {hotReloadEnabled && (
                     <div class="panel__section">
                         <Button name="Save" onClick={forceSaveConfiguration} />
@@ -251,6 +269,9 @@ export function Editor(parameters: EditorParameters) {
             )}
             {activeEditor === 'general' && (
                 <GeneralEditor configuration={configuration} onConfigurationChange={updateConfiguration} />
+            )}
+            {activeEditor === 'history' && (
+                <HistoryEditor configuration={configuration} onConfigurationRecover={setConfiguration} />
             )}
             {activeEditor === 'style' && (
                 <StyleEditor configuration={configuration} onConfigurationChange={updateConfiguration} />
@@ -479,7 +500,7 @@ function SidebarSceneListSection(parameters: SidebarSceneListSectionParameters) 
 
 type SidebarEditorsSectionParameters = {
     activeEditor: 'editor' | 'general' | 'style' | string
-    onActiveEditorChange: (newActiveEditor: 'editor' | 'general' | 'style') => void
+    onActiveEditorChange: (newActiveEditor: 'editor' | 'general' | 'history' | 'style') => void
 }
 
 function SidebarEditorsSection(parameters: SidebarEditorsSectionParameters) {
@@ -493,6 +514,7 @@ function SidebarEditorsSection(parameters: SidebarEditorsSectionParameters) {
                 [
                     { type: 'editor', name: 'Editor', Icon: PenIcon },
                     { type: 'general', name: 'Settings', Icon: SettingIcon },
+                    { type: 'history', name: 'History', Icon: HistoryIcon },
                     { type: 'style', name: 'Style', Icon: StyleIcon },
                 ] as const
             ).map(({ type, name, Icon }) => {
