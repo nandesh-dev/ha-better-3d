@@ -42,9 +42,12 @@ function PrecautionMessage() {
     return (
         <>
             <p class="warning">
-                <b>HEADS UP! You will LOOSE your configuration if you didn't read this.</b>
-                <br /> Make sure to save your configuration <b>FIRST</b> using the <b>LEFT</b> save button (above the
-                sidebar), <i>then</i> using the save button provided by Home Assistant.
+                <b>HEADS UP! You may LOOSE your configuration if you don't read this.</b>
+                <br /> Make sure to save your configuration <b>first</b> using the <b>left</b> save button (below the
+                sidebar), <i>then</i> using the save button provided by Home Assistant. If you forget to follow the
+                order, you will need to recover the configuration from history tab. Hot reload relies on a system where
+                updates are passed directly to visual instead of going throw Home Assistant, Hence you need to save it
+                in the above order.
             </p>
             <Graphic />
         </>
