@@ -18,7 +18,6 @@ export class PerspectiveCamera {
     public three: ThreePerspectiveCamera
     public helper: Group
 
-    private hadFirstUpdate: boolean = false
     private control: OrbitControls
     private evaluator: Evaluator
 
@@ -66,19 +65,20 @@ export class PerspectiveCamera {
 
         if (projectionPropertiesChanged) this.three.updateProjectionMatrix()
 
-        if (this.hadFirstUpdate) return null
-        this.hadFirstUpdate = true
-
         try {
             const position = this.evaluator.evaluate<Vector3>(configuration.position)
-            this.three.position.copy(position)
+            if (this.three.position.distanceTo(position) > 0) {
+                this.three.position.copy(position)
+            }
         } catch (error) {
             throw new Error('Cannot evaluate position', error)
         }
 
         try {
             const lookAt = this.evaluator.evaluate<Vector3>(configuration.lookAt)
-            this.control.target = lookAt
+            if (this.control.target.distanceTo(lookAt) > 0) {
+                this.control.target = lookAt
+            }
         } catch (error) {
             throw new Error('Cannot evaluate lookAt', error)
         }
