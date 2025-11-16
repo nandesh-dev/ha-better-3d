@@ -18,6 +18,7 @@ export class PerspectiveCamera {
     public three: ThreePerspectiveCamera
     public helper: Group
 
+    private previousSetPosition: Vector3
     private control: OrbitControls
     private evaluator: Evaluator
 
@@ -26,6 +27,7 @@ export class PerspectiveCamera {
         this.three = new ThreePerspectiveCamera()
         this.helper = new Group()
 
+        this.previousSetPosition = new Vector3()
         this.control = new OrbitControls(this.three, domElement)
         this.evaluator = evaluator
     }
@@ -67,7 +69,8 @@ export class PerspectiveCamera {
 
         try {
             const position = this.evaluator.evaluate<Vector3>(configuration.position)
-            if (this.three.position.distanceTo(position) > 0) {
+            if (this.previousSetPosition.distanceTo(position) > 0) {
+                this.previousSetPosition = position
                 this.three.position.copy(position)
             }
         } catch (error) {
