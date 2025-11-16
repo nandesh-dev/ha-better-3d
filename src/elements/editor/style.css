@@ -18,6 +18,14 @@
     border-right: 1px solid var(--divider-color);
 }
 
+.sidebar__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-height: 32rem;
+    overflow: auto;
+}
+
 .sidebar__item {
     width: 100%;
 }
@@ -83,6 +91,19 @@
 
 .panel__section--full-height {
     height: 40dvh;
+}
+
+.history-editor__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.8rem;
+    border-radius: 0.4rem;
+    border: 1px solid var(--outline-color);
+}
+
+.history-editor__row__detail {
+    margin: 0;
 }
 
 .dropdown {
