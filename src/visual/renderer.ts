@@ -45,7 +45,6 @@ export class Renderer {
             height: height + 'px',
             width: width + 'px',
         }
-        Object.assign(this.domElement.style, style)
         Object.assign(this.webGLWrapperElement.style, style)
         Object.assign(this.css3DWrapperElement.style, style)
 
