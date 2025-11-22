@@ -112,7 +112,7 @@ export type GLBModelConfiguration = {
 
 export const DEFAULT_GLB_MODEL_CONFIGURATION: GLBModelConfiguration = {
     type: 'model.glb',
-    url: '',
+    url: '"https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/doc/assets/logo.glb"',
     position: 'new Vector3(0, 0, 0)',
     rotation: 'new Euler(0, 0, 0)',
     scale: 'new Vector3(1, 1, 1)',
