@@ -1,6 +1,6 @@
 # Home Assistant Better 3D
 
-<img align="right" width="128" src="https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/assets/favicon.png">
+<img align="right" width="128" src="https://raw.githubusercontent.com/nandesh-dev/ha-better-3d/main/doc/assets/favicon.png">
 
 Say goodbye to flat dashboards; It's time to bridge the 3D world with our Home Assistant dashboards.
 
