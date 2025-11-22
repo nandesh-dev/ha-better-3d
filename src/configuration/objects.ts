@@ -19,19 +19,22 @@ export const DEFAULT_CARD_2D_CONFIGURATION: Card2DConfiguration = {
     size: 'new HTMLSize("auto", "auto")',
     position: 'new Vector3(0, 0, 0)',
     rotation: 'new Euler(0, 0, 0)',
-    scale: 'new Vector3(1, 1, 1)',
+    scale: 'new Vector2(0.1, 0.1)',
     visible: 'true',
 } as const
 
 export function decodeCard2DConfiguration(raw: any): Card2DConfiguration {
     return {
         type: 'card.2d',
-        config: { type: raw.config?.type ?? '', ...(raw.config ?? {}) },
-        size: decodeExpression(raw.size, 'new HTMLSize("auto", "auto")'),
-        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
-        rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
-        scale: decodeExpression(raw.scale, 'new Vector2(1, 1)'),
-        visible: decodeExpression(raw.visible, 'true'),
+        config: {
+            type: raw.config?.type ?? DEFAULT_CARD_2D_CONFIGURATION.config.type,
+            ...(raw.config ?? DEFAULT_CARD_2D_CONFIGURATION.config),
+        },
+        size: decodeExpression(raw.size, DEFAULT_CARD_2D_CONFIGURATION.size),
+        position: decodeExpression(raw.position, DEFAULT_CARD_2D_CONFIGURATION.position),
+        rotation: decodeExpression(raw.rotation, DEFAULT_CARD_2D_CONFIGURATION.rotation),
+        scale: decodeExpression(raw.scale, DEFAULT_CARD_2D_CONFIGURATION.scale),
+        visible: decodeExpression(raw.visible, DEFAULT_CARD_2D_CONFIGURATION.visible),
     }
 }
 
@@ -66,19 +69,22 @@ export const DEFAULT_CARD_3D_CONFIGURATION: Card3DConfiguration = {
     size: 'new HTMLSize("auto", "auto")',
     position: 'new Vector3(0, 0, 0)',
     rotation: 'new Euler(0, 0, 0)',
-    scale: 'new Vector3(1, 1, 1)',
+    scale: 'new Vector2(0.1, 0.1)',
     visible: 'true',
 } as const
 
 export function decodeCard3DConfiguration(raw: any): Card3DConfiguration {
     return {
         type: 'card.3d',
-        config: { type: raw.config?.type ?? '', ...(raw.config ?? {}) },
-        size: decodeExpression(raw.size, 'new HTMLSize("auto", "auto")'),
-        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
-        rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
-        scale: decodeExpression(raw.scale, 'new Vector2(1, 1)'),
-        visible: decodeExpression(raw.visible, 'true'),
+        config: {
+            type: raw.config?.type ?? DEFAULT_CARD_3D_CONFIGURATION.config.type,
+            ...(raw.config ?? DEFAULT_CARD_3D_CONFIGURATION.config),
+        },
+        size: decodeExpression(raw.size, DEFAULT_CARD_3D_CONFIGURATION.size),
+        position: decodeExpression(raw.position, DEFAULT_CARD_3D_CONFIGURATION.position),
+        rotation: decodeExpression(raw.rotation, DEFAULT_CARD_3D_CONFIGURATION.rotation),
+        scale: decodeExpression(raw.scale, DEFAULT_CARD_3D_CONFIGURATION.scale),
+        visible: decodeExpression(raw.visible, DEFAULT_CARD_3D_CONFIGURATION.visible),
     }
 }
 
@@ -118,10 +124,10 @@ export function decodeGLBModelConfiguration(raw: any): GLBModelConfiguration {
     return {
         type: 'model.glb',
         url: decodeExpression(raw.url, ''),
-        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
-        rotation: decodeExpression(raw.rotation, 'new Euler(0, 0, 0)'),
-        scale: decodeExpression(raw.scale, 'new Vector3(1, 1, 1)'),
-        visible: decodeExpression(raw.visible, 'true'),
+        position: decodeExpression(raw.position, DEFAULT_GLB_MODEL_CONFIGURATION.position),
+        rotation: decodeExpression(raw.rotation, DEFAULT_GLB_MODEL_CONFIGURATION.rotation),
+        scale: decodeExpression(raw.scale, DEFAULT_GLB_MODEL_CONFIGURATION.scale),
+        visible: decodeExpression(raw.visible, DEFAULT_GLB_MODEL_CONFIGURATION.visible),
         helper: decodeExpression(raw.helper, DEFAULT_GLB_MODEL_CONFIGURATION.helper),
     }
 }
@@ -149,8 +155,8 @@ export type PointLightConfiguration = {
 
 export const DEFAULT_POINT_LIGHT_CONFIGURATION: PointLightConfiguration = {
     type: 'light.point',
-    position: 'new Vector3(0, 0, 0)',
-    intensity: '2000',
+    position: 'new Vector3(100, 80, 60)',
+    intensity: '160000',
     color: 'new Color("#ffffff")',
     helper: 'false',
     visible: 'true',
@@ -159,11 +165,11 @@ export const DEFAULT_POINT_LIGHT_CONFIGURATION: PointLightConfiguration = {
 export function decodePointLightConfiguration(raw: any): PointLightConfiguration {
     return {
         type: 'light.point',
-        position: decodeExpression(raw.position, 'new Vector3(0, 0, 0)'),
-        intensity: decodeExpression(raw.intensity, '"1000"'),
-        color: decodeExpression(raw.color, 'new Color("#ffffff")'),
-        helper: decodeExpression(raw.helper, 'false'),
-        visible: decodeExpression(raw.visible, 'true'),
+        position: decodeExpression(raw.position, DEFAULT_POINT_LIGHT_CONFIGURATION.position),
+        intensity: decodeExpression(raw.intensity, DEFAULT_POINT_LIGHT_CONFIGURATION.intensity),
+        color: decodeExpression(raw.color, DEFAULT_POINT_LIGHT_CONFIGURATION.color),
+        helper: decodeExpression(raw.helper, DEFAULT_POINT_LIGHT_CONFIGURATION.helper),
+        visible: decodeExpression(raw.visible, DEFAULT_POINT_LIGHT_CONFIGURATION.visible),
     }
 }
 
@@ -187,7 +193,7 @@ export type AmbientLightConfiguration = {
 
 export const DEFAULT_AMBIENT_LIGHT_CONFIGURATION: AmbientLightConfiguration = {
     type: 'light.ambient',
-    intensity: '2000',
+    intensity: '2',
     color: 'new Color("#ffffff")',
     visible: 'true',
 } as const
@@ -195,9 +201,9 @@ export const DEFAULT_AMBIENT_LIGHT_CONFIGURATION: AmbientLightConfiguration = {
 export function decodeAmbientLightConfiguration(raw: any): AmbientLightConfiguration {
     return {
         type: 'light.ambient',
-        intensity: decodeExpression(raw.intensity, '"10"'),
-        color: decodeExpression(raw.color, 'new Color("#ffffff")'),
-        visible: decodeExpression(raw.visible, 'true'),
+        intensity: decodeExpression(raw.intensity, DEFAULT_AMBIENT_LIGHT_CONFIGURATION.intensity),
+        color: decodeExpression(raw.color, DEFAULT_AMBIENT_LIGHT_CONFIGURATION.color),
+        visible: decodeExpression(raw.visible, DEFAULT_AMBIENT_LIGHT_CONFIGURATION.visible),
     }
 }
 
@@ -288,18 +294,18 @@ export const DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION: PerspectiveCameraConfigur
     fov: '50',
     near: '0.1',
     far: '10000',
-    position: 'new Vector3(100, 20, 300)',
+    position: 'new Vector3(100, 80, 180)',
     lookAt: 'new Vector3(0, 0, 0)',
 } as const
 
 export function decodePerspectiveCameraConfiguration(raw: any): PerspectiveCameraConfiguration {
     return {
         type: 'camera.perspective',
-        fov: decodeExpression(raw.fov, '50'),
-        near: decodeExpression(raw.near, '0.1'),
-        far: decodeExpression(raw.far, '1000'),
-        position: decodeExpression(raw.position, 'new Vector3(100, 20, 300)'),
-        lookAt: decodeExpression(raw.look_at, 'new Vector3(0, 0, 0)'),
+        fov: decodeExpression(raw.fov, DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION.fov),
+        near: decodeExpression(raw.near, DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION.near),
+        far: decodeExpression(raw.far, DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION.far),
+        position: decodeExpression(raw.position, DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION.position),
+        lookAt: decodeExpression(raw.look_at, DEFAULT_PERSPECTIVE_CAMERA_CONFIGURATION.lookAt),
     }
 }
 

@@ -1,4 +1,4 @@
-import { Color, Group, PointLightHelper, PointLight as ThreePointLight, Vector3 } from 'three'
+import { Color, PointLightHelper, PointLight as ThreePointLight, Vector3 } from 'three'
 
 import { PointLightConfiguration } from '@/configuration/objects'
 import { encodeExpression } from '@/configuration/value'

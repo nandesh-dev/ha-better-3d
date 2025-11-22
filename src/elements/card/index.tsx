@@ -1,13 +1,10 @@
-import { decodeConfiguration } from '@/configuration'
+import { DEFAULT_CONFIGURATION, decodeConfiguration } from '@/configuration'
 import { Visual } from '@/visual'
 
 import { HomeAssistant } from '@/utility/home_assistant/types'
 import { setLastCreatedVisual } from '@/utility/hot_reload'
 
 import { EDITOR_ELEMENT_TAG_NAME } from '../editor'
-import { DEFAULT_CONFIG } from './default_config'
-
-export const CARD_CUSTOM_ELEMENT_TAGNAME = process.env.PRODUCTION ? 'better-3d-card' : 'better-3d-card_development'
 
 export class CardHTMLElement extends HTMLElement {
     private homeAssistant: HomeAssistant | null = null
@@ -63,7 +60,7 @@ export class CardHTMLElement extends HTMLElement {
     }
 
     public getStubConfig() {
-        return DEFAULT_CONFIG
+        return DEFAULT_CONFIGURATION
     }
 
     public static getConfigElement() {

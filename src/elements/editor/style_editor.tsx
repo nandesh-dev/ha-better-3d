@@ -1,8 +1,7 @@
-import { Configuration } from '@/configuration'
+import { Configuration, DEFAULT_CONFIGURATION } from '@/configuration'
 
 import { Expression as ConfigurationExpression } from '@/configuration/value'
 
-import { DEFAULT_CONFIG } from '../card/default_config'
 import { TextArea } from './components/text_area'
 
 export type StyleEditorParameters = {
@@ -22,7 +21,7 @@ export function StyleEditor(parameters: StyleEditorParameters) {
                 <TextArea
                     value={parameters.configuration.styles}
                     onValueChange={updateStyles}
-                    placeholder={DEFAULT_CONFIG.styles}
+                    placeholder={(DEFAULT_CONFIGURATION as any).styles}
                     fullHeight
                 />
             </div>
