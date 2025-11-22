@@ -48,7 +48,7 @@ export class Visual {
 
         this.renderer = new Renderer()
         const rendererContainerElement = document.createElement('div')
-        Object.assign(rendererContainerElement.style, { overflow: 'hidden', width: '100%', height: '100%' })
+        Object.assign(rendererContainerElement.style, { width: '0px', height: '0px' })
         rendererContainerElement.append(this.renderer.domElement)
         this.domElement.append(rendererContainerElement)
 
