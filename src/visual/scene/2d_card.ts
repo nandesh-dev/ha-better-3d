@@ -11,7 +11,7 @@ import { Evaluator, HTMLSize } from '@/utility/evaluater'
 import { HomeAssistant } from '@/utility/home_assistant/types'
 
 export class Card2D {
-    public three: Group
+    public three: CSS3DSprite
     public helper: Group
 
     public name: string
@@ -26,11 +26,10 @@ export class Card2D {
 
     constructor(name: string, configuration: Card2DConfiguration, evaluator: Evaluator) {
         this.name = name
-        this.three = new Group()
-        this.helper = new Group()
 
         this.cardOuterElement = document.createElement('div')
-        this.three.add(new CSS3DSprite(this.cardOuterElement))
+        this.three = new CSS3DSprite(this.cardOuterElement)
+        this.helper = new Group()
 
         this.cardOuterElementCommonEventListener = (e) => e.stopPropagation()
         this.cardOuterElement.addEventListener('keyup', this.cardOuterElementCommonEventListener)
